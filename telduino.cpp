@@ -36,6 +36,9 @@ void setup() {
 }
 
 void loop() {
+	Serial3.print("AT+CCLK?\r\n");
+	echo_serial3_serial0();
+	_delay_ms(5000);
 }
 
 void echo_serial3_serial0(){
