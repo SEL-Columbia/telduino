@@ -1,0 +1,7 @@
+Telduino
+========
+
+create build directory or make will fail.
+
+make will compile and use tiny usb over icsp to program board.
+
