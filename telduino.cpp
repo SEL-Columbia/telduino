@@ -1,6 +1,3 @@
-#include "util/delay.h"
-#include "avr/io.h"
-#include "avr/signal.h"
 #include "WProgram.h"
 
 char ctrlz = 26;
@@ -38,11 +35,11 @@ void setup() {
 void loop() {
 	Serial3.print("AT+CCLK?\r\n");
 	echo_serial3_serial0();
-	_delay_ms(5000);
+	delay(5000);
 }
 
 void echo_serial3_serial0(){
-	_delay_ms(250);
+	delay(250);
 	while (Serial3.available()){
 		Serial.print(Serial3.read(), BYTE);
 	}	
