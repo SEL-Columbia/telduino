@@ -12,16 +12,6 @@ PROJECT = telduino
 GCCFLAGS = -c -g -Os -w -ffunction-sections -fdata-sections
 G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections 
 
-$(PROJECT).hex: 
-	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) uart.c -ouart.o
-	avr-gcc $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $(PROJECT).c -obuild/$(PROJECT).o
-	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o build/$(PROJECT).elf build/$(PROJECT).o uart.o
-	avr-objcopy -O ihex build/$(PROJECT).elf build/$(PROJECT).eep
-	avr-objcopy -O ihex -R .eeprom build/$(PROJECT).elf build/$(PROJECT).hex
-
-program: $(PROJECT).hex
-	avrdude -patmega1280 -cusbtiny -Uflash:w:build/$(PROJECT).hex
-
 arduino: telduino.pde
 	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/pins_arduino.c -obuild/pins_arduino.c.o
 	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/WInterrupts.c -obuild/WInterrupts.c.o
@@ -56,4 +46,8 @@ arduino: telduino.pde
 	avr-objcopy -O ihex -R .eeprom build/telduino.elf build/telduino.hex 
 	avrdude -patmega1280 -cusbtiny -Uflash:w:build/$(PROJECT).hex
 
+
+
+program: $(PROJECT).hex
+	avrdude -patmega1280 -cusbtiny -Uflash:w:build/$(PROJECT).hex
 
