@@ -23,32 +23,32 @@ program: $(PROJECT).hex
 	avrdude -patmega1280 -cusbtiny -Uflash:w:build/$(PROJECT).hex
 
 arduino: telduino.pde
-	#avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/pins_arduino.c -obuild/pins_arduino.c.o
-	#avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/WInterrupts.c -obuild/WInterrupts.c.o
-	#avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring.c -obuild/wiring.c.o
-	#avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring_analog.c -obuild/wiring_analog.c.o
-	#avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring_digital.c -obuild/wiring_digital.c.o
-	#avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring_pulse.c -obuild/wiring_pulse.c.o
-	#avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring_shift.c -obuild/wiring_shift.c.o
-	#avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/HardwareSerial.cpp -obuild/HardwareSerial.cpp.o
-	#avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/main.cpp -obuild/main.cpp.o
-	#avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/Print.cpp -obuild/Print.cpp.o
-	#avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/Tone.cpp -obuild/Tone.cpp.o
-	#avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/WMath.cpp -obuild/WMath.cpp.o
-	#avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/WString.cpp -obuild/WString.cpp.o
-	#avr-ar rcs build/core.a build/pins_arduino.c.o
-	#avr-ar rcs build/core.a build/WInterrupts.c.o
-	#avr-ar rcs build/core.a build/wiring.c.o
-	#avr-ar rcs build/core.a build/wiring_analog.c.o
-	#avr-ar rcs build/core.a build/wiring_digital.c.o
-	#avr-ar rcs build/core.a build/wiring_pulse.c.o
-	#avr-ar rcs build/core.a build/wiring_shift.c.o
-	#avr-ar rcs build/core.a build/HardwareSerial.cpp.o
-	#avr-ar rcs build/core.a build/main.cpp.o
-	#avr-ar rcs build/core.a build/Print.cpp.o
-	#avr-ar rcs build/core.a build/Tone.cpp.o
-	#avr-ar rcs build/core.a build/WMath.cpp.o
-	#avr-ar rcs build/core.a build/WString.cpp.o
+	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/pins_arduino.c -obuild/pins_arduino.c.o
+	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/WInterrupts.c -obuild/WInterrupts.c.o
+	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring.c -obuild/wiring.c.o
+	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring_analog.c -obuild/wiring_analog.c.o
+	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring_digital.c -obuild/wiring_digital.c.o
+	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring_pulse.c -obuild/wiring_pulse.c.o
+	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/wiring_shift.c -obuild/wiring_shift.c.o
+	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/HardwareSerial.cpp -obuild/HardwareSerial.cpp.o
+	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/main.cpp -obuild/main.cpp.o
+	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/Print.cpp -obuild/Print.cpp.o
+	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/Tone.cpp -obuild/Tone.cpp.o
+	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/WMath.cpp -obuild/WMath.cpp.o
+	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino arduino/WString.cpp -obuild/WString.cpp.o
+	avr-ar rcs build/core.a build/pins_arduino.c.o
+	avr-ar rcs build/core.a build/WInterrupts.c.o
+	avr-ar rcs build/core.a build/wiring.c.o
+	avr-ar rcs build/core.a build/wiring_analog.c.o
+	avr-ar rcs build/core.a build/wiring_digital.c.o
+	avr-ar rcs build/core.a build/wiring_pulse.c.o
+	avr-ar rcs build/core.a build/wiring_shift.c.o
+	avr-ar rcs build/core.a build/HardwareSerial.cpp.o
+	avr-ar rcs build/core.a build/main.cpp.o
+	avr-ar rcs build/core.a build/Print.cpp.o
+	avr-ar rcs build/core.a build/Tone.cpp.o
+	avr-ar rcs build/core.a build/WMath.cpp.o
+	avr-ar rcs build/core.a build/WString.cpp.o
 	
 	avr-g++ $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 -Iarduino telduino.cpp -obuild/telduino.o
 	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o build/telduino.elf build/telduino.o build/core.a -Larduino -lm 
