@@ -1,5 +1,8 @@
 #include "WProgram.h"
 
+//JR-Cal
+#include "ShiftRegister/ShiftRegister.h"
+
 char ctrlz = 26;
 
 void setup();
@@ -43,4 +46,9 @@ void echo_serial3_serial0(){
 	while (Serial3.available()){
 		Serial.print(Serial3.read(), BYTE);
 	}	
+}
+
+//JR-Cal
+void testRegister(){
+	//testShiftRegister();
 }
