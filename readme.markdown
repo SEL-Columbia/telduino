@@ -1,8 +1,5 @@
 Telduino
 ========
 
-create build directory or make will fail.
-    mkdir build
+repository for energy metering and telecommunication firmware.
 
-make will compile and use tiny usb over icsp to program board.
-    make
