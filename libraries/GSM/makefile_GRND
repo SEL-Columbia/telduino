@@ -28,16 +28,19 @@
 ###GCC COMPILER########
 CXX=avr-g++
 MMCU = -mmcu=atmega1280 
-CPPFLAGS = -I Include $(MMCU) -Wall -DF_CPU=8000000 # -Wstrict-prototypes
+#CPPFLAGS = -I Include $(MMCU) -Wall -DF_CPU=8000000 # -Wstrict-prototypes
+CPPFLAGS = -I libraries/GSM $(MMCU) -Wall -DF_CPU=8000000 # -Wstrict-prototypes
 ALLCPPFLAGS = -Os $(CPPFLAGS)
 #use to link in libs -L tells directory -l tells lib name
 LINKFLAG = 
 Source=Source
 #VPATH = Source Include
-vpath %.h Include #specify directory to look for .h files
-vpath %.cpp Source #same .cpp
+#vpath %.h Include #specify directory to look for .h files
+vpath %.h libraries/GSM #specify directory to look for .h files
+#vpath %.cpp Source #same .cpp
+vpath %.cpp libraries/GSM #same .cpp
 # get all cpp files from Source directory
-SRCFiles=  $(wildcard $(Source)/#.cpp)
+SRCFiles=  $(wildcard $(libraries/GSM)/*.cpp)
 # create object file name targets
 OBJ= $(SRCFiles:.cpp=.o)
 
@@ -48,6 +51,18 @@ CHIP= m1280
 
 #all in one
 all: build upload
+
+# Uses elf file as target for a basic compile,
+# all cpp files get turned to o files and linked as dependents
+build: outMain.elf
+
+#Compile and link all o files into the main elf file
+outMain.elf: $(notdir $(OBJ))
+	$(CXX) $(MMCU) -o outMain.elf  $^ $(LINKFLAG)
+
+#Compile with outlinking all cpp files
+.cpp.o:
+	$(CXX) $(ALLCPPFLAGS) -c  $< -o $(notdir $@)
 
 upload: outMain.hex
 	avrdude -B10 -p $(CHIP) -c avrispmkII -P usb -U flash:w:$< 
@@ -63,36 +78,26 @@ debugASM.s : outMain.elf
 	avr-objdump -S -h $< > $@ 
 	avr-size outMain.elf
 
-# Uses elf file as target for a basic compile,
-# all cpp files get turned to o files and linked as dependents
-build: outMain.elf
 
-#Compile and link all o files into the main elf file
-outMain.elf: $(notdir $(OBJ))
-	$(CXX) $(MMCU) -o outMain.elf  $^ $(LINKFLAG)
-
-#Compile with outlinking all cpp files
-.cpp.o:
-	$(CXX) $(ALLCPPFLAGS) -c  $< -o $(notdir $@)
 
 # Rule how to process a cpp file into a make.d target
 # if it is out of date or not found
 
 # For same as source dir
 #%.d: %.cpp
-#	$(SHELL) -ec '$(CXX) -M $(ALLCPPFLAGS) $< | sed "s?$(notdir $#).o?$#.o $#.d?" > $@ '
+#	$(SHELL) -ec '$(CXX) -M $(ALLCPPFLAGS) $< | sed "s?$(notdir $*).o?$*.o $*.d?" > $@ '
 	
 # For main dir
 .cpp.d:
 	$(CXX) -M $(ALLCPPFLAGS) $< \
-| sed "s?$(notdir $#).o?$(notdir $#).o $(notdir $#).d?" | tee $(notdir $@) 
+| sed "s?$(notdir $*).o?$(notdir $*).o $(notdir $*).d?" | tee $(notdir $@) 
 
 # -M option to g++ makes it look at the #include calls in the .cppfiles
 # and lists them as dependencies, so if the .h files change it recompiles.
 # $< is the name of the first dependincy "%.cpp". % is a wild card.
 # It outputs target.o:target.c target.h <-.h is grabed from #include
 # Output is sent to sed which, makes the content of the make.d file by replacing
-# $# <-which is the same name as % from target, minus the directory (notdir) in the
+# $* <-which is the same name as % from target, minus the directory (notdir) in the
 # g++ output. 
 # To create the .d file the output from sed is > with tee into $@ 
 # file which stands for the name of the target %.d.
