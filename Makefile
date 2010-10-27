@@ -14,16 +14,17 @@
 
 CLOCK = 8000000L
 PROJECT = telduino
-GCCFLAGS = -c -g -Os -w -ffunction-sections -fdata-sections -Iarduino
-G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Iarduino
-VPATH = arduino
-OBJECTS = pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_digital.o \
-                wiring_pulse.o wiring_shift.o main.o HardwareSerial.o Print.o Tone.o \
-                WMath.o WString.o telduino.o
+GCCFLAGS = -c -g -Os -w -ffunction-sections -fdata-sections -Ilibraries/GSM
+G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries/GSM
+VPATH = libraries/GSM
+GRND_OBJECTS = gsm.o gsmSMS.o ioHelper.o serial2.o timer.o $(PROJECT).o
 
-$(PROJECT).hex: $(OBJECTS)
-	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(OBJECTS) -Larduino -lm
-	avr-objcopy -O ihex -R .eeprom telduino.elf telduino.hex
+all : GRND program
+
+GRND : $(GRND_OBJECTS)
+	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(GRND_OBJECTS) -Llibraries/GSM -lm
+	avr-objcopy -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
+	#avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
 
 %.o : %.c
 	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@
