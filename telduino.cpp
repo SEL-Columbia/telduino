@@ -1,7 +1,7 @@
 #include "WProgram.h"
 
 //JR-Cal
-#include "ShiftRegister/ShiftRegister.h"
+//#include "ShiftRegister/ShiftRegister.h"
 
 char ctrlz = 26;
 
