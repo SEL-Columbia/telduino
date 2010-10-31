@@ -1,16 +1,16 @@
+/** @file ShiftRegister.h 
+
+@author: Javier Rosa
+@todo Need to see what a sane endianness is.
+
+*/
+
 #ifndef SHIFTREGISTER_H
 #define SHIFTREGISTER_H
 
 #include <inttypes.h>
 #include "arduino/wiring.h"
 
-/*
-Author: Javier Rosa
-Version: 0.0.1
-Notes:
-
-Need to see what a sane endianness is
-*/
 
 //TPIC6B959 shift register on pins:
 #define NOTENABLE 28    //NOTG

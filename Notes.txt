@@ -6,5 +6,25 @@ SD
 - Additionally, as the 1280 uses the same SPI ports as the 128(?) I added a simple #define which configures the ports similarly. I might be wrong about that though.
 - The lock (WP) and available(Card detect) pins must also be set to: 48/49 PL1,PL0 and the must also be configured nicely.
 - When the switch is flipped the AtMega should synchronize the data and make sure that the card is ready to be unmounted.
--
+- 
+
+Docs
+- Use Doxygen to automatically generate documentation
+- Create patches for Ronald Reigel Libraries which specify used ports for select, available, and locked.
+
+
+Doxygen Basics:
+- http://www.agapow.net/programming/all-the-rest/doxygen-cheatsheet is a good guide for the basics
+- file must have /** @file */  at the begining to document the file.
+- Long block of documentation, which can be put before the item being documented.
+	/**
+		Long description, usually but before function.
+	*/
+- Long block of documenation, which can be put at the same line as the item being documented.
+	/**<    Long description, at the same line as, for instance, a variable.
+- /** @warning Warning message */
+- /** @todo ToDo message */
+- see: http://www.stack.nl/~dimitri/doxygen/docblocks.html for more information.
+- A cheatsheet has been placed in the ...Berkeley_Docs/ directory.
+
 
