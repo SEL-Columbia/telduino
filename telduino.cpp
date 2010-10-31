@@ -2,6 +2,9 @@
 
 //JR-Cal
 #include "ShiftRegister/ShiftRegister.h"
+#include "Demux/Demux.h"
+#include "SDRAW/sd_raw.h"
+#include "ADE7753/ADE7753.h"
 
 char ctrlz = 26;
 

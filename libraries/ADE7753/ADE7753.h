@@ -1,8 +1,10 @@
 #ifndef ADE7753_H
 #define ADE7753_H
 
-#include <inttypes.h> //check dir structure for the wiring lib -AM
 #include "SPI/SPI.h"
+//extern "C" {
+	#include <inttypes.h> //check dir structure for the wiring lib -AM
+//}
 
 //register defines -AM
 const uint8_t IRMS = 0x16;
@@ -21,6 +23,6 @@ bool initSPI();
 		operation
 	-AM
 */
-bool readData(int8_t numBits, int8_t regAddr, uint8_t[3] data);
+bool readData(int8_t numBits, int8_t regAddr, uint8_t data[3]);
 
 #endif

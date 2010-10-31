@@ -1,0 +1,10 @@
+Serial2 is the debug serial it is available from the arduino libraries.
+
+SD
+- The raw library seems to assume availability of the SD card. It is imperative that we make sure that the Ronald Reigel library doesn't cache writes and try to write when we are communicating with the ADE.
+- Pins must be changed in sd_raw_config.h PL2 is used for the SD card SS. Therefor SS must be changed and the select/unselect functions.
+- Additionally, as the 1280 uses the same SPI ports as the 128(?) I added a simple #define which configures the ports similarly. I might be wrong about that though.
+- The lock (WP) and available(Card detect) pins must also be set to: 48/49 PL1,PL0 and the must also be configured nicely.
+- When the switch is flipped the AtMega should synchronize the data and make sure that the card is ready to be unmounted.
+-
+
