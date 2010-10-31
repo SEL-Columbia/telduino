@@ -1,16 +1,16 @@
 #include "Demux.h"
 
 void initDemux(){
-	setEnabled(false);
+	muxSetEnabled(false);
 }
 
-void setEnabled(boolean enabled){
+void muxSetEnabled(boolean enabled){
         digitalWrite(NENABLED, enabled?LOW:HIGH);
 }
 	
 //Lines are numbered from 0 to 20
 //The last circuit line 20 is physcially the mains circuit
-boolean select( int8_t line ){
+boolean muxSelect( int8_t line ){
 	//The hex pair X,Y corresponding to number 0-20 (00 - A5) defines the physcial circuit being activated.
 	//for line 20, the last/main line, DCBA=1111 HGFE=0101
 	if ( 0 <= line < 15){
@@ -34,7 +34,7 @@ boolean select( int8_t line ){
 		digitalWrite(G, (line & 0x04)?HIGH:LOW);
 	} else {
 		//TODO: This is more an error than anything else.
-		setEnabled(false);
+		muxSetEnabled(false);
 		return false;
 	}
 	return true;
@@ -44,19 +44,19 @@ void testDemux() {
 	int ii = 0;
 	initDemux();
 
-	select(20); //Mains
+	muxSelect(20); //Mains
 	
 	//Enable/Disable CS
 	for (ii=0; ii < 10; ii++) {
-		setEnable(true);
+		muxSetEnable(true);
 		delay(500);
-		setEnable(false);
+		muxSetEnable(false);
 	}
 
-	setEnable(true);
+	muxSetEnable(true);
 
 	for (ii=0; ii < 21; ii++) {
-		select(ii);
+		muxSelect(ii);
 		delay(2000);
 	}
 }
