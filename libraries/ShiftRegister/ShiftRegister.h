@@ -2,7 +2,7 @@
 #define SHIFTREGISTER_H
 
 #include <inttypes.h>
-#include "wiring.h"
+#include "arduino/wiring.h"
 
 /*
 Author: Javier Rosa
