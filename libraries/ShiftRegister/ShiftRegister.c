@@ -1,12 +1,10 @@
-#include "ShiftRegister.h"
+/** @file ShiftRegister.cpp
+@author Javier Rosa
 
-/*
-Author: Javier Rosa
-Version: 0.0.1
-Notes:
+In order to make any changes to the shift register visible apart for clearing and enabling, latch must be called.
 
-Need to see what the correct endianness is
 */
+#include "ShiftRegister.h"
 
 //TPIC6B959 shift register on pins:
 #define NOTENABLE 28    //NOTG
@@ -35,23 +33,32 @@ void initShiftRegister(){
 	setEnabled(false);
 }
 
-//enable/disable register
+/** 
+	enable/disable register. 
+*/
 void setEnabled( boolean enabled ){
 	digitalWrite(NOTENABLE, enabled?LOW:HIGH);
 }
 
-//latch register contents on output pins
+/**
+	Latch register contents on output pins.
+*/
 void latch() {
 	CLOCK(LATCH);
 }
 
-//only one bit do not latch
+/** 
+	Shifts only one bit. 
+*/
 inline void shiftBit( boolean bit ){
 	digitalWrite(SERIN, bit?LOW:HIGH);
 	CLOCK(SHIFTCLK);
 }
 
-//does not latch
+/** 
+	If bits[i] is not zero then the register line i is set to one.
+	@todo specify endianness
+*/
 void shiftArray( byte bits[] , uint8_t size){
 	int idx;
 	for(idx = 0; idx < size; idx++){
@@ -59,11 +66,18 @@ void shiftArray( byte bits[] , uint8_t size){
 	}
 }
 
-//clear register
+/**
+	Clear register
+*/
 void clearShiftRegister(){
 	CLOCK(NOTCLR);
 }
 
+/**
+	Initializes, pushes 101, latches, clears, 
+	sends an array of alternative 0s and 1s except for 
+	three 1s at the end.
+*/
 void testShiftRegister() {
 	byte testArray[21] = {1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,-7,12};
 
