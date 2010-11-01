@@ -144,7 +144,7 @@ void SerialPort::flush()
  
 
 
-void SerialPort:: USART_Init( unsigned int baud )
+void SerialPort:: USART_Init( uint32_t  baud )
 {
 
 uint16_t  baud_rate = (F_CPU / 8 / baud - 1) / 2;
@@ -157,7 +157,7 @@ uint16_t  baud_rate = (F_CPU / 8 / baud - 1) / 2;
    *ubrrl = (uint8_t)baud_rate;
 
   // set no U2x double speed
-   *ucsra = 0; // ~(1<<u2x);
+   *ucsra =  (0<<u2x);
  /* Enable receiver and transmitter
  * and receive transmit interupts
  * (RXCIE0)(TXIE0)*/

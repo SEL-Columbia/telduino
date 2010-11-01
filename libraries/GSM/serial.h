@@ -79,7 +79,7 @@ public:
 	char read();
 	uint8_t available();
 	void flush();
-	void USART_Init( unsigned int baud );
+	void USART_Init( uint32_t baud );
 
 };
 

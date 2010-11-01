@@ -49,12 +49,13 @@ typedef SerialPort Serial;      // change here to support your serial friend
 	GSMbase(Serial& ,uint32_t(*FP)(), Serial* = NULL);	// Call Once for best results
 	//Handel Telit Data
 	virtual const char* const catchTelitData
-	(uint32_t = 180000,bool = false);			//Default time out for +COPS is 180 seconds
+	(uint32_t = 180000, bool = false, uint16_t= 300, uint32_t = 60);//Default time out for +COPS is 180 seconds
+	//time out	   //quickCheck	 //datasize	//baudDelay
 	virtual const char* const parseData(const char* const,const char*,const char*);	//Parses string see below
 	virtual const char* const parseSplit(const char* const,const char*,uint16_t);	//Splits string see below
-	virtual bool parseFind(const char* const, const char*);			//returns true if it finds a string 
+	virtual bool parseFind(const char* const, const char*);		//returns true if it finds a string 
 	//Talking to Telit
-	virtual void sendATCommand(const char*);				//Sends command in the clear
+	virtual void sendATCommand(const char*);			//Sends command in the clear
 	virtual const char* const sendRecQuickATCommand(const char*);	//Used to send/get reply for a OK reply
 	virtual const char* const sendRecATCommand(const char*);	//Main function that gets Telit reply
 	virtual const char* const sendRecATCommandParse(const char*, 
@@ -65,13 +66,14 @@ typedef SerialPort Serial;      // change here to support your serial friend
 	virtual bool turnOn();		//Used to turn on Telit (**read below for use with arduino**)
 	virtual bool turnOff();		//Turn off Telit
 	virtual bool init(uint16_t);	//Used to init Telit to right settings, code doesn't work if not used.
+	const char* const getTemperatureTEMPMON(); // Returns Temperature of mod in C
 	//Network calls
 	bool checkCREG();			//Gets registration status 
 	const char* const checkCOPS();		//Gets network availability and current registration
 	const char* const checkGSN();				//Gets serial number
 	uint32_t checkCSQ();					//Gets signal quality
 	const char* const checkMONI();	//gets info for surronding availble cell towers
-
+	const char* const getMyNumCNUM(); //gets tel number of current mod, if stored on SIM 
 };
 
 //////////////////////////////////////////////////////////////////////NETWORK STATUS FUNCS*
@@ -121,6 +123,12 @@ inline const char* const GSMbase::checkMONI(){
 //RETURNS: #MONI: Cingular BSIC:51 RxQual:0 LAC:8AD3 
 //Id:6014 ARFCN:148 PWR:-99dbm TA:0 OK
 return sendRecATCommandParse("AT#MONI","\r\n","\r\n");
+}
+
+//AT+CNUM returns the phone # number of the device, if stored on SIM 
+inline const char* const GSMbase::getMyNumCNUM(){
+//RETURNS: +CNUM: "name","3449709999",129
+return  sendRecATCommandSplit("AT+CNUM",",",1);
 }
 
 //////////////////////////////////////////////////////////////////////NETWORK STATUS FUNCS*

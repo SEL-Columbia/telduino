@@ -7,8 +7,11 @@ gsmSMS::gsmSMS(Serial& _telit, uint32_t (*_millis)(), Serial* _debug)
 
 //////////////////////////////////////////////////////////////////////INIT FUNC
 bool gsmSMS::init(uint16_t _band){
-	GSMbase::init(_band);
-	DebugPort->write("\r\nbegin gsmSMS init\r\n");
+	if(GSMbase::init(_band) && smsInit()) return 1;
+return 0;
+}
+
+bool gsmSMS::smsInit(){
 	if(!sendRecQuickATCommand("AT+CMGF=1")) return 0;             	// set tesxt mode not PDU	
 	//Configuration for receive/send SMS
 	if(!sendRecQuickATCommand("AT#SMSMODE=0")) return 0;		// set extended smsmode off
@@ -18,7 +21,7 @@ bool gsmSMS::init(uint16_t _band){
 	//<buffer notification>, <no notification sent to DTE>, 
 	//<no brodcast notification>,<no status notification>, 
 	//<when buffering switches state flushes all stored notification to DTE >
-	DebugPort->write("finished gsmSMS init\r\n");
+
 return 1;
 }
 //////////////////////////////////////////////////////////////////////INIT FUNC*
@@ -29,20 +32,14 @@ return 1;
 //AT+CMGS //sends SMS without storing
 bool gsmSMS::sendNoSaveCMGS(const char* theNumber,const char* sendString){
 //RETURNS > 
-	DebugPort->write("begin sendNoSaveCMGS\r\n");
 	telitPort.write("AT+CMGS=\"");
 	telitPort.write(theNumber);
-	telitPort.write("\"\r\n");
-	DebugPort->write("wrote number\r\n");	
+	telitPort.write("\"\r");
 	if( parseFind(catchTelitData(),">")){
-		DebugPort->write("found > character in reply\r\n");
-		telitPort.write(sendString);
-		telitPort.write(0x1A);  // ctrl-z code
+	telitPort.write(sendString);
+	telitPort.write(0x1A);
 	return 1;					// good send
-	} else {
-		DebugPort->write("did not find > character\r\n");
-		telitPort.write(0x1B); // escape code
-	}
+	}else telitPort.write(0x1B);
 return 0;						// if we got here it failed
 }
 
