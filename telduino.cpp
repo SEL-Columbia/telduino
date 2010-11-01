@@ -5,6 +5,7 @@
 #include "Demux/Demux.h"
 #include "SDRAW/sd_raw.h"
 #include "ADE7753/ADE7753.h"
+#include "Select/select.h"
 
 char ctrlz = 26;
 

@@ -1,6 +1,15 @@
 #include "Demux.h"
 
 void initDemux(){
+	pinMode(A,OUTPUT);
+	pinMode(B,OUTPUT);
+	pinMode(C,OUTPUT);
+	pinMode(D,OUTPUT);
+	pinMode(E,OUTPUT);
+	pinMode(F,OUTPUT);
+	pinMode(G,OUTPUT);
+	pinMode(NENABLED,OUTPUT);
+	
 	muxSetEnabled(false);
 }
 
