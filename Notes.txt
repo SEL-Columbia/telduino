@@ -28,3 +28,33 @@ Doxygen Basics:
 - A cheatsheet has been placed in the ...Berkeley_Docs/ directory.
 
 
+ARCHITECTURE
+
+ADE7753
+SHiftRegister
+Demux
+SDRAW -> SDFAT32
+Debug
+	- Manages LEDs
+	- Manages Serial Debug
+Accounts
+	- tracks energy credits
+	- account status (Free,Calibrating, )
+	- pricing models
+Circuits	
+	- manages each circuits state	
+		- enabled/disabled
+		- current/power limits
+		- switching
+	- tracks uncharged energy
+
+//There's a circular dependency for the below functions so perhaps they should be integrated.
+//Perhaps the QueryEngine should have a set of recurrent query jobs that are completed after a time interval.
+Logger
+	- Formats data from some QueryEngine functions and writes it out
+	- Manages SD Card and Buffer if the card is disconnected.
+	- Takes timestamp, type, string, [id]
+QueryEngine 
+	- Aggregates data from Logger, Circuits, and Accounts
+	- Formats for GSM or logging
+	- Sends to GSM, logger
