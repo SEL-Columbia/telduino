@@ -60,16 +60,30 @@ int main(void){
 	//only these are declared, to turn on other serial ports do so in serial.h
 	Serial3.USART_Init(9600); 	//Telit serial
 	Serial2.USART_Init(9600); 	//debug serial
+	Serial2.write("\r\n\r\ntelduino power up\r\n");
 	
 	//GSMb.init(3);	// init Telit ***ALWAYS INIT AFTER SERIAL SETUP***
-	GsmSMS.init(3); // init Telit derived class calls base init() 
+	Serial2.write("telit power up\r\n");
+	GSMb.turnOn();
+	GsmSMS.init(3); // init Telit derived class calls base init()
+	GSMb.sendRecQuickATCommand("AT+CFUN?\r\n");
+	//GSMbaseTester();
+	//GsmSMS.sendNoSaveCMGS("8323776861","yo");
 	
 	while(1){
-		//talk();
+		Serial2.write("top of while loop\r\n");
+		GSMb.sendRecQuickATCommand("AT+CSQ\r\n");
+		//GSMbaseTester();
+		GsmSMS.sendNoSaveCMGS("8323776861","yo");
+
+		uint32_t startTime=millisWrapper();
+		while((millisWrapper()-startTime) < 5000);
+		
+		//talkReply();
 		//sendCommand();
 		//GSMbaseTester();
 		//gsmSMSTester();
-		turnOnTester();
+		//turnOnTester();
 		
 	}
 }
@@ -133,53 +147,54 @@ void turnOnTester(){
 
 
 void GSMbaseTester(){
-//CHECK CREG (NETWORK REGISTRATION)
-//	if (GSMb.checkCREG()) Serial2.write("REGISTERED");
-//	else Serial2.write("NOTREGISTERED");
+	Serial2.write("begin GSMbaseTester\r\n");
+	//CHECK CREG (NETWORK REGISTRATION)
+	//	if (GSMb.checkCREG()) Serial2.write("REGISTERED");
+	//	else Serial2.write("NOTREGISTERED");
 
-//CHECK COPS (NETWORK INFO)
-//	Serial2.write( GSMb.checkCOPS() );
+	//CHECK COPS (NETWORK INFO)
+	Serial2.write( GSMb.checkCOPS() );
 
-//CHECK GSN (SERIAL NUMBER)
+	//CHECK GSN (SERIAL NUMBER)
 	Serial2.write( GSMb.checkGSN() );
 
-//CHECK CSQ (signal strength)
-//	char tempTest[10];
-//	Serial2.write(itoa( GSMb.checkCSQ(), tempTest, 10 ));
+	//CHECK CSQ (signal strength)
+	char tempTest[10];
+	Serial2.write(itoa( GSMb.checkCSQ(), tempTest, 10 ));
 
-//CHECK MONI (ALL SURRONDING TOWER INFORMATION)
-//	Serial2.write( GSMb.checkMONI() );
-
+	//CHECK MONI (ALL SURRONDING TOWER INFORMATION)
+	//	Serial2.write( GSMb.checkMONI() );
+	Serial2.write("finished GSMbaseTester\r\n");
 }
 
 
 
 const char* result=NULL;
 void sendCommand(){
-		result = GSMb.sendRecATCommandSplit("AT+CSQ","\r",0); 	//send command, parse the reply 
-		//result = GSMb.sendRecATCommand("AT+CSQ");
-		if (!result) Serial2.write("returned bad pointer\n"); 	//check to see if it is good
-		Serial2.write("Return results: ");
-		Serial2.write(result);
-		Serial2.write("\n");
-		Serial2.write("FullData main loop: ");
-		Serial2.write(GSMb.getFullData());			//Even though you parsed data you
-									//can get the full reply by calling
-									//getFullData before the next sendRec
-									//call to the Telit
-		Serial2.write("END\n");
-		while(!Timer0.delay(4000));	//from my timer
-		
+	result = GSMb.sendRecATCommandSplit("AT+CSQ","\r",0); 	//send command, parse the reply 
+	//result = GSMb.sendRecATCommand("AT+CSQ");
+	if (!result) Serial2.write("returned bad pointer\n"); 	//check to see if it is good
+	Serial2.write("Return results: ");
+	Serial2.write(result);
+	Serial2.write("\n");
+	Serial2.write("FullData main loop: ");
+	Serial2.write(GSMb.getFullData());			//Even though you parsed data you
+								//can get the full reply by calling
+								//getFullData before the next sendRec
+								//call to the Telit
+	Serial2.write("END\n");
+	while(!Timer0.delay(4000));	//from my timer
+	
 
-		result = GSMb.sendRecATCommandSplit("AT+COPS=?","\r",0);
-		//result = GSMb.sendRecATCommand("AT+COPS=?");
-		if (!result) Serial2.write("returned bad pointer2\n");
-		Serial2.write("Return2 results: ");
-		Serial2.write(result);
-		Serial2.write("\n");
-		Serial2.write("FullData2 main loop: ");
-		Serial2.write(GSMb.getFullData());
-		Serial2.write("END2\n");
+	result = GSMb.sendRecATCommandSplit("AT+COPS=?","\r",0);
+	//result = GSMb.sendRecATCommand("AT+COPS=?");
+	if (!result) Serial2.write("returned bad pointer2\n");
+	Serial2.write("Return2 results: ");
+	Serial2.write(result);
+	Serial2.write("\n");
+	Serial2.write("FullData2 main loop: ");
+	Serial2.write(GSMb.getFullData());
+	Serial2.write("END2\n");
 
 }
 

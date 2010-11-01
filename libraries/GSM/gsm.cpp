@@ -36,7 +36,8 @@ return	(catchTelitData());								//return data
 //_end string: "blah"
 //returns a pointer to "quick brown"
 const char* const GSMbase::sendRecATCommandParse(const char* theMessageMelleMel, 
-const char* _start,const char* _end){
+												 const char* _start,
+												 const char* _end){
 	telitPort.write(theMessageMelleMel);
 	telitPort.write("\r");
 return (parseData(const_cast<char*>(catchTelitData()),_start,_end));			//return data
@@ -49,7 +50,8 @@ return (parseData(const_cast<char*>(catchTelitData()),_start,_end));			//return 
 //field: 2
 //returns pointer to "brown"
 const char* const GSMbase::sendRecATCommandSplit(const char* theMessageMelleMel, 
-const char* _delimiters, uint16_t _field){
+												 const char* _delimiters, 
+												 uint16_t _field){
 	telitPort.write(theMessageMelleMel);
 	telitPort.write("\r");
 return	(parseSplit(const_cast<char*>(catchTelitData()),_delimiters,_field));		//return data
@@ -63,8 +65,8 @@ return	(parseSplit(const_cast<char*>(catchTelitData()),_delimiters,_field));		//
 
 //////////////////////////////////////////////////////////////////////PARSE FUNCS
 //finds the objectOfDesire string in theString if it is ! a NULL pointer
-bool GSMbase::parseFind(const char* const theString
-,const char* objectOfDesire){
+bool GSMbase::parseFind(const char* const theString,
+						const char* objectOfDesire){
 	if (!theString) return 0;                       // If we get a NULL pointer bail	
 return strstr(theString,objectOfDesire);
 }
@@ -107,8 +109,8 @@ doneReceive:
 	fullData[dataPos]= '\0';		//NULL for a string
 	
 	if(quickCheck){
-	if (parseFind(fullData, "\r\nOK\r\n")){ DebugPort->write("G\n"); return fullData;} 	//return fullData
-	else if (parseFind(fullData,"ERROR")){ DebugPort->write("B\n"); return 0;}   	//return NULL
+	if (parseFind(fullData, "\r\nOK\r\n")){ DebugPort->write("G\r\n"); return fullData;} 	//return fullData
+	else if (parseFind(fullData,"ERROR")){ DebugPort->write("B\r\n"); return 0;}   	//return NULL
 	else return 0;		
 	}
 
@@ -126,8 +128,9 @@ return fullData;
 //_start string: "the"
 //_end string: "blah"
 //returns a pointer to "quick brown"
-const char* const GSMbase::parseData(const char* const theString,const char* start,
-const char* end){
+const char* const GSMbase::parseData(const char* const theString,
+									 const char* start,
+									 const char* end){
 //DebugPort->write("parseData\n ");
 	if (!theString) return 0;                       // If we get a NULL pointer bail	
 
@@ -160,7 +163,8 @@ return parsedData;					// gives back what it can. parsData has class scope.
 //field: 2
 //returns pointer to "brown"
 const char* const GSMbase::parseSplit(const char* const theString,
-const char* delimiters,uint16_t field){
+									  const char* delimiters,
+									  uint16_t field){
 	if (!theString) return 0;  			// if not a NULL pointer 
 
 	char * temp;					// you have to use a local scope char array,	
@@ -200,7 +204,7 @@ bool GSMbase::turnOn(){
 		startTime = millis();		
 		while ((millis() - startTime) < 10000);		// block 10 seconds
 		if(sendRecQuickATCommand("AT")) return 1;	//set no echo if you get a OK we are ON!
-DebugPort->write("stuck in ON");
+DebugPort->write("stuck in ON\r\n");
 		}
 return 1;							//should never get here
 }
@@ -225,9 +229,9 @@ return 1;
 }
 //Used to init Telit to right settings, code doesn't work if not used.
 bool GSMbase::init(uint16_t _band){
-DebugPort->write("initalizing");
+DebugPort->write("initalizing telit\r\n");
 
-	if(!sendRecQuickATCommand("ATE0"))return 0;		//set no echo
+	//if(!sendRecQuickATCommand("ATE0"))return 0;		//set no echo
 	if(!sendRecQuickATCommand("ATV1"))return 0;		//set verbose mode
 	if(!sendRecQuickATCommand("AT&K0"))return 0;		//set flow control off
 	if(!sendRecQuickATCommand("AT+IPR=0"))return 0;		//set autoBaud (default not really needed)
