@@ -6,18 +6,11 @@ In order to make any changes to the shift register visible apart for clearing an
 */
 #include "ShiftRegister.h"
 
-//TPIC6B959 shift register on pins:
-#define NOTENABLE 28    //NOTG
-#define LATCH     27    //RCK 
-#define NOTCLR    26    //NOTSRCLR
-#define SHIFTCLK  25    //SRCK
-#define SERIN     29    //INPUT
-
-//#define WIDTH     24    //WIDTH
-//#define REVERSE   0     //Reverse order of shift
-
 #define CLOCK(pin) digitalWrite(pin,HIGH);digitalWrite(pin,LOW);
-
+/**
+*	Register output pins are initialized to outputs and cleared.
+*	The register is then set disabled.
+*/
 void initShiftRegister(){
 	pinMode(NOTENABLE,OUTPUT);
 	pinMode(LATCH,OUTPUT);
@@ -34,21 +27,21 @@ void initShiftRegister(){
 }
 
 /** 
-	enable/disable register. 
+*	@brief Enable/disable register
 */
 void setEnabled( boolean enabled ){
 	digitalWrite(NOTENABLE, enabled?LOW:HIGH);
 }
 
 /**
-	Latch register contents on output pins.
+*	@brief Manifest register contents on output pins
 */
 void latch() {
 	CLOCK(LATCH);
 }
 
 /** 
-	Shifts only one bit. 
+*	@brief Pushes one bit onto the register.
 */
 inline void shiftBit( boolean bit ){
 	digitalWrite(SERIN, bit?LOW:HIGH);
@@ -56,8 +49,12 @@ inline void shiftBit( boolean bit ){
 }
 
 /** 
-	If bits[i] is not zero then the register line i is set to one.
-	@todo specify endianness
+*	@brief Pushes a set of bits as bytes onto the register.
+*	
+*	Pushes a set of bits as bytes onto the register.
+*	If bits[i] is not zero then the register line i is set to one.
+*
+*	@todo specify endianness
 */
 void shiftArray( byte bits[] , uint8_t size){
 	int idx;
@@ -67,16 +64,18 @@ void shiftArray( byte bits[] , uint8_t size){
 }
 
 /**
-	Clear register
+*	@brief Clear register
 */
 void clearShiftRegister(){
 	CLOCK(NOTCLR);
 }
 
 /**
-	Initializes, pushes 101, latches, clears, 
-	sends an array of alternative 0s and 1s except for 
-	three 1s at the end.
+*	@brief Exercises ShiftRegister functions.
+*
+*	Initializes, pushes 101, latches, clears, 
+*	sends an array of alternative 0s and 1s except for 
+*	three 1s at the end.
 */
 void testShiftRegister() {
 	byte testArray[21] = {1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,-7,12};
@@ -109,3 +108,4 @@ void testShiftRegister() {
 	latch();
 	setEnabled(false);
 }
+

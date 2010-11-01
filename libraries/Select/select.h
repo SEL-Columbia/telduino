@@ -6,27 +6,32 @@
 #include "SDRAW/sd_raw.h"
 #include "Demux/Demux.h"
 
-//TODO: Magic number of circuits
-//Mapping between ckt as index and shift register slot as value. i.e. srMapping[0] is the bit in the ShiftRegister that corresponds to circuit 0.
-const int8_t srMapping[21]; 
-//Muxes map normally. i.e. mux entry 0 is the 0th circuit.
-const int8_t SDCARD = 24; As there is not 32th circuit this is a safe value, for now.
+const int8_t NCIRCUITS = 21;
 
-//disable
+/** 
+*	@warning Ensure SDCCARD is not within the range of [-1,NCIRCUITS].
+*/
+enum Devices { DEVDISABLE = -1, SDCARD = 24 }; //24 works as there are less than 22 circuits
 
-//select device
-boolean selectSPIDevice(int8_t device) {
+/** 
+*	Select SPI device  using SS(CS)
+* 	when device == -1 SS(CS) is HIGH (disabled)
+*/
+boolean selectSPIDevice(int8_t device) 
+{
 	if (device == SDCARD) {
 		select_card();
 		muxSetEnabled(false);	
-	} else if ( 0 <= device && device <= 20) {
+	} else if ( 0 <= device && device < NCIRCUITS) {
 		unselect_card();
 		muxSetEnabled(true);
 		muxSelect(device);
+	} else if ( device == DEVDISABLE ) {
+		unselect_card();
+		muxSetEnabled(false);
 	} else {
 		//error
 	}
-
 }
 
 #endif
