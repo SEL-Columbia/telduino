@@ -7,6 +7,7 @@
  * or the GNU Lesser General Public License version 2.1, both as
  * published by the Free Software Foundation.
  */
+#include "Select/select.h"
 
 #ifndef SD_RAW_CONFIG_H
 #define SD_RAW_CONFIG_H
@@ -79,11 +80,11 @@
     #define configure_pin_mosi() DDRB |= (1 << DDB2)
     #define configure_pin_sck() DDRB |= (1 << DDB1)
     //#define configure_pin_ss() DDRB |= (1 << DDB0)   //Must change, sets PB0 to output 
-    #define configure_pin_ss() DDRL |= (1 << DDL2)   //Must change, sets PL2 to output 
+    #define configure_pin_ss() initSelect()//DDRL |= (1 << DDL2)   //Must change, sets PL2 to output 
     #define configure_pin_miso() DDRB &= ~(1 << DDB3)
 
-    #define select_card()   PORTL &= ~(1 << PL2)     //Changed, Sets PL2 to low
-    #define unselect_card() PORTL |= (1 << PL2)      //Changed, sets PL2 to high
+    #define select_card()   selectSPIDevice(SDCARD)//PORTL &= ~(1 << PL2)     //Changed, Sets PL2 to low
+    #define unselect_card() selectSPIDevice(DEVDISABLE)//PORTL |= (1 << PL2)      //Changed, sets PL2 to high
 #else
     #error "no sd/mmc pin mapping available!"
 #endif

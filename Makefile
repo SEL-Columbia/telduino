@@ -39,6 +39,7 @@ arduino: telduino.cpp
 	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 libraries/ADE7753/ADE7753.cpp -obuild/ADE7753.cpp.o
 	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 libraries/SDRaw/sd_raw.cpp -obuild/sd_raw.cpp.o
 	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 libraries/DbgTel/DbgTel.cpp -obuild/DbgTel.cpp.o
+	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) -DARDUINO=20 libraries/Select/select.cpp -obuild/select.cpp.o
 	
 	avr-ar rcs build/core.a build/pins_arduino.c.o
 	avr-ar rcs build/core.a build/WInterrupts.c.o
@@ -61,6 +62,7 @@ arduino: telduino.cpp
 	#SPI,ADE
 	avr-ar rcs build/core.a build/SPI.cpp.o
 	avr-ar rcs build/core.a build/ADE7753.cpp.o
+	avr-ar rcs build/core.a build/select.cpp.o
 	avr-ar rcs build/core.a build/sd_raw.cpp.o
 	avr-ar rcs build/core.a build/DbgTel.cpp.o
 	

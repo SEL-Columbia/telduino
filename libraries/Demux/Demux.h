@@ -17,11 +17,11 @@ void initDemux();
 /* set enabled/disabled
  * The caller should make sure that the SD card is not enabled!
  */
-void setEnabled(boolean enabled);
+void muxSetEnabled(boolean enabled);
 /*
  * set line
  */
-boolean select( int8_t line );
+boolean muxSelect( int8_t line );
 
 void testDemux();
 

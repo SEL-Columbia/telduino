@@ -6,6 +6,7 @@
 #include "SDRaw/sd_raw.h"
 #include "ADE7753/ADE7753.h"
 #include "DbgTel/DbgTel.h"
+#include "Select/select.h"
 
 char ctrlz = 26;
 
