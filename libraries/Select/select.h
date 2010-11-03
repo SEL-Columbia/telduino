@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 #include "arduino/wiring.h"
-#include "SDRAW/sd_raw.h"
+#include "SDRaw/sd_raw.h"
 
 extern "C"{
 	#include "Demux/Demux.h"
