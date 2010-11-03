@@ -250,6 +250,7 @@ bool GSMbase::init(uint16_t _band){
 DebugPort->write("initalizing\r\n");
 
 	if(!sendRecQuickATCommand("ATE1"))return 0;		//set echo for debug purposes
+    /*	
 	if(!sendRecQuickATCommand("ATV1"))return 0;		//set verbose mode
 	if(!sendRecQuickATCommand("AT&K0"))return 0;		//set flow control off
 	if(!sendRecQuickATCommand("AT+IPR=0"))return 0;		//set autoBaud (default not really needed)
@@ -260,7 +261,7 @@ DebugPort->write("initalizing\r\n");
 	case 2: if(!sendRecQuickATCommand("AT#BND=2"))return 0; //2 - GMS 850MHz + DCS 1800MHz 
 	case 3: if(!sendRecQuickATCommand("AT#BND=3"))return 0; //3 - GMS 850MHz + PCS 1900MHz
 	}
-
+*/
 return 1;
 }
 

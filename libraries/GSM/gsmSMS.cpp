@@ -12,6 +12,7 @@ return 0;
 }
 
 bool gsmSMS::smsInit(){
+	/*
 	if(!sendRecQuickATCommand("AT+CMGF=1")) return 0;             	// set tesxt mode not PDU	
 	//Configuration for receive/send SMS
 	if(!sendRecQuickATCommand("AT#SMSMODE=0")) return 0;		// set extended smsmode off
@@ -21,7 +22,7 @@ bool gsmSMS::smsInit(){
 	//<buffer notification>, <no notification sent to DTE>, 
 	//<no brodcast notification>,<no status notification>, 
 	//<when buffering switches state flushes all stored notification to DTE >
-
+    */
 return 1;
 }
 //////////////////////////////////////////////////////////////////////INIT FUNC*

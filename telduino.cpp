@@ -70,8 +70,13 @@ int main(void){
 	
 	//GSMb.init(3);	// init Telit ***ALWAYS INIT AFTER SERIAL SETUP***
 	Serial2.write("telit power up\r\n");
-	GsmMASTER.init(3); // init Telit derived class calls base init()
-
+	GSMb.turnOn();
+	int init = GsmMASTER.init(3); // init Telit derived class calls base init()
+    if (init==1) {
+        Serial2.write("GsmMaster.init successful\r\n");
+    } else {
+        Serial2.write("GsmMaster.init failed\r\n");
+    }
 	/*
 	//GSMb.sendRecQuickATCommand("AT+CFUN?\r\n");
 	Serial3.write("AT+CFUN?\r\n");
@@ -96,10 +101,20 @@ int main(void){
 	*/
 	
 	while(1){
+		while (Serial2.available()>0){
+			Serial3.write(Serial2.read());
+		}
+		while (Serial3.available()>0){
+			Serial2.write(Serial3.read());
+			
+		}
 		
+/*
+		GSMb.turnOn();
 		Serial2.write("top of while loop\r\n");
 
-		Serial3.write("AT\r\n");
+        Serial2.write("text mode?\r\n");
+		Serial3.write("CMGF=?\r\n");
 
 		delayStart = millisWrapper();
 		while((millisWrapper() - delayStart) < 2000);
@@ -108,6 +123,7 @@ int main(void){
 			Serial2.write(Serial3.read());
 		}
 		
+		Serial2.write("antenna strength?\r\n");
 		Serial3.write("AT+CSQ\r\n");
 		
 		delayStart = millisWrapper();
@@ -125,9 +141,29 @@ int main(void){
 		while (Serial3.available() > 0) {
 			Serial2.write(Serial3.read());
 		}
+
+		char ctrlz = 26;
+		Serial2.write("message start\r\n");
+		Serial3.write("AT+CMGS=8323776861\r\n");
+
+		delayStart = millisWrapper();
+		while((millisWrapper() - delayStart) < 2000);
+		
+		Serial3.write("message from columbia telduino ");
+		//Serial3.write(__TIME__);
+		Serial3.write("\r\n");
+		Serial3.write(ctrlz);
 		
 		delayStart = millisWrapper();
 		while((millisWrapper() - delayStart) < 2000);
+
+		while (Serial3.available() > 0) {
+			Serial2.write(Serial3.read());
+		}
+
+		delayStart = millisWrapper();
+		while((millisWrapper() - delayStart) < 2000);
+ */
 	}
 }
 
