@@ -3,14 +3,23 @@
 //JR-Cal
 #include "ShiftRegister/ShiftRegister.h"
 #include "Demux/Demux.h"
-#include "SDRAW/sd_raw.h"
+#include "SDRaw/sd_raw.h"
 #include "ADE7753/ADE7753.h"
+#include "DbgTel/DbgTel.h"
 
 char ctrlz = 26;
 
 void setup();
 void loop();
 void echo_serial3_serial0();
+
+//JR needed to make compiler happy
+extern "C" {
+	void __cxa_pure_virtual(void) {
+		while(1);
+	}
+} 
+
 
 void setup() {
 	
@@ -51,7 +60,3 @@ void echo_serial3_serial0(){
 	}	
 }
 
-//JR-Cal
-void testRegister(){
-	//testShiftRegister();
-}
