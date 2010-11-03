@@ -103,7 +103,7 @@ bool quickCheck,uint16_t dataSize,uint32_t baudDelay){
 			return 0;			//don't overflow buffer
 		}
 		storeData[dataPos++] = telitPort.read();	//Read out serial register
-//DebugPort->write(storeData[dataPos-1]);
+DebugPort->write(storeData[dataPos-1]);
 		startTimeBaud = millis();			
 		while (telitPort.available() < 1){ 						
 			if((millis() - startTimeBaud) > baudDelay){	//if no more data is coming
@@ -247,9 +247,9 @@ return 1;
 }
 //Used to init Telit to right settings, code doesn't work if not used.
 bool GSMbase::init(uint16_t _band){
-DebugPort->write("initalizing");
+DebugPort->write("initalizing\r\n");
 
-	if(!sendRecQuickATCommand("ATE0"))return 0;		//set no echo
+	if(!sendRecQuickATCommand("ATE1"))return 0;		//set echo for debug purposes
 	if(!sendRecQuickATCommand("ATV1"))return 0;		//set verbose mode
 	if(!sendRecQuickATCommand("AT&K0"))return 0;		//set flow control off
 	if(!sendRecQuickATCommand("AT+IPR=0"))return 0;		//set autoBaud (default not really needed)

@@ -17,7 +17,7 @@ PROJECT = telduino
 GCCFLAGS = -c -g -Os -w -ffunction-sections -fdata-sections -Ilibraries/GSM
 G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries/GSM
 VPATH = libraries/GSM
-GRND_OBJECTS = gsm.o gsmSMS.o ioHelper.o serial2.o timer.o $(PROJECT).o
+GRND_OBJECTS = gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o serial2.o timer.o $(PROJECT).o
 
 all : GRND program
 

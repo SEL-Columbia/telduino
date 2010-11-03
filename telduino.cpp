@@ -27,6 +27,8 @@
 #include "timer.h"
 #include "gsmbase.h"
 #include "gsmSMS.h"
+#include "gsmGPRS.h"
+#include "gsmMaster.h"
 
 
 //****************************************8
@@ -54,8 +56,12 @@ uint32_t millisWrapper(){return Timer0.millis();}
 
 GSMbase GSMb(Serial3,milP,&Serial2);	//GSMbase TELIT BASE FUNCTIONALITY
 gsmSMS  GsmSMS(Serial3,milP,&Serial2);	//gsmSMS TELIT SMS
+gsmGPRS GsmGPRS(Serial3,milP,&Serial2); //gsmGPRS TELIT GPRS
+gsmMASTER GsmMASTER(Serial3,milP,&Serial2);//combine base SMS and GPRS
 
 int main(void){
+	uint32_t delayStart;
+	
 	sei(); 				//Enable interupts
 	//only these are declared, to turn on other serial ports do so in serial.h
 	Serial3.USART_Init(9600); 	//Telit serial
@@ -64,27 +70,64 @@ int main(void){
 	
 	//GSMb.init(3);	// init Telit ***ALWAYS INIT AFTER SERIAL SETUP***
 	Serial2.write("telit power up\r\n");
-	GSMb.turnOn();
-	GsmSMS.init(3); // init Telit derived class calls base init()
-	GSMb.sendRecQuickATCommand("AT+CFUN?\r\n");
+	GsmMASTER.init(3); // init Telit derived class calls base init()
+
+	/*
+	//GSMb.sendRecQuickATCommand("AT+CFUN?\r\n");
+	Serial3.write("AT+CFUN?\r\n");
+	delayStart = millisWrapper();
+	while((millisWrapper()-delayStart) < 1000);	
+	GSMb.catchTelitData();
 	//GSMbaseTester();
 	//GsmSMS.sendNoSaveCMGS("8323776861","yo");
+	Serial3.write("AT+CSQ?\r\n");
+	delayStart = millisWrapper();
+	while((millisWrapper()-delayStart) < 1000);	
+	GSMb.catchTelitData();
+	char ctrlz = 26;
+	Serial2.write("message start\r\n");
+	Serial3.write("AT+CMGS=8323776861\r\n");
+	GSMb.catchTelitData();
+	Serial3.write("message from columbia telduino ");
+	Serial3.write(__TIME__);
+	Serial3.write("\r\n");
+	Serial3.write(ctrlz);
+	GSMb.catchTelitData();
+	*/
 	
 	while(1){
+		
 		Serial2.write("top of while loop\r\n");
-		GSMb.sendRecQuickATCommand("AT+CSQ\r\n");
-		//GSMbaseTester();
-		GsmSMS.sendNoSaveCMGS("8323776861","yo");
 
-		uint32_t startTime=millisWrapper();
-		while((millisWrapper()-startTime) < 5000);
+		Serial3.write("AT\r\n");
+
+		delayStart = millisWrapper();
+		while((millisWrapper() - delayStart) < 2000);
+
+		while (Serial3.available() > 0) {
+			Serial2.write(Serial3.read());
+		}
 		
-		//talkReply();
-		//sendCommand();
-		//GSMbaseTester();
-		//gsmSMSTester();
-		//turnOnTester();
+		Serial3.write("AT+CSQ\r\n");
 		
+		delayStart = millisWrapper();
+		while((millisWrapper() - delayStart) < 2000);
+
+		while (Serial3.available() > 0) {
+			Serial2.write(Serial3.read());
+		}
+
+		Serial3.write("AT+CFUN?\r\n");
+		
+		delayStart = millisWrapper();
+		while((millisWrapper() - delayStart) < 2000);
+		
+		while (Serial3.available() > 0) {
+			Serial2.write(Serial3.read());
+		}
+		
+		delayStart = millisWrapper();
+		while((millisWrapper() - delayStart) < 2000);
 	}
 }
 

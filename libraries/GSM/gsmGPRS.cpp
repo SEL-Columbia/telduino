@@ -22,9 +22,12 @@ return 1;
 //setApnCGDCONT("2","IP","wap.cingular","0.0.0.0",0,0); 
 //if static ip=0.0.0.0 dynamic assignment from gateway. 
 //**context can only be numbered 1-5, 0 is always for SMS context.
-bool gsmGPRS::setApnCGDCONT(const char * const userSetContextID ,const char* const PDPtype,
-const char* const APN ,const char* const requestedStaticIP, const char* const dataCompression,
-const char* const headerCompression){
+bool gsmGPRS::setApnCGDCONT(const char* const userSetContextID,
+							const char* const PDPtype,
+							const char* const APN,
+							const char* const requestedStaticIP, 
+							const char* const dataCompression,
+							const char* const headerCompression){
 //RETURNS: OK
 	
 	telitPort.write("AT+CGDCONT=");
@@ -47,10 +50,12 @@ return catchTelitData(2000,1);		//make it a quick one 2 sec timeout
 
 
 //AT+SCFG is used to set the socket connection settings
-bool gsmGPRS::setTcpIpStackSCFG(const char * const userSetConnectionID ,
-const char* const userSetContextID,const char* const minPacketSize ,
-const char* const globalTimeout, const char* const connectionTimeout,
-const char* const txTimeout){
+bool gsmGPRS::setTcpIpStackSCFG(const char* const userSetConnectionID,
+								const char* const userSetContextID,
+								const char* const minPacketSize,
+								const char* const globalTimeout, 
+								const char* const connectionTimeout,
+								const char* const txTimeout){
 //RETURNS: OK
 	
 	telitPort.write("AT#SCFG=");
@@ -304,9 +309,13 @@ return  catchTelitData(180000,false,dataSize,3000); 	//Set with two min(180000) 
 
 
 //Constructs and send a POST request on opened socket
-const char* const gsmGPRS::postHTTP(uint16_t dataSize,const char* const host, 
-const char* const resource,const char* const secretAgent, const char* const httpVersion,
-bool keepAlive, const char* const reqStr){
+const char* const gsmGPRS::postHTTP(uint16_t dataSize,
+									const char* const host, 
+									const char* const resource,
+									const char* const secretAgent, 
+									const char* const httpVersion,
+									bool keepAlive, 
+									const char* const reqStr){
 //RETURN:
 	size_t length =strlen(reqStr);	//Convert strlength into ascii for contentLength
 	char asciiLength[7+1];		//1,000,000 + 1'\0'
