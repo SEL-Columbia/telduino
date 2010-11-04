@@ -71,10 +71,12 @@ arduino: telduino.cpp
 	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o build/telduino.elf build/telduino.o build/core.a -Larduino -lm 
 	avr-objcopy -O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --no-change-warnings --change-section-lma .eeprom=0 build/telduino.elf build/telduino.eep 
 	avr-objcopy -O ihex -R .eeprom build/telduino.elf build/telduino.hex 
+	avrdude -patmega1280 -cdragon_isp -Pusb -Uflash:w:build/$(PROJECT).hex
 
 
 
 program: $(PROJECT).hex
+	#avrdude -patmega1280 -cusbtiny -Uflash:w:build/$(PROJECT).hex
 	avrdude -patmega1280 -cusbtiny -Uflash:w:build/$(PROJECT).hex
 clean: 
 	rm build/*

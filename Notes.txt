@@ -58,3 +58,7 @@ QueryEngine
 	- Aggregates data from Logger, Circuits, and Accounts
 	- Formats for GSM or logging
 	- Sends to GSM, logger
+
+TODO:
+    - make initialization naming conventions sane
+    - fix the shift register naming conventions

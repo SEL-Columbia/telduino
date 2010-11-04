@@ -1,5 +1,8 @@
 #include "Demux.h"
 
+/**
+ * Mux starts off disabled and set to have output 0 LOW and all others HIGH.
+ */
 void initDemux(){
 	pinMode(A,OUTPUT);
 	pinMode(B,OUTPUT);
@@ -11,6 +14,7 @@ void initDemux(){
 	pinMode(NENABLED,OUTPUT);
 	
 	muxSetEnabled(false);
+        muxSelect(0);
 }
 
 void muxSetEnabled(boolean enabled){
@@ -22,7 +26,8 @@ void muxSetEnabled(boolean enabled){
 boolean muxSelect( int8_t line ){
 	//The hex pair X,Y corresponding to number 0-20 (00 - A5) defines the physcial circuit being activated.
 	//for line 20, the last/main line, DCBA=1111 HGFE=0101
-	if ( 0 <= line < 15){
+        muxSetEnabled(false);
+	if ( 0 <= line && line < 15){
 		//This just converts line into binary input to the mux.
 		digitalWrite(A, (line & 0x01)?HIGH:LOW);
 		digitalWrite(B, (line & 0x02)?HIGH:LOW);
@@ -30,7 +35,12 @@ boolean muxSelect( int8_t line ){
 		digitalWrite(D, (line & 0x08)?HIGH:LOW);
 		//EFG are irrelevant as the second muxer is disabled until ABCD=1111. The demuxers have all of their output set to high if the input is high.
 		//As the muxers are chained via the last output if the first muxer is not set to 1111 the second has all of its lines high.
-	} else if (0 <= line < 21 ) {
+                
+                //Just to keep the timings the same
+		digitalWrite(E, LOW);
+		digitalWrite(F, LOW);
+		digitalWrite(G, LOW);
+	} else if (15 <= line && line < 21) {
 		//See comment above. The first muxer is set to enable the second muxer.
 		digitalWrite(A, HIGH);
 		digitalWrite(B, HIGH);
@@ -43,9 +53,10 @@ boolean muxSelect( int8_t line ){
 		digitalWrite(G, (line & 0x04)?HIGH:LOW);
 	} else {
 		//TODO: This is more an error than anything else.
-		muxSetEnabled(false);
+        	muxSetEnabled(false);
 		return false;
 	}
+        muxSetEnabled(true);
 	return true;
 }
 

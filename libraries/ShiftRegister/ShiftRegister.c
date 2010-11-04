@@ -12,16 +12,18 @@ In order to make any changes to the shift register visible apart for clearing an
 *	The register is then set disabled.
 */
 void initShiftRegister(){
+	pinMode(SERIN,OUTPUT);
 	pinMode(NOTENABLE,OUTPUT);
 	pinMode(LATCH,OUTPUT);
 	pinMode(NOTCLR,OUTPUT);
 	pinMode(SHIFTCLK,OUTPUT);
-	pinMode(SERIN,OUTPUT);
  
-	digitalWrite(SHIFTCLK, LOW);
+        digitalWrite(SERIN,LOW);
 	digitalWrite(LATCH, LOW);
-	setEnabled(true);
-	clear();
+        digitalWrite(NOTCLR,LOW);
+	digitalWrite(SHIFTCLK, LOW);
+	setEnabled(true); //May not be needed
+	clearShiftRegister();
 	latch();
 	setEnabled(false);
 }
@@ -44,7 +46,7 @@ void latch() {
 *	@brief Pushes one bit onto the register.
 */
 inline void shiftBit( boolean bit ){
-	digitalWrite(SERIN, bit?LOW:HIGH);
+	digitalWrite(SERIN, bit?HIGH:LOW);
 	CLOCK(SHIFTCLK);
 }
 
@@ -66,8 +68,11 @@ void shiftArray( byte bits[] , uint8_t size){
 /**
 *	@brief Clear register
 */
-void clearShiftRegister(){
-	CLOCK(NOTCLR);
+void clearShiftRegister()
+{
+	//Clear when LOW
+	digitalWrite(NOTCLR,LOW);
+	digitalWrite(NOTCLR,HIGH);
 }
 
 /**

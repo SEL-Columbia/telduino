@@ -24,5 +24,6 @@ bool initSPI();
 	-AM
 */
 bool readData(int8_t numBits, int8_t regAddr, uint8_t data[3]);
+bool writeData(int8_t numBits, int8_t regAddr, uint8_t data[3]);
 
 #endif
