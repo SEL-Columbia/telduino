@@ -39,6 +39,7 @@ void blink();	//a hello world blink test for the pins
 //****************************************8
 //base class tester functions
 void talkReply();   	// you type commands to ATMEL serial and telit responce is catched by GSMbase function.
+void talkReplyCatchTest();
 void sendCommand(); 	// shows a typical send command using GSMbase class
 void GSMbaseTester();	// tests GSMbase member functions
 void turnOnTester();	// cycles a on off sequence
@@ -69,9 +70,10 @@ int main(void){
 	Serial2.write("\r\n\r\ntelduino power up\r\n");
 	
 	//GSMb.init(3);	// init Telit ***ALWAYS INIT AFTER SERIAL SETUP***
-	Serial2.write("telit power up\r\n");
-	GSMb.turnOn();
-	int init = GsmMASTER.init(3); // init Telit derived class calls base init()
+	//Serial2.write("telit power up\r\n");
+	//GSMb.turnOn();
+//	int init = GsmMASTER.init(3); // init Telit derived class calls base init()
+	bool init = GSMb.init(3);
     if (init==1) {
         Serial2.write("GsmMaster.init successful\r\n");
     } else {
@@ -101,6 +103,9 @@ int main(void){
 	*/
 	
 	while(1){
+		talkReply();
+
+/*
 		while (Serial2.available()>0){
 			Serial3.write(Serial2.read());
 		}
@@ -108,8 +113,7 @@ int main(void){
 			Serial2.write(Serial3.read());
 			
 		}
-		
-/*
+
 		GSMb.turnOn();
 		Serial2.write("top of while loop\r\n");
 
@@ -283,9 +287,22 @@ void talkReply(){
 		Serial3.write(Serial2.read());
 	}
 	if (Serial3.available()>0){
-		GSMb.catchTelitData(1000);
+		GSMb.catchTelitData(3000, true);
 		Serial2.write(GSMb.getFullData());
 		
+	}
+}
+
+void talkReplyCatchTest(){
+	while (Serial2.available()>0){
+		GSMb.catchTelitData(3000,0,60,3000);
+		Serial2.write(GSMb.getFullData());
+		Serial2.write("parseData:\n");
+		GSMb.parseData(GSMb.getFullData(),"**","&&");
+		Serial2.write(GSMb.getParsedData());
+		Serial2.write("parsesplit:\n");
+		GSMb.parseSplit(GSMb.getFullData(),",:",2);
+		Serial2.write(GSMb.getParsedData());
 	}
 }
 

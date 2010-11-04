@@ -23,7 +23,7 @@ all : GRND program
 
 GRND : $(GRND_OBJECTS)
 	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(GRND_OBJECTS) -Llibraries/GSM -lm
-	avr-objcopy -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
+	avr-objcopy -j .text -j .data -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
 	#avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
 
 %.o : %.c

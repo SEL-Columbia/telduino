@@ -85,6 +85,7 @@ bool quickCheck,uint16_t dataSize,uint32_t baudDelay){
 	malloc(sizeof(char) * (dataSize));
 	
 	if (storeData == NULL){		//if we get bad memory
+		DebugPort->write("bad memory malloc 1\r\n");
 		return 0;
 		}
 
@@ -104,6 +105,7 @@ bool quickCheck,uint16_t dataSize,uint32_t baudDelay){
 		}
 		storeData[dataPos++] = telitPort.read();	//Read out serial register
 DebugPort->write(storeData[dataPos-1]);
+//DebugPort->write("SC");
 		startTimeBaud = millis();			
 		while (telitPort.available() < 1){ 						
 			if((millis() - startTimeBaud) > baudDelay){	//if no more data is coming
@@ -113,24 +115,28 @@ DebugPort->write(storeData[dataPos-1]);
 				if (dataPos < 500){	//500 seems to be the threshold with nothing else running	
 					free(fullData);
 					fullData=NULL;
+					//DebugPort->write("end of receiving\r\n");
 					
 					fullData = (char*) 
 					malloc(sizeof(char) * (dataPos+1));
 					
 					if (fullData == NULL) {
+						DebugPort->write("bad memory malloc 1\r\n");
 						return 0;
 					}
 					memcpy(fullData,storeData,dataPos+1);
 					free(storeData);
 					storeData=NULL;
 				}else fullData=storeData; //ELSE we just copy over the whole thing
-			goto doneReceive;
+				goto doneReceive;
 			}	
 			
 		} //No data in x time goto doneReceive, based on baud delay
 	}
 	
 	doneReceive:
+	//DebugPort->write("after doneReceive\r\n");
+	DebugPort->write(fullData);
 	if(quickCheck){
 	if (parseFind(fullData, "\r\nOK\r\n")) return fullData; 	//return fullData
 	else if (parseFind(fullData,"ERROR")) return 0;   		//return NULL
@@ -250,7 +256,7 @@ bool GSMbase::init(uint16_t _band){
 DebugPort->write("initalizing\r\n");
 
 	if(!sendRecQuickATCommand("ATE1"))return 0;		//set echo for debug purposes
-    /*	
+	DebugPort->write("passed ate1\r\n");
 	if(!sendRecQuickATCommand("ATV1"))return 0;		//set verbose mode
 	if(!sendRecQuickATCommand("AT&K0"))return 0;		//set flow control off
 	if(!sendRecQuickATCommand("AT+IPR=0"))return 0;		//set autoBaud (default not really needed)
@@ -261,7 +267,6 @@ DebugPort->write("initalizing\r\n");
 	case 2: if(!sendRecQuickATCommand("AT#BND=2"))return 0; //2 - GMS 850MHz + DCS 1800MHz 
 	case 3: if(!sendRecQuickATCommand("AT#BND=3"))return 0; //3 - GMS 850MHz + PCS 1900MHz
 	}
-*/
 return 1;
 }
 
