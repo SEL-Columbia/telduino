@@ -65,124 +65,29 @@ gsmGPRS GsmGPRS(Serial3,milP,&Serial2); //gsmGPRS TELIT GPRS
 gsmMASTER GsmMASTER(Serial3,milP,&Serial2);//combine base SMS and GPRS
 
 int main(void){
-	uint32_t delayStart;
-	
 	sei(); 				//Enable interupts
 	//only these are declared, to turn on other serial ports do so in serial.h
 	Serial3.USART_Init(9600); 	//Telit serial
 	Serial2.USART_Init(9600); 	//debug serial
 	Serial2.write("\r\n\r\ntelduino power up\r\n");
 	
-	//GSMb.init(3);	// init Telit ***ALWAYS INIT AFTER SERIAL SETUP***
-	//Serial2.write("telit power up\r\n");
+
 	GSMb.turnOn();
+	Serial2.write("telit power up\r\n");
+
+	// init Telit ***ALWAYS INIT AFTER SERIAL SETUP***
 	int init = GsmMASTER.init(3); // init Telit derived class calls base init()
-	//bool init = GSMb.init(3);
+
     if (init==1) {
         Serial2.write("GsmMaster.init successful\r\n");
     } else {
         Serial2.write("GsmMaster.init failed\r\n");
     }
-	/*
-	//GSMb.sendRecQuickATCommand("AT+CFUN?\r\n");
-	Serial3.write("AT+CFUN?\r\n");
-	delayStart = millisWrapper();
-	while((millisWrapper()-delayStart) < 1000);	
-	GSMb.catchTelitData();
-	//GSMbaseTester();
-	//GsmSMS.sendNoSaveCMGS("8323776861","yo");
-	Serial3.write("AT+CSQ?\r\n");
-	delayStart = millisWrapper();
-	while((millisWrapper()-delayStart) < 1000);	
-	GSMb.catchTelitData();
-	char ctrlz = 26;
-	Serial2.write("message start\r\n");
-	Serial3.write("AT+CMGS=8323776861\r\n");
-	GSMb.catchTelitData();
-	Serial3.write("message from columbia telduino ");
-	Serial3.write(__TIME__);
-	Serial3.write("\r\n");
-	Serial3.write(ctrlz);
-	GSMb.catchTelitData();
-	*/
-	
-	/* rajesh says this works, i don't believe him
-	ATZ
-	AT&K=0
-	AT+CMGF=1
-	AT+CGDCONT=1,"IP",'epc.tmobile.com',"0.0.0.0",0,0
-	AT#SCFG=1,1,512,30,300,100
-	AT#SGACT=1,1,None,None
-	*/
-	
+
 	while(1){
 		//talkReply();
 		masterTester();
 		
-
-/*
-		while (Serial2.available()>0){
-			Serial3.write(Serial2.read());
-		}
-		while (Serial3.available()>0){
-			Serial2.write(Serial3.read());
-			
-		}
-
-		GSMb.turnOn();
-		Serial2.write("top of while loop\r\n");
-
-        Serial2.write("text mode?\r\n");
-		Serial3.write("CMGF=?\r\n");
-
-		delayStart = millisWrapper();
-		while((millisWrapper() - delayStart) < 2000);
-
-		while (Serial3.available() > 0) {
-			Serial2.write(Serial3.read());
-		}
-		
-		Serial2.write("antenna strength?\r\n");
-		Serial3.write("AT+CSQ\r\n");
-		
-		delayStart = millisWrapper();
-		while((millisWrapper() - delayStart) < 2000);
-
-		while (Serial3.available() > 0) {
-			Serial2.write(Serial3.read());
-		}
-
-		Serial3.write("AT+CFUN?\r\n");
-		
-		delayStart = millisWrapper();
-		while((millisWrapper() - delayStart) < 2000);
-		
-		while (Serial3.available() > 0) {
-			Serial2.write(Serial3.read());
-		}
-
-		char ctrlz = 26;
-		Serial2.write("message start\r\n");
-		Serial3.write("AT+CMGS=8323776861\r\n");
-
-		delayStart = millisWrapper();
-		while((millisWrapper() - delayStart) < 2000);
-		
-		Serial3.write("message from columbia telduino ");
-		//Serial3.write(__TIME__);
-		Serial3.write("\r\n");
-		Serial3.write(ctrlz);
-		
-		delayStart = millisWrapper();
-		while((millisWrapper() - delayStart) < 2000);
-
-		while (Serial3.available() > 0) {
-			Serial2.write(Serial3.read());
-		}
-
-		delayStart = millisWrapper();
-		while((millisWrapper() - delayStart) < 2000);
- */
 	}
 }
 
