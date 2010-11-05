@@ -21,11 +21,12 @@ bool readData(int8_t numBits, int8_t regAddr, uint8_t data[3])
         for (ii=0; ii<numBytes; ii++) {
                 data[ii] = 0x00;
         }
-
+	delay(10);
         //now read the data on the SPI data register byte-by-byte with the MSB first - AM
         for (ii=0; ii<numBytes; ii++) {
 
                 data[ii] = SPI.transfer(0x00);
+		delay(10);
         }
 
         //make sure that the data buffer is properly organized -AM

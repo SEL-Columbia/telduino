@@ -16,6 +16,12 @@ extern "C" {
 #include "ShiftRegister/ShiftRegister.h"
 #include "Demux/Demux.h"
 	void __cxa_pure_virtual(void) {
+		setDbgLeds(RPAT);
+		delay(500);
+		setDbgLeds(YPAT);
+		delay(500);
+		setDbgLeds(GPAT);
+		delay(500);
 		while(1);
 	}
 } 
@@ -29,7 +35,6 @@ void setup()
     //Setup serial port
     Serial2.begin(9600);
 
-
     //Blink leds
     initDbgTel();
 
@@ -41,8 +46,6 @@ void setup()
     //test select
     initSelect();
 
-    //INIT SPI
-    SPI.begin();
 
     delay(100);
     uint8_t data = 0b0000100;
@@ -59,16 +62,17 @@ void setup()
 
 void loop(){
     
+    Serial2.println("Start");
     setDbgLeds(GYRPAT);
-    delay(1000);
+    delay(500);
     setDbgLeds(0);
-    delay(1000);
+    delay(500);
     //setDbgLeds(GYPAT);
 
 
     
     /* Shift Reg.
-     * */
+     * 
     int8_t first1 = 20;
     setEnabled(true);
     for (int8_t i = first1; i < first1 + 1; i++){
@@ -83,7 +87,7 @@ void loop(){
     delay(1000);
     clearShiftRegister();
     latch();
-    /**/
+    */
     /* Demux*/
     /*
     //muxSetEnabled(true);
@@ -105,26 +109,30 @@ void loop(){
 
 
     //SD Card
-    //selectSPIDevice(SDCARD);
     /*
+    selectSPIDevice(SDCARD);
+    
     struct sd_raw_info info = {0}; 
     sd_raw_get_info(&info);
     if(info.manufacturer | info.revision) {
-        Serial2.println(16);
+        Serial2.println(info.manufacturer);
+        Serial2.println(info.revision);
     } else { 
     }
     delay(1000);
-   */
+    */
 
     /* */
-    /* ADE
-    delay(1000);
+    /* ADE*/
+    //INIT SPI
+    /*
+    SPI.begin();
+    delay(100);
     selectSPIDevice(20);
+    delay(100);
     uint8_t data[3];
-    int8_t out = readData(24,VRMS,data);*/
-    /*uint8_t by = SPI.transfer(VRMS);
-    Serial2.println(by);*/
-    /*Serial2.println(out);
+    int8_t out = readData(24,VRMS,data);
+    Serial2.println(out);
     Serial2.println(static_cast<int>(data[0]));
     Serial2.println(static_cast<int>(data[1]));
     Serial2.println(static_cast<int>(data[2]));
@@ -143,8 +151,8 @@ void loop(){
     }
     setDbgLeds(PAT);
     delay(10000);
-
-    */
-    Serial2.println(16);
+	*/
+    
+    Serial2.println("Restart");
     Serial2.flush();
 }
