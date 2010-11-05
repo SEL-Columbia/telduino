@@ -75,7 +75,7 @@ int main(void){
 	
 	//GSMb.init(3);	// init Telit ***ALWAYS INIT AFTER SERIAL SETUP***
 	//Serial2.write("telit power up\r\n");
-	//GSMb.turnOn();
+	GSMb.turnOn();
 	int init = GsmMASTER.init(3); // init Telit derived class calls base init()
 	//bool init = GSMb.init(3);
     if (init==1) {
@@ -356,13 +356,15 @@ void masterTester(){
 		//AT#SD socket dial opens a socket to remote server.
 		//conection ID 1 being opened
 		//Serial2.write("SD");
-		if( GsmMASTER.socketDialSD("1","0","80","173.203.94.233")){
+//		if( GsmMASTER.socketDialSD("1","0","80","173.203.94.233")){
+		if( GsmMASTER.socketDialSD("1","0","80","178.79.140.99")){
 			//RETURNS: CONNECT
 			//////////////////////HERE DO A GET OR POST/////////////////////////////////
 			
 			//Constructs and send a get request on open socket
 			Serial2.write("HTTP\r\n");
-			GsmMASTER.getHTTP(3000,"173.203.94.233","/","HTTP/1.1",true);
+//			GsmMASTER.getHTTP(3000,"173.203.94.233","/index.html","1.0",true);
+			GsmMASTER.getHTTP(3000,"178.79.140.99","/sms/","1.0",true);
 			Serial2.write("\n\n\n\nOUT of HTTP\r\n");
 			//Constructs and sends a POST
 			

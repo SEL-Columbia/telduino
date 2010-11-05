@@ -287,9 +287,11 @@ return 0;
 ///////////////////////////////////////////////////////////////////////////HTTP REQUESTS
 
 //Constructs and send a GET request on opened socket
-const char* const gsmGPRS::getHTTP(uint16_t dataSize, const char* const host, 
-const char* const resource, const char* const httpVersion,
-bool keepAlive){
+const char* const gsmGPRS::getHTTP(uint16_t dataSize, 
+								   const char* const host, 
+								   const char* const resource, 
+								   const char* const httpVersion,
+								   bool keepAlive){
 		
 	telitPort.write("GET ");
 	telitPort.write(resource);
