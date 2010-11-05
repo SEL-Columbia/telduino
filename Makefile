@@ -24,7 +24,6 @@ all : GRND program
 GRND : $(GRND_OBJECTS)
 	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(GRND_OBJECTS) -Llibraries/GSM -lm
 	avr-objcopy -j .text -j .data -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
-	#avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
 
 %.o : %.c
 	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@
@@ -33,7 +32,7 @@ GRND : $(GRND_OBJECTS)
 	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@
 
 clean:
-	rm *.o *.elf *.eep *.hex
+	rm *.o *.elf *.hex
 
 program: $(PROJECT).hex
 	avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
