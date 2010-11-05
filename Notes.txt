@@ -62,3 +62,8 @@ QueryEngine
 TODO:
     - make initialization naming conventions sane
     - fix the shift register naming conventions
+
+Notes on SD Card
+	Forgot to call the init routine!
+Notes on ADE
+	Seems to spout out gibberish, but it is at least talking.

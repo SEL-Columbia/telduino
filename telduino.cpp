@@ -58,6 +58,8 @@ void setup()
     if (data){
     //    Serial2.println("Uber Alles");
     }
+
+    sd_raw_init();
 }
 
 void loop(){
@@ -111,13 +113,13 @@ void loop(){
     //SD Card
     /*
     selectSPIDevice(SDCARD);
-    
     struct sd_raw_info info = {0}; 
     sd_raw_get_info(&info);
-    if(info.manufacturer | info.revision) {
-        Serial2.println(info.manufacturer);
-        Serial2.println(info.revision);
+    if(info.manufacturer || info.revision) {
+        Serial2.println(info.manufacturer,BIN);
+        Serial2.println(info.revision,BIN);
     } else { 
+	Serial2.println("Nothing From SD Card Received");
     }
     delay(1000);
     */
@@ -125,7 +127,7 @@ void loop(){
     /* */
     /* ADE*/
     //INIT SPI
-    /*
+    
     SPI.begin();
     delay(100);
     selectSPIDevice(20);
@@ -137,7 +139,7 @@ void loop(){
     Serial2.println(static_cast<int>(data[1]));
     Serial2.println(static_cast<int>(data[2]));
     delay(1000);
-    */
+    
     /*
     int8_t PAT = 0;
     if(data[0]){
