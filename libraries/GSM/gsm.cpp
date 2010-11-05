@@ -79,36 +79,40 @@ bool quickCheck,uint16_t dataSize,uint32_t baudDelay){
 	//best I can do.
 	free(fullData);
 	fullData=NULL;
-	if (quickCheck) dataSize=10; //If it is just a quick check max size is "/n/nERROR/n/n/0"
+	if (quickCheck) dataSize=20; //If it is just a quick check max size is "/n/nERROR/n/n/0"
 	
 	char* storeData = (char*) 
 	malloc(sizeof(char) * (dataSize));
 	
 	if (storeData == NULL){		//if we get bad memory
-		DebugPort->write("bad memory malloc 1\r\n");
+//		DebugPort->write("bad memory malloc 1\r\n");
 		return 0;
 		}
 
 	// block wait for reply
 	uint64_t startTimeGlobal = millis();		//9600/1000= 9.6bits per milli 6 milles ~6 bytes
 	while (telitPort.available() < 1){ 		// smallest message "<CR><LF>OK<CR><LF>"    
-		if((millis() - startTimeGlobal) > 
-		_timeout){ return 0;} 			// timed out bad message
+		if((millis() - startTimeGlobal) > _timeout){ 
+//			DebugPort->write("returning from global timeout\r\n");
+			return 0;} 			// timed out bad message
 	}
 
 	uint16_t dataPos=0;
 	uint64_t startTimeBaud;
 	//if no data in 60 milli (baudDelay default) sendings done
 	while (1){
-		if ((dataPos+1) >= dataSize){
+		if ((dataPos+1) >= dataSize) {
+//			DebugPort->write("returning from overflow check\r\n");
 			return 0;			//don't overflow buffer
 		}
 		storeData[dataPos++] = telitPort.read();	//Read out serial register
-DebugPort->write(storeData[dataPos-1]);
-//DebugPort->write("SC");
+//		DebugPort->write(":");
+		DebugPort->write(storeData[dataPos-1]);
+//		DebugPort->write("\n");
 		startTimeBaud = millis();			
 		while (telitPort.available() < 1){ 						
 			if((millis() - startTimeBaud) > baudDelay){	//if no more data is coming
+
 				storeData[dataPos]= '\0';		//Add NULL for a string
 				//If it is a small amount of data 
 				//we can afford to cut it down.		
@@ -121,7 +125,7 @@ DebugPort->write(storeData[dataPos-1]);
 					malloc(sizeof(char) * (dataPos+1));
 					
 					if (fullData == NULL) {
-						DebugPort->write("bad memory malloc 1\r\n");
+					//	DebugPort->write("bad memory malloc 1\r\n");
 						return 0;
 					}
 					memcpy(fullData,storeData,dataPos+1);
@@ -136,11 +140,18 @@ DebugPort->write(storeData[dataPos-1]);
 	
 	doneReceive:
 	//DebugPort->write("after doneReceive\r\n");
-	DebugPort->write(fullData);
+	//DebugPort->write(fullData);
 	if(quickCheck){
-	if (parseFind(fullData, "\r\nOK\r\n")) return fullData; 	//return fullData
-	else if (parseFind(fullData,"ERROR")) return 0;   		//return NULL
-	else return 0;		
+//		if (parseFind(fullData, "\r\nOK\r\n")) {
+		if (parseFind(fullData, "OK")) {
+			//DebugPort->write("is ok\r\n");
+			return fullData; 	//return fullData
+		}
+		else if (parseFind(fullData,"ERROR")) {
+			//DebugPort->write("is not ok\r\n");
+			return 0;   		//return NULL
+		}
+		else return 0;		
 	}
 
 return fullData;
@@ -255,8 +266,8 @@ return 1;
 bool GSMbase::init(uint16_t _band){
 DebugPort->write("initalizing\r\n");
 
-	if(!sendRecQuickATCommand("ATE1"))return 0;		//set echo for debug purposes
-	DebugPort->write("passed ate1\r\n");
+	if(!sendRecQuickATCommand("ATE0"))return 0;		//set echo for debug purposes
+		//DebugPort->write("passed ate1\r\n");
 	if(!sendRecQuickATCommand("ATV1"))return 0;		//set verbose mode
 	if(!sendRecQuickATCommand("AT&K0"))return 0;		//set flow control off
 	if(!sendRecQuickATCommand("AT+IPR=0"))return 0;		//set autoBaud (default not really needed)

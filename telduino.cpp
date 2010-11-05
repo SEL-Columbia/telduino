@@ -47,6 +47,10 @@ void turnOnTester();	// cycles a on off sequence
 //*****************************************8
 //SMS derived class tester
 void gsmSMSTester();	// test gsmSMS member functions
+//*****************************************8
+//GPRS derived class tester
+void masterTester();
+//*****************************************8
 
 //*****************************************8
 uint32_t millisWrapper();
@@ -72,8 +76,8 @@ int main(void){
 	//GSMb.init(3);	// init Telit ***ALWAYS INIT AFTER SERIAL SETUP***
 	//Serial2.write("telit power up\r\n");
 	//GSMb.turnOn();
-//	int init = GsmMASTER.init(3); // init Telit derived class calls base init()
-	bool init = GSMb.init(3);
+	int init = GsmMASTER.init(3); // init Telit derived class calls base init()
+	//bool init = GSMb.init(3);
     if (init==1) {
         Serial2.write("GsmMaster.init successful\r\n");
     } else {
@@ -102,8 +106,19 @@ int main(void){
 	GSMb.catchTelitData();
 	*/
 	
+	/* rajesh says this works, i don't believe him
+	ATZ
+	AT&K=0
+	AT+CMGF=1
+	AT+CGDCONT=1,"IP",'epc.tmobile.com',"0.0.0.0",0,0
+	AT#SCFG=1,1,512,30,300,100
+	AT#SGACT=1,1,None,None
+	*/
+	
 	while(1){
-		talkReply();
+		//talkReply();
+		masterTester();
+		
 
 /*
 		while (Serial2.available()>0){
@@ -287,8 +302,8 @@ void talkReply(){
 		Serial3.write(Serial2.read());
 	}
 	if (Serial3.available()>0){
-		GSMb.catchTelitData(3000, true);
-		Serial2.write(GSMb.getFullData());
+		GsmSMS.catchTelitData(3000);
+		Serial2.write(GsmSMS.getFullData());
 		
 	}
 }
@@ -317,3 +332,80 @@ outputLow(PORTB,LED);
 	startTime=millisWrapper();
 	while((millisWrapper()-startTime) < 2000);
 }
+
+////**PLEASE CHANGE INFO BEFORE RUNNING SO I DON"T GET HIT!!!**||||||||
+///////////////////////////////////////////////////////////////////////////MASTER CLASS TESTERS
+void masterTester(){
+	uint32_t startTime=millisWrapper();
+	while((millisWrapper()-startTime) < 5000);		// hang out 
+	
+	////////////////////////////////SET NETWORK CONNECTION
+	//SETS the context number associated with a PDP protocal "IP"/"PPP" and APN number.
+	//	context "2" now has these settings (NOTE don't use "0" it is reserved for SMS)
+	Serial2.write("CGDCONT\r\n");
+	GsmMASTER.setApnCGDCONT("2","IP","epc.tmobile.com");
+	//SETS the TCP/IP stack
+	//	sockst conection ID 1 is now linked to context ID 2 data, with default timeouts TCP/IP
+	Serial2.write("SCFG\r\n");
+	GsmMASTER.setTcpIpStackSCFG("1","2");
+	//REGISTERS with the network, receives IP address and network resources.
+	//	connect the specified context ID to the network. 
+	//	1 gets network resources 0 disconnects from network and frees resources.
+	Serial2.write("SGACT set\r\n");
+	if(GsmMASTER.setContextSGACT("2","1")){
+		//AT#SD socket dial opens a socket to remote server.
+		//conection ID 1 being opened
+		//Serial2.write("SD");
+		if( GsmMASTER.socketDialSD("1","0","80","173.203.94.233")){
+			//RETURNS: CONNECT
+			//////////////////////HERE DO A GET OR POST/////////////////////////////////
+			
+			//Constructs and send a get request on open socket
+			Serial2.write("HTTP\r\n");
+			GsmMASTER.getHTTP(3000,"173.203.94.233","/","HTTP/1.1",true);
+			Serial2.write("\n\n\n\nOUT of HTTP\r\n");
+			//Constructs and sends a POST
+			
+			//Serial2.write(GsmMASTER.postHTTP(600,"www.johnhenryshammer.com","/cTest/myPing.php",
+			//								 "justin", "HTTP/1.1",true,"testPing=helloworld") );
+			//Serial2.write("POST*****");
+			////////////////////////////////////////////////////////////////////////////	
+			//Suspends listing to socket, socket can still receive data till
+			//a SH command is issued to shut the socket
+			GsmMASTER.suspendSocket();
+		}else{
+			Serial2.write("SGACT2 unset");
+		}
+		
+		///////*****OR DO A FTP*****////////
+		//////////////////////HERE DO A FTP PUT////////////////////////////////////////////////
+		//SEE BELOW FOR FTP STEPS
+		//ftp();
+		///////////////////////////////////////////////////////////////////////////////////////
+	}
+	
+	//AT#SO you can use resumeSocket to reopen connection
+	//	resumeSocketSO(const char* const whichSocket);
+	
+	//AT#SS can be implemented to view the status of a socket
+	Serial2.write("SS");
+	Serial2.write( GsmMASTER.socketStatusSS() );	//then you can check socket status
+	
+	//AT#SI can be implemented to view the status of a socket
+	Serial2.write(GsmMASTER.socketInfoSI("1") );	//see the bytes transfered
+	
+	//AT#SH closes the socket connection, no data in or out
+	
+	GsmMASTER.closeSocketSH("1");
+	
+	//Serial2.write("SGACT2 unset");
+	//Give back the IP to the network
+	//DO THIS AT VERY END OF COMMUNICATION
+	//	GsmMASTER.setContextSGACT("2","0","WAP@CINGULARGPRS.COM","CINGULAR1");
+	startTime=millisWrapper();
+	while((millisWrapper()-startTime) < 60000);		// hang out 
+	
+	//GsmMASTER.sendNoSaveCMGS("3473017780","hello world!");
+	
+}
+

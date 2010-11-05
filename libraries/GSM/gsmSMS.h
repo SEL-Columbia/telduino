@@ -21,7 +21,7 @@
 #define GSMSMS
 #include "gsmbase.h"
 
-class gsmSMS : virtual protected GSMbase
+class gsmSMS : virtual public GSMbase
 {
 
 				//**FULL FUNC DESCRIPTION IN SOURCE**\\

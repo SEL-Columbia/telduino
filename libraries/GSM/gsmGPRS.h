@@ -22,7 +22,7 @@
 #define GSMGPRS
 #include "gsmbase.h"
 
-class gsmGPRS : virtual protected GSMbase
+class gsmGPRS : virtual public GSMbase
 {
 
 //**FULL FUNC DESCRIPTION IN SOURCE**\\
