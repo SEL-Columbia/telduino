@@ -30,7 +30,9 @@
 #include "gsmGPRS.h"
 #include "gsmMaster.h"
 
-#define GATEWAY_IP "178.79.140.99"
+// #define GATEWAY_IP "178.79.140.99" //this is the real live gateway
+#define GATEWAY_IP "173.203.94.233"
+
 
 //****************************************8
 //Basic debug helpers
@@ -273,8 +275,8 @@ void masterTester(){
 			//Constructs and sends a POST
 			Serial2.write("Sending POST\r\n");
 			Serial2.write(GsmMASTER.postHTTP(600,GATEWAY_IP,"/logs/pp/TelduinoUno/1/",
-											 "", "HTTP/1.1", true, 
-											 "{'wh':1,'cr':1,'tu':1,'status':1}") );
+											 "default", "1.1", true, 
+											 "wh=1&cr=1&tu=1&ts=1&status=1") );
 			Serial2.write("\r\nPOST Sent\r\n");
 
 			////////////////////////////////////////////////////////////////////////////	
