@@ -279,6 +279,12 @@ void masterTester(){
 											 "wh=1&cr=1&tu=1&ts=1&status=1") );
 			Serial2.write("\r\nPOST Sent\r\n");
 
+			Serial2.write("Sending POST\r\n");
+			Serial2.write(GsmMASTER.postHTTP(600,GATEWAY_IP,"/logs/pp/TelduinoUno/2/",
+											 "default", "1.1", true, 
+											 "wh=1&cr=1&tu=1&ts=1&status=1") );
+			Serial2.write("\r\nPOST Sent\r\n");
+			
 			////////////////////////////////////////////////////////////////////////////	
 			//Suspends listing to socket, socket can still receive data till
 			//a SH command is issued to shut the socket
