@@ -30,6 +30,7 @@
 #include "gsmGPRS.h"
 #include "gsmMaster.h"
 
+#define GATEWAY_IP "178.79.140.99"
 
 //****************************************8
 //Basic debug helpers
@@ -260,22 +261,22 @@ void masterTester(){
 	if(GsmMASTER.setContextSGACT("2","1")){
 		//AT#SD socket dial opens a socket to remote server.
 		//conection ID 1 being opened
-		//Serial2.write("SD");
-//		if( GsmMASTER.socketDialSD("1","0","80","173.203.94.233")){
-		if( GsmMASTER.socketDialSD("1","0","80","178.79.140.99")){
+		Serial2.write("socketDialSD\r\n");
+		if( GsmMASTER.socketDialSD("1", "0", "80", GATEWAY_IP)){
 			//RETURNS: CONNECT
-			//////////////////////HERE DO A GET OR POST/////////////////////////////////
-			
+
 			//Constructs and send a get request on open socket
-			Serial2.write("HTTP\r\n");
-//			GsmMASTER.getHTTP(3000,"173.203.94.233","/index.html","1.0",true);
-			GsmMASTER.getHTTP(3000,"178.79.140.99","/sms/","1.0",true);
-			Serial2.write("\n\n\n\nOUT of HTTP\r\n");
+			Serial2.write("Sending GET\r\n");
+			GsmMASTER.getHTTP(3000, GATEWAY_IP, "/sms/", "1.0", true);
+			Serial2.write("\r\nGET sent\r\n");
+
 			//Constructs and sends a POST
-			
-			//Serial2.write(GsmMASTER.postHTTP(600,"www.johnhenryshammer.com","/cTest/myPing.php",
-			//								 "justin", "HTTP/1.1",true,"testPing=helloworld") );
-			//Serial2.write("POST*****");
+			Serial2.write("Sending POST\r\n");
+			Serial2.write(GsmMASTER.postHTTP(600,GATEWAY_IP,"/logs/pp/TelduinoUno/1/",
+											 "", "HTTP/1.1", true, 
+											 "{'wh':1,'cr':1,'tu':1,'status':1}") );
+			Serial2.write("\r\nPOST Sent\r\n");
+
 			////////////////////////////////////////////////////////////////////////////	
 			//Suspends listing to socket, socket can still receive data till
 			//a SH command is issued to shut the socket
@@ -310,7 +311,7 @@ void masterTester(){
 	//DO THIS AT VERY END OF COMMUNICATION
 	//	GsmMASTER.setContextSGACT("2","0","WAP@CINGULARGPRS.COM","CINGULAR1");
 	startTime=millisWrapper();
-	while((millisWrapper()-startTime) < 60000);		// hang out 
+	while((millisWrapper()-startTime) < 5000);		// hang out 
 	
 	//GsmMASTER.sendNoSaveCMGS("3473017780","hello world!");
 	
