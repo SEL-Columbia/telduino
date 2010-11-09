@@ -273,17 +273,23 @@ void masterTester(){
 			Serial2.write("\r\nGET sent\r\n");
 
 			//Constructs and sends a POST
-			Serial2.write("Sending POST\r\n");
+			Serial2.write("Sending POST 1\r\n");
 			Serial2.write(GsmMASTER.postHTTP(600,GATEWAY_IP,"/logs/pp/TelduinoUno/1/",
 											 "default", "1.1", true, 
 											 "wh=1&cr=1&tu=1&ts=1&status=1") );
-			Serial2.write("\r\nPOST Sent\r\n");
-
-			Serial2.write("Sending POST\r\n");
+			Serial2.write("\r\nPOST 1 Sent\r\n");
+			
+			Serial2.write("\r\nMillis Output\r\n");
+			char charBuffer[12];
+			itoa(Timer0.millis(), charBuffer, 10);
+			Serial2.write(charBuffer);
+			Serial2.write("\r\n");
+			
+			Serial2.write("Sending POST 2\r\n");
 			Serial2.write(GsmMASTER.postHTTP(600,GATEWAY_IP,"/logs/pp/TelduinoUno/2/",
 											 "default", "1.1", true, 
 											 "wh=1&cr=1&tu=1&ts=1&status=1") );
-			Serial2.write("\r\nPOST Sent\r\n");
+			Serial2.write("\r\nPOST 2 Sent\r\n");
 			
 			////////////////////////////////////////////////////////////////////////////	
 			//Suspends listing to socket, socket can still receive data till
