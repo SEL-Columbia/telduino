@@ -224,12 +224,12 @@ void talkReplyCatchTest(){
 
 #define LED PB7
 void blink(){
-setOutput(DDRB,LED);
+	setOutput(DDRB,LED);
 
-outputHigh(PORTB,LED);
+	outputHigh(PORTB,LED);
 	uint32_t startTime=millisWrapper();
 	while((millisWrapper()-startTime) < 2000);
-outputLow(PORTB,LED);
+	outputLow(PORTB,LED);
 	startTime=millisWrapper();
 	while((millisWrapper()-startTime) < 2000);
 }
