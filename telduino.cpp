@@ -31,7 +31,7 @@
 #include "gsmMaster.h"
 
 // #define GATEWAY_IP "178.79.140.99" //this is the real live gateway
-#define GATEWAY_IP "173.203.94.233"
+#define GATEWAY_IP "173.203.94.233"  // test gateway
 
 
 //****************************************8
@@ -106,7 +106,6 @@ void talk(){
 	}
 }
 
-///////////////////////////////////////////////////////////////////////////SMS CLASS TESTERS
 void gsmSMSTester(){
 //CHECK CMGD gives a numerical list of all messages which are stored seperated by ','
 //	Serial2.write( GsmSMS.checkCMGDList() );
@@ -129,10 +128,6 @@ void gsmSMSTester(){
 //
 }
 
-
-
-
-////////////////////////////////////////////////////////////////////////////BASE CLASS TESTERS
 void turnOnTester(){
 //TURN ON
 	Serial2.write("start");	
@@ -151,7 +146,6 @@ void turnOnTester(){
 	while((millisWrapper()-startTime) < 60000);	// hang out a minute
 }
 
-
 void GSMbaseTester(){
 	Serial2.write("begin GSMbaseTester\r\n");
 	//CHECK CREG (NETWORK REGISTRATION)
@@ -165,15 +159,15 @@ void GSMbaseTester(){
 	Serial2.write( GSMb.checkGSN() );
 
 	//CHECK CSQ (signal strength)
+	Serial2.write("begin CSQ check\r\n");
 	char tempTest[10];
 	Serial2.write(itoa( GSMb.checkCSQ(), tempTest, 10 ));
-
+	Serial2.write("  end CSQ check\r\n");
+	
 	//CHECK MONI (ALL SURRONDING TOWER INFORMATION)
 	//	Serial2.write( GSMb.checkMONI() );
 	Serial2.write("finished GSMbaseTester\r\n");
 }
-
-
 
 const char* result=NULL;
 void sendCommand(){
@@ -203,7 +197,6 @@ void sendCommand(){
 	Serial2.write("END2\n");
 
 }
-
 
 void talkReply(){
 	while (Serial2.available()>0){
@@ -241,8 +234,6 @@ outputLow(PORTB,LED);
 	while((millisWrapper()-startTime) < 2000);
 }
 
-////**PLEASE CHANGE INFO BEFORE RUNNING SO I DON"T GET HIT!!!**||||||||
-///////////////////////////////////////////////////////////////////////////MASTER CLASS TESTERS
 void masterTester(){
 	uint32_t startTime=millisWrapper();
 	while((millisWrapper()-startTime) < 5000);		// hang out 
