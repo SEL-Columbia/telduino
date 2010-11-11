@@ -72,7 +72,6 @@ void setup()
 	//Is it problematic for this to be called repeatedly.
 	SPI.begin();
 	//SPI.setClockDivider(0);
-	SPI.setDataMode(SPI_MODE1);
 }
 
 void loop(){
@@ -127,23 +126,28 @@ void loop(){
 
 
 	//SD Card
-	/*
+	SPI.setDataMode(SPI_MODE0);
 	selectSPIDevice(SDCARD);
 	struct sd_raw_info info = {0}; 
 	sd_raw_get_info(&info);
 	if(info.manufacturer || info.revision) {
+		
+		setDbgLeds(GPAT);
+		delay(1000);
+		Serial2.println("manufacturer");
 		Serial2.println(info.manufacturer,BIN);
+		Serial2.println("revision");
 		Serial2.println(info.revision,BIN);
 	} else { 
-	Serial2.println("Nothing From SD Card Received");
+		Serial2.println("Nothing From SD Card Received");
 	}
 	delay(1000);
-	*/
 
 	/* */
-	/* ADE*/
+	/* ADE
 	//INIT SPI
 	//SPI
+	SPI.setDataMode(SPI_MODE1);
 	selectSPIDevice(20);
 	#define regist VRMS
 	byte data[3] = {0};
@@ -158,6 +162,7 @@ void loop(){
 	Serial2.print("data[0]==data[1]:");
 	Serial2.println(data[0]==data[1]);
 
+	*/
 	/*
 	int8_t PAT = 0;
 	if(data[0]){
