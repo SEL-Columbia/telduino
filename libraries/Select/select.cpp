@@ -20,16 +20,17 @@ void initSelect()
 boolean selectSPIDevice(int8_t device) 
 {
 	if (device == SDCARD) {
-		digitalWrite(SDSS,LOW);
 		muxSetEnabled(false);	
+		digitalWrite(SDSS,LOW);
 	} else if ( 0 <= device && device < NCIRCUITS) {
 		digitalWrite(SDSS,HIGH);
-		muxSetEnabled(true);
 		muxSelect(device);
+		muxSetEnabled(true);
 	} else if ( device == DEVDISABLE ) {
-		digitalWrite(SDSS,HIGH);
 		muxSetEnabled(false);
+		digitalWrite(SDSS,HIGH);
 	} else {
 		//error
 	}
 }
+

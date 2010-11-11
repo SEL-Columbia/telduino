@@ -75,6 +75,12 @@ void clearShiftRegister()
 	digitalWrite(NOTCLR,HIGH);
 }
 
+int8_t setCkt(int8_t sNum, int8_t onOff)
+{
+	//Define mapping
+
+}
+
 /**
 *	@brief Exercises ShiftRegister functions.
 *
