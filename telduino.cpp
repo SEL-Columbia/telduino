@@ -73,7 +73,8 @@ int main(void){
 	Serial3.USART_Init(9600); 	//Telit serial
 	Serial2.USART_Init(9600); 	//debug serial
 	Serial2.write("\r\n\r\ntelduino power up\r\n");
-	
+	Serial2.write(__TIME__);
+	Serial2.write("\r\n");
 
 	GSMb.turnOn();
 	Serial2.write("telit power up\r\n");
@@ -88,11 +89,26 @@ int main(void){
     }
 
 	while(1){
+		Serial2.write("Debug: Telit RTC request\r\n");
+		GSMb.sendRecATCommand("AT+CCLK?"); 
 		//talkReply();
 		masterTester();
-		
+		//Timer0.delay(1000);
+	
 	}
 }
+
+/* network time stuff
+AT#SELINT=2
+AT#NITZ=7,0 // sync network time to internal clock
+AT&P0 // profile to be loaded on startup
+AT&W0 // store the complete profile
+AT#SHDN // this will turn off the modem
+		// now power on the modem
+AT+CCLK? // get current time
+		 // time response is +CCLK: "09/06/29,15:25:32-28"
+		 // time format is yy/MM/dd,hh:mm:ss±zz
+*/
 
 
 //////////////////////////////////////////////////////////////////////////TALKING
@@ -241,23 +257,23 @@ void masterTester(){
 	////////////////////////////////SET NETWORK CONNECTION
 	//SETS the context number associated with a PDP protocal "IP"/"PPP" and APN number.
 	//	context "2" now has these settings (NOTE don't use "0" it is reserved for SMS)
-	Serial2.write("CGDCONT\r\n");
+	Serial2.write("Debug: CGDCONT\r\n");
 	GsmMASTER.setApnCGDCONT("2","IP","epc.tmobile.com");
 	//SETS the TCP/IP stack
 	//	sockst conection ID 1 is now linked to context ID 2 data, with default timeouts TCP/IP
-	Serial2.write("SCFG\r\n");
+	Serial2.write("Debug: SCFG\r\n");
 	GsmMASTER.setTcpIpStackSCFG("1","2");
 	//REGISTERS with the network, receives IP address and network resources.
 	//	connect the specified context ID to the network. 
 	//	1 gets network resources 0 disconnects from network and frees resources.
-	Serial2.write("SGACT set\r\n");
+	Serial2.write("Debug: SGACT set\r\n");
 	if(GsmMASTER.setContextSGACT("2","1")){
 		//AT#SD socket dial opens a socket to remote server.
 		//conection ID 1 being opened
-		Serial2.write("socketDialSD\r\n");
+		Serial2.write("Debug: socketDialSD\r\n");
 		if( GsmMASTER.socketDialSD("1", "0", "80", GATEWAY_IP)){
 			//RETURNS: CONNECT
-
+			
 			//Constructs and send a get request on open socket
 			Serial2.write("Sending GET\r\n");
 			GsmMASTER.getHTTP(3000, GATEWAY_IP, "/sms/", "1.0", true);
@@ -265,10 +281,18 @@ void masterTester(){
 
 			//Constructs and sends a POST
 			Serial2.write("Sending POST 1\r\n");
-			Serial2.write(GsmMASTER.postHTTP(600,GATEWAY_IP,"/logs/pp/TelduinoUno/1/",
-											 "default", "1.1", true, 
-											 "wh=1&cr=1&tu=1&ts=1&status=1") );
+			Serial2.write(GsmMASTER.postHTTP(600,
+											 GATEWAY_IP,
+											 "/logs/pp/TelduinoUno/1/",
+											 "default",
+											 "1.1",
+											 true, 
+											 "wh=1&cr=1&tu=1&ts=1&status=1"));
 			Serial2.write("\r\nPOST 1 Sent\r\n");
+			
+			// if you issue this command here, the telit seems to hang
+			// i guess we can't mess around during a GPRS session?
+			//GSMb.sendRecATCommand("AT+CCLK?");
 			
 			Serial2.write("\r\nMillis Output\r\n");
 			char charBuffer[12];
@@ -276,49 +300,47 @@ void masterTester(){
 			Serial2.write(charBuffer);
 			Serial2.write("\r\n");
 			
+			// make a c-string out of the millis output for sending in post request
+			
+			
 			Serial2.write("Sending POST 2\r\n");
-			Serial2.write(GsmMASTER.postHTTP(600,GATEWAY_IP,"/logs/pp/TelduinoUno/2/",
-											 "default", "1.1", true, 
-											 "wh=1&cr=1&tu=1&ts=1&status=1") );
+			Serial2.write(GsmMASTER.postHTTP(600,
+											 GATEWAY_IP,
+											 "/logs/pp/TelduinoUno/2/",
+											 "default", 
+											 "1.1", 
+											 true, 
+											 "wh=1&cr=1&tu=1&ts=1&status=1"));
 			Serial2.write("\r\nPOST 2 Sent\r\n");
 			
-			////////////////////////////////////////////////////////////////////////////	
 			//Suspends listing to socket, socket can still receive data till
 			//a SH command is issued to shut the socket
 			GsmMASTER.suspendSocket();
-		}else{
+		} else {
 			Serial2.write("SGACT2 unset");
 		}
-		
-		///////*****OR DO A FTP*****////////
-		//////////////////////HERE DO A FTP PUT////////////////////////////////////////////////
-		//SEE BELOW FOR FTP STEPS
-		//ftp();
-		///////////////////////////////////////////////////////////////////////////////////////
 	}
 	
 	//AT#SO you can use resumeSocket to reopen connection
 	//	resumeSocketSO(const char* const whichSocket);
 	
 	//AT#SS can be implemented to view the status of a socket
-	Serial2.write("SS");
+	Serial2.write("Debug: socketStatusSS");
 	Serial2.write( GsmMASTER.socketStatusSS() );	//then you can check socket status
 	
 	//AT#SI can be implemented to view the status of a socket
+	Serial2.write("Debug: socketInfoSI");
 	Serial2.write(GsmMASTER.socketInfoSI("1") );	//see the bytes transfered
 	
 	//AT#SH closes the socket connection, no data in or out
-	
 	GsmMASTER.closeSocketSH("1");
 	
 	//Serial2.write("SGACT2 unset");
 	//Give back the IP to the network
 	//DO THIS AT VERY END OF COMMUNICATION
 	//	GsmMASTER.setContextSGACT("2","0","WAP@CINGULARGPRS.COM","CINGULAR1");
-	startTime=millisWrapper();
-	while((millisWrapper()-startTime) < 5000);		// hang out 
-	
-	//GsmMASTER.sendNoSaveCMGS("3473017780","hello world!");
-	
+	//startTime=millisWrapper();
+	//while((millisWrapper()-startTime) < 5000);		// hang out 
+	Timer0.delay(5000);
 }
 

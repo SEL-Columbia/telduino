@@ -264,19 +264,19 @@ return 1;
 }
 //Used to init Telit to right settings, code doesn't work if not used.
 bool GSMbase::init(uint16_t _band){
-DebugPort->write("initalizing\r\n");
+DebugPort->write("GSMbase::init - initalizing\r\n");
 
-	if(!sendRecQuickATCommand("ATE0"))return 0;		//set echo for debug purposes
-		//DebugPort->write("passed ate1\r\n");
-	if(!sendRecQuickATCommand("ATV1"))return 0;		//set verbose mode
-	if(!sendRecQuickATCommand("AT&K0"))return 0;		//set flow control off
-	if(!sendRecQuickATCommand("AT+IPR=0"))return 0;		//set autoBaud (default not really needed)
-	if(!sendRecQuickATCommand("AT+CMEE=2"))return 0;	//set exended error report
-	switch(_band){
-	case 0: if(!sendRecQuickATCommand("AT#BND=0"))return 0;	//0 - GSM 900MHz + DCS 1800MHz
-	case 1: if(!sendRecQuickATCommand("AT#BND=1"))return 0;	//1 - GSM 900MHz + PCS 1900MHz
-	case 2: if(!sendRecQuickATCommand("AT#BND=2"))return 0; //2 - GMS 850MHz + DCS 1800MHz 
-	case 3: if(!sendRecQuickATCommand("AT#BND=3"))return 0; //3 - GMS 850MHz + PCS 1900MHz
+	if (!sendRecQuickATCommand("ATE0"))        return 0;		//set echo 0 or 1
+	if (!sendRecQuickATCommand("AT#SELINT=2")) return 0;
+	if (!sendRecQuickATCommand("ATV1"))        return 0;		//set verbose mode
+	if (!sendRecQuickATCommand("AT&K0"))       return 0;		//set flow control off
+	if (!sendRecQuickATCommand("AT+IPR=0"))    return 0;		//set autoBaud (default not really needed)
+	if (!sendRecQuickATCommand("AT+CMEE=2"))   return 0;	//set exended error report
+	switch (_band){
+	case 0: if (!sendRecQuickATCommand("AT#BND=0")) return 0;	//0 - GSM 900MHz + DCS 1800MHz
+	case 1: if (!sendRecQuickATCommand("AT#BND=1")) return 0;	//1 - GSM 900MHz + PCS 1900MHz
+	case 2: if (!sendRecQuickATCommand("AT#BND=2")) return 0; //2 - GMS 850MHz + DCS 1800MHz 
+	case 3: if (!sendRecQuickATCommand("AT#BND=3")) return 0; //3 - GMS 850MHz + PCS 1900MHz
 	}
 return 1;
 }

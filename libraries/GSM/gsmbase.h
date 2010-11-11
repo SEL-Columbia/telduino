@@ -48,20 +48,28 @@ typedef SerialPort Serial;      // change here to support your serial friend
 
 	GSMbase(Serial& ,uint32_t(*FP)(), Serial* = NULL);	// Call Once for best results
 	//Handel Telit Data
-	virtual const char* const catchTelitData
-	(uint32_t = 180000, bool = false, uint16_t= 300, uint32_t = 60);//Default time out for +COPS is 180 seconds
+	virtual const char* const catchTelitData(uint32_t = 180000, 
+											 bool = false, 
+											 uint16_t= 300, 
+											 uint32_t = 60);//Default time out for +COPS is 180 seconds
 	//time out	   //quickCheck	 //datasize	//baudDelay
-	virtual const char* const parseData(const char* const,const char*,const char*);	//Parses string see below
-	virtual const char* const parseSplit(const char* const,const char*,uint16_t);	//Splits string see below
+	virtual const char* const parseData(const char* const,
+										const char*,
+										const char*);	//Parses string see below
+	virtual const char* const parseSplit(const char* const,
+										 const char*,
+										 uint16_t);	//Splits string see below
 	virtual bool parseFind(const char* const, const char*);		//returns true if it finds a string 
 	//Talking to Telit
 	virtual void sendATCommand(const char*);			//Sends command in the clear
 	virtual const char* const sendRecQuickATCommand(const char*);	//Used to send/get reply for a OK reply
 	virtual const char* const sendRecATCommand(const char*);	//Main function that gets Telit reply
 	virtual const char* const sendRecATCommandParse(const char*, 
-	const char* _start, const char* _end);		//Sends AT command parses reply, between _start _end
+													const char* _start, 
+													const char* _end);		//Sends AT command parses reply, between _start _end
 	virtual const char* const sendRecATCommandSplit(const char*,
-	const char* _delimiters, uint16_t _field);//Sends AT command splits data according to delimeter
+													const char* _delimiters, 
+													uint16_t _field);//Sends AT command splits data according to delimeter
 	//Hardware
 	virtual bool turnOn();		//Used to turn on Telit (**read below for use with arduino**)
 	virtual bool turnOff();		//Turn off Telit
