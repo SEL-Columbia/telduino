@@ -22,6 +22,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <string.h>
 #include "serial.h"
 #include "ioHelper.h"
 #include "timer.h"
@@ -301,7 +302,12 @@ void masterTester(){
 			Serial2.write("\r\n");
 			
 			// make a c-string out of the millis output for sending in post request
-			
+			// fixme: in the future dynamically allocate or pay the price...
+			char postString[80] = "";
+			strcat(postString, "wh=1&cr=1&tu=1&ts=");
+			strcat(postString, charBuffer);
+			strcat(postString, "&status=1");
+			Serial2.write(postString);
 			
 			Serial2.write("Sending POST 2\r\n");
 			Serial2.write(GsmMASTER.postHTTP(600,
@@ -310,7 +316,7 @@ void masterTester(){
 											 "default", 
 											 "1.1", 
 											 true, 
-											 "wh=1&cr=1&tu=1&ts=1&status=1"));
+											 postString));
 			Serial2.write("\r\nPOST 2 Sent\r\n");
 			
 			//Suspends listing to socket, socket can still receive data till
