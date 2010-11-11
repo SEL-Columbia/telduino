@@ -39,17 +39,18 @@ bool readData(ADEReg reg, byte data[3])
             data[ii] = 0x00;
         }
 
-	Serial2.println(static_cast<uint8_t> (data[0]),BIN);
-	Serial2.println(static_cast<uint8_t> (data[1]),BIN);
-	Serial2.println(static_cast<uint8_t> (data[2]),BIN);
+	//Serial2.println(static_cast<uint8_t> (data[0]),BIN);
+	//Serial2.println(static_cast<uint8_t> (data[1]),BIN);
+	//Serial2.println(static_cast<uint8_t> (data[2]),BIN);
 
         //now transfer the readInstuction/registerAddress: i.e. 00xxxxxx -AM
         //sd_raw_send_byte(reg.addr);
 	SPI.transfer(reg.addr);
-	delayMicroseconds(4);
+	//delayMicroseconds(4);
         //now read the data on the SPI data register byte-by-byte with the MSB first - AM
         for (ii=0; ii<numBytes; ii++) {
             data[ii] = SPI.transfer(0x00);//sd_raw_rec_byte();
+	    //delayMicroseconds(4);
         }
 
         //make sure that the data buffer is properly organized -AM

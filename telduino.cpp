@@ -152,8 +152,8 @@ void loop(){
 	Serial2.println(data[0],BIN);
 	Serial2.println(data[1],BIN);
 	Serial2.println(data[2],BIN);
-	delay(1000);
 	selectSPIDevice(DEVDISABLE);
+	delay(1000);
 
 	Serial2.print("data[0]==data[1]:");
 	Serial2.println(data[0]==data[1]);
@@ -173,6 +173,11 @@ void loop(){
 	delay(10000);
 	*/
 	
+	Serial2.print("SPCR:");
+	Serial2.println(SPCR,BIN);
+	Serial2.print("SPDR:");
+	Serial2.println(SPDR,BIN);
 	Serial2.println("Restart");
 	Serial2.flush();
+
 }
