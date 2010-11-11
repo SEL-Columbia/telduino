@@ -35,4 +35,5 @@ clean:
 	rm *.o *.elf *.hex
 
 program: $(PROJECT).hex
-	avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
+#	avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
+	avrdude -patmega1280 -c dragon_isp -P usb -Uflash:w:$(PROJECT).hex
