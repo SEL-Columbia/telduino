@@ -9,6 +9,7 @@
 //register defines -AM
 const uint8_t IRMS = 0x16;
 const uint8_t VRMS = 0x17;
+const uint8_t DIEREV = 0x3F;
 
 /*
  * this implicitly assumes that SPI.begin has already been called -AM

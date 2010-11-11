@@ -7,8 +7,8 @@
 # -I adds directory to the head of the list to be searched for header files
 # -o place the output in file
 
-# atmel 1280 comes with a default clock prescaling of 8
-CLOCK = 1000000L
+# atmel 1280 comes with a default clock prescaling of 8 - you were right! not now changed it though
+CLOCK = 8000000L
 PROJECT = telduino
 GCCFLAGS = -c -g -Os -w -ffunction-sections -fdata-sections -Ilibraries
 G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries

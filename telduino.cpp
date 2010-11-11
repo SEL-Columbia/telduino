@@ -5,6 +5,7 @@
 #include "ADE7753/ADE7753.h"
 #include "DbgTel/DbgTel.h"
 #include "Select/select.h"
+#include "prescaler.h"
 
 char ctrlz = 26;
 
@@ -28,7 +29,11 @@ extern "C" {
 
 void setup()
 {
-    //Enable level shifters
+	//Get rid of stinking prescaler.
+	setClockPrescaler(CLOCK_PRESCALER_1);
+    
+
+	//Enable level shifters
     pinMode(37, OUTPUT);
     digitalWrite(37,HIGH);
 
@@ -60,10 +65,17 @@ void setup()
     }
 
     sd_raw_init();
+	analogWrite(2,128);
+	//Is it problematic for this to be called repeatedly.
+    SPI.begin();
+	//SPI.setClockDivider(0);
 }
 
 void loop(){
-    
+	Serial2.print("CLKPR:");
+	Serial2.println(CLKPR, BIN);
+	Serial2.print("SPCR:");
+	Serial2.println(SPCR,BIN);
     Serial2.println("Start");
     setDbgLeds(GYRPAT);
     delay(500);
@@ -127,18 +139,17 @@ void loop(){
     /* */
     /* ADE*/
     //INIT SPI
-    
-    SPI.begin();
-    delay(100);
+	//SPI
     selectSPIDevice(20);
-    delay(100);
-    uint8_t data[3];
-    int8_t out = readData(24,VRMS,data);
+	delay(1);
+    byte data[3] = {0};
+    int8_t out = readData(8,DIEREV,data);
     Serial2.println(out);
-    Serial2.println(static_cast<int>(data[0]));
-    Serial2.println(static_cast<int>(data[1]));
-    Serial2.println(static_cast<int>(data[2]));
+    Serial2.println(data[0],BIN);
+    Serial2.println(data[1],BIN);
+    Serial2.println(data[2],BIN);
     delay(1000);
+	selectSPIDevice(DEVDISABLE);
     
     /*
     int8_t PAT = 0;
