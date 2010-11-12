@@ -22,13 +22,14 @@ int readData(ADEReg reg, uint32_t *data)
 	SPI.transfer(reg.addr);
 	//delayMicroseconds(4);
         //now read the data on the SPI data register byte-by-byte with the MSB first - AM
-	const int max = sizeof(*data)-1;
+	const int msb = sizeof(*data)-1;
         for (int i=0; i<nBytes; i++) {
-            ((byte*)data)[max-i] = SPI.transfer(0x00);
+            ((byte*)data)[msb-i] = SPI.transfer(0x00);
         }
 
         return 0;
 }
+
 
 /**
 	returns 1 if the read failed
@@ -66,6 +67,23 @@ int ADEgetRegister(ADEReg reg, int32_t *regValue)
 	(*regValue) >>= ((sizeof(uint32_t)-nBytes)*8);
 
 	return 0;
+}
+
+int writeData(ADEReg reg, uint32_t *data)
+{
+	SPI.setDataMode(SPI_MODE1);
+        int nBytes = (reg.nBits+7)/8;
+
+        //now transfer the write Instuction/registerAddress: i.e. 10xxxxxx -JR
+	SPI.transfer(reg.addr | 0x80);
+        //now write the data on the SPI data register byte-by-byte with the MSB first - AM
+	const int msb = sizeof(*data)-1;
+        for (int i=0; i<nBytes; i++) {
+             SPI.transfer( ((byte*)data)[msb-i] );
+        }
+	//TODO CHKSUM 
+
+        return 0;
 }
 
 int chksum(uint32_t data) 

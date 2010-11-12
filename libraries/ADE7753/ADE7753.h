@@ -75,8 +75,8 @@ bool initADE();
 *  
 */
 int readData(ADEReg, uint32_t*);
+int writeData(ADEReg, uint32_t*);
 int ADEgetRegister(ADEReg, int32_t*);
 int chksum(uint32_t);
-//uint32_t uxtu32_t(uint8_t data[3],int nBytes);
 #endif
 

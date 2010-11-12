@@ -132,7 +132,7 @@ void loop()
 	/* ADE*/
 	//INIT SPI
 	//SPI
-	#define regist TEMP 
+	#define regist APOS
 	uint32_t data = 0;
 	selectSPIDevice(20);
 	byte out = readData(regist,&data);
@@ -155,6 +155,12 @@ void loop()
 	Serial2.println(iData);
 	Serial2.print("BIN iData:");
 	Serial2.println(iData,BIN);
+
+	
+	selectSPIDevice(20);
+	uint32_t aposVal = 0x00000000;
+	writeData(regist,&aposVal);
+	selectSPIDevice(DEVDISABLE);
 	/*
 	int8_t PAT = 0;
 	if(data[0]){

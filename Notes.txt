@@ -81,3 +81,4 @@ ToDo:
 	- Determine SD Card mode
 	- Standarize on success = 0
 	- Test each register read.
+	- Verify microsecond timing
