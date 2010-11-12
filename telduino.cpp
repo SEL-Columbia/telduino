@@ -132,7 +132,7 @@ void loop()
 	/* ADE*/
 	//INIT SPI
 	//SPI
-	#define regist VRMS
+	#define regist TEMP 
 	uint32_t data = 0;
 	selectSPIDevice(20);
 	byte out = readData(regist,&data);

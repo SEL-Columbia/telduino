@@ -7,7 +7,7 @@
 /**
 * The type of number retrieved from the ADE
 */
-enum {UNSIGN=0,TWOS=2,SIGNMAG=1};
+enum {UNSIGN=0,SIGNMAG=1,TWOS=2};
 //NOTE: We can recover memory (3*41= 124 bytes) by just using a single, data buffer
 
 typedef struct {
@@ -74,7 +74,9 @@ bool initADE();
 /**
 *  
 */
-uint8_t readData(ADEReg,uint32_t*);
-uint8_t ADEgetRegister(ADEReg, int32_t*);
+int readData(ADEReg, uint32_t*);
+int ADEgetRegister(ADEReg, int32_t*);
+int chksum(uint32_t);
 //uint32_t uxtu32_t(uint8_t data[3],int nBytes);
 #endif
+

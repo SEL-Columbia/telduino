@@ -80,5 +80,4 @@ ToDo:
 	- Fix build environment
 	- Determine SD Card mode
 	- Standarize on success = 0
-
-
+	- Test each register read.

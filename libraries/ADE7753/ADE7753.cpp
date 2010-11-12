@@ -6,12 +6,15 @@ bool initSPI()
 	//Needs to be done before reads/writes
 }
 /**
+* returns BYTES from the ADE in a uint32_t value
+* MSB of ADE output is the MSB of the data output
 * @warning SPI mode is changed after calling this funciton
+* *TODO : Chksum if chksum fails return 2
 */
-uint8_t readData(ADEReg reg, uint32_t *data)
+int readData(ADEReg reg, uint32_t *data)
 {
 	SPI.setDataMode(SPI_MODE1);
-        int8_t numBytes = (reg.nBits+7)/8;
+        int nBytes = (reg.nBits+7)/8;
 
 	*data = 0;
 
@@ -19,11 +22,10 @@ uint8_t readData(ADEReg reg, uint32_t *data)
 	SPI.transfer(reg.addr);
 	//delayMicroseconds(4);
         //now read the data on the SPI data register byte-by-byte with the MSB first - AM
-        for (int ii=numBytes-1; ii>=0; ii--) {
-            ((byte*)data)[ii] = SPI.transfer(0x00);
+	const int max = sizeof(*data)-1;
+        for (int i=0; i<nBytes; i++) {
+            ((byte*)data)[max-i] = SPI.transfer(0x00);
         }
-
-	//The data buffer is now in local endianness
 
         return 0;
 }
@@ -32,25 +34,47 @@ uint8_t readData(ADEReg reg, uint32_t *data)
 	returns 1 if the read failed
 	returns 2 if the CHKSUM fails
 */
-uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
+int ADEgetRegister(ADEReg reg, int32_t *regValue)
 {
-	//get raw data
-	uint8_t failure = readData(reg, (uint32_t*)regValue);
+	//get raw data, MSB of data is MSB from ADE irrespective of byte length
+	uint32_t rawData = 0;
+	int nBytes = (reg.nBits+7)/8;
+
+	int failure = readData(reg, &rawData);
 	if (failure) {
-		return 1;
+		return failure;
 	}
 	
-	//fix to 32 bit signed int based on sign
-	//only unsigned for now
-	//TODO CONVERT PROPERLY
-	//TODO signed insert into higher order then shift
-
-	//TODO: Chksum
-	//if chksum fails return 2
+	//Push bits into MSB for irregular sizes
+	rawData <<= (nBytes*8-reg.nBits);
+	if (reg.signType == TWOS) {
+		//Make signed
+		*regValue = rawData;
+	} else if(reg.signType == SIGNMAG) {
+		bool sign = rawData&(1<<(sizeof(uint32_t)-1));
+		rawData &= ~(1<<(sizeof(uint32_t)-1));
+		if (sign) { //MSB is one
+			*regValue = -rawData;
+		} else {
+			*regValue = rawData;
+		}
+	} else { //unsigned
+		*regValue = rawData;
+	}
+	//Use signed shift for 8 byte alignment, then to move LSB to 0 byte
+	(*regValue) >>= (nBytes*8-reg.nBits);
+	(*regValue) >>= ((sizeof(uint32_t)-nBytes)*8);
 
 	return 0;
 }
 
-//data 0 is the MSB coming in first from the ADE
-//TODO: to support signs should load all right up against msb then shift 
-//using sign
+int chksum(uint32_t data) 
+{
+	int sum = 0;
+	for (int i=0; i < sizeof(data)*8; i++) {
+		sum += data & 0x01;
+		data >>= 1;
+	}
+	return sum;
+}
+
