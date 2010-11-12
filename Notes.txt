@@ -69,5 +69,16 @@ Notes on SD Card
 	Forgot to call the init routine!
 Notes on ADE
 	Seems to spout out gibberish, but it is at least talking.
+	Need to make use of data member in ADEReg
+
+
+Notes on build:
+There is a strange linking problem with prescaler.h that occurs if the default ADERegs are not consts.
+
+ToDo:
+	- Check level translator lines
+	- Fix build environment
+	- Determine SD Card mode
+	- Standarize on success = 0
 
 

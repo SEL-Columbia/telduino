@@ -1,85 +1,56 @@
 #include "ADE7753.h"
 
-/*
-void sd_raw_send_byte(uint8_t b)
-{
-    SPDR = b;
-    // wait for byte to be shifted out 
-    while(!(SPSR & (1 << SPIF)));
-    SPSR &= ~(1 << SPIF);
-}
-
-uint8_t sd_raw_rec_byte()
-{
-    // send dummy data for receiving some 
-    SPDR = 0xff;
-    while(!(SPSR & (1 << SPIF)));
-    SPSR &= ~(1 << SPIF);
-
-    return SPDR;
-}
-
-*/
 bool initSPI()
 {
         //Change SPI speed/endianness as empirically determined. -JR    
+	//Needs to be done before reads/writes
 }
-
-bool readData(ADEReg reg, byte data[3])
+/**
+* @warning SPI mode is changed after calling this funciton
+*/
+uint8_t readData(ADEReg reg, uint32_t *data)
 {
-        int8_t numBytes = (reg.nbits+7)/8;
-        int8_t ii = 0;
-        if (reg.addr & 0b11000000) {
-                //error: not a read instruction -AM
-                return false;
-        }
-		
-        //initialize data to be all zeros first -AM
-        for (ii=0; ii<3; ii++) {
-            data[ii] = 0x00;
-        }
+	SPI.setDataMode(SPI_MODE1);
+        int8_t numBytes = (reg.nBits+7)/8;
 
-	//Serial2.println(static_cast<uint8_t> (data[0]),BIN);
-	//Serial2.println(static_cast<uint8_t> (data[1]),BIN);
-	//Serial2.println(static_cast<uint8_t> (data[2]),BIN);
+	*data = 0;
 
         //now transfer the readInstuction/registerAddress: i.e. 00xxxxxx -AM
-        //sd_raw_send_byte(reg.addr);
 	SPI.transfer(reg.addr);
 	//delayMicroseconds(4);
         //now read the data on the SPI data register byte-by-byte with the MSB first - AM
-        for (ii=0; ii<numBytes; ii++) {
-            data[ii] = SPI.transfer(0x00);//sd_raw_rec_byte();
-	    //delayMicroseconds(4);
+        for (int ii=numBytes-1; ii>=0; ii--) {
+            ((byte*)data)[ii] = SPI.transfer(0x00);
         }
 
-        //make sure that the data buffer is properly organized -AM
-        //ans: it is -AM
+	//The data buffer is now in local endianness
 
-        return true;
+        return 0;
 }
 
-bool writeData(int8_t numBits, int8_t regAddr, uint8_t data[3])
+/**
+	returns 1 if the read failed
+	returns 2 if the CHKSUM fails
+*/
+uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 {
-        int8_t numBytes = (numBits+7)/8;
-        int8_t ii = 0;
+	//get raw data
+	uint8_t failure = readData(reg, (uint32_t*)regValue);
+	if (failure) {
+		return 1;
+	}
+	
+	//fix to 32 bit signed int based on sign
+	//only unsigned for now
+	//TODO CONVERT PROPERLY
+	//TODO signed insert into higher order then shift
 
-        if (regAddr & 0b11000000) {
-                //error: not a pure address -AM
-                return false;
-        }
-        regAddr |= 0b10000000;
+	//TODO: Chksum
+	//if chksum fails return 2
 
-        //now transfer the readInstuction/registerAddress: i.e. 00xxxxxx -AM
-        //SPI.transfer(regAddr);
-
-        //now write the data on the SPI data register byte-by-byte with the MSB first - AM
-        for (ii=0; ii<numBytes; ii++) {
-                SPI.transfer(data[ii]);
-        }
-
-        //make sure that the data buffer is properly organized -AM
-        //ans: it is -AM
-
-        return true;
+	return 0;
 }
+
+//data 0 is the MSB coming in first from the ADE
+//TODO: to support signs should load all right up against msb then shift 
+//using sign

@@ -7,7 +7,8 @@
 #include "Select/select.h"
 #include "prescaler.h"
 
-const ADEReg *aardvark[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
+
+const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
 
 char ctrlz = 26;
 
@@ -21,71 +22,54 @@ extern "C" {
 	void __cxa_pure_virtual(void) {
 		while(1) {
 			setDbgLeds(RPAT);
-			delay(500);
+			delay(332);
 			setDbgLeds(YPAT);
-			delay(500);
+			delay(332);
 			setDbgLeds(GPAT);
-			delay(500);
+			delay(332);
 		}
 	}
 } 
 
 void setup()
 {
-	//Get rid of stinking prescaler.
+	//Get rid of prescaler.
 	setClockPrescaler(CLOCK_PRESCALER_1);
 	
-
-	//Enable level shifters
+	//Level shifters
 	pinMode(37, OUTPUT);
 	digitalWrite(37,HIGH);
 
-	//Setup serial port
+	//Serial port
 	Serial2.begin(9600);
 
 	//Blink leds
 	initDbgTel();
 
-	//test Shift registers
+	//Shift registers
 	initShiftRegister();
-	//test muxers
+
+	//Muxers
 	initDemux();
 
-	//test select
+	//Select
 	initSelect();
 
-
-	delay(100);
-	uint8_t data = 0b0000100;
-	/*Serial2.println(data,BYTE);
-	Serial2.println(writeData(8,0x0F,&data));
-	delay(100);*/
-	//Serial2.println(readData(8,0x3F,&data));
-	delay(100);
-	//Serial2.println(data,BYTE);
-	if (data){
-		//Serial2.println("Uber Alles");
-	}
-
-	sd_raw_init();
-	analogWrite(2,128);
-	//Is it problematic for this to be called repeatedly.
+	//SPI
 	SPI.begin();
+
+	//SDCard
+	sd_raw_init();
+
 	//SPI.setClockDivider(0);
 }
 
-void loop(){
-	Serial2.print("CLKPR:");
-	Serial2.println(CLKPR, BIN);
-	Serial2.print("SPCR:");
-	Serial2.println(SPCR,BIN);
-	Serial2.println("Start");
+void loop()
+{
 	setDbgLeds(GYRPAT);
 	delay(500);
-	setDbgLeds(0);
-	delay(500);
+	Serial2.println("START");
 	//setDbgLeds(GYPAT);
-
 
 	
 	/* Shift Reg.
@@ -105,6 +89,7 @@ void loop(){
 	clearShiftRegister();
 	latch();
 	*/
+
 	/* Demux*/
 	/*
 	//muxSetEnabled(true);
@@ -126,14 +111,13 @@ void loop(){
 
 
 	//SD Card
+	/*
 	SPI.setDataMode(SPI_MODE0);
 	selectSPIDevice(SDCARD);
 	struct sd_raw_info info = {0}; 
 	sd_raw_get_info(&info);
 	if(info.manufacturer || info.revision) {
-		
 		setDbgLeds(GPAT);
-		delay(1000);
 		Serial2.println("manufacturer");
 		Serial2.println(info.manufacturer,BIN);
 		Serial2.println("revision");
@@ -142,27 +126,35 @@ void loop(){
 		Serial2.println("Nothing From SD Card Received");
 	}
 	delay(1000);
+	*/
+	
 
-	/* */
-	/* ADE
+	/* ADE*/
 	//INIT SPI
 	//SPI
-	SPI.setDataMode(SPI_MODE1);
-	selectSPIDevice(20);
 	#define regist VRMS
-	byte data[3] = {0};
-	byte out = readData(regist,data);
-	Serial2.println(out);
-	Serial2.println(data[0],BIN);
-	Serial2.println(data[1],BIN);
-	Serial2.println(data[2],BIN);
+	uint32_t data = 0;
+	selectSPIDevice(20);
+	byte out = readData(regist,&data);
 	selectSPIDevice(DEVDISABLE);
-	delay(1000);
 
-	Serial2.print("data[0]==data[1]:");
-	Serial2.println(data[0]==data[1]);
+	Serial2.print("out:");
+	Serial2.println(out,BIN);
 
-	*/
+	Serial2.print("int data:");
+	Serial2.println(data);
+	Serial2.print("BIN data:");
+	Serial2.println(data,BIN);
+
+	int32_t iData = 0;
+	selectSPIDevice(20);
+	ADEgetRegister(regist, &iData);
+	selectSPIDevice(DEVDISABLE);
+
+	Serial2.print("int iData:");
+	Serial2.println(iData);
+	Serial2.print("BIN iData:");
+	Serial2.println(iData,BIN);
 	/*
 	int8_t PAT = 0;
 	if(data[0]){
@@ -178,11 +170,16 @@ void loop(){
 	delay(10000);
 	*/
 	
+	Serial2.print("CLKPR:");
+	Serial2.println(CLKPR, BIN);
 	Serial2.print("SPCR:");
 	Serial2.println(SPCR,BIN);
 	Serial2.print("SPDR:");
 	Serial2.println(SPDR,BIN);
-	Serial2.println("Restart");
+	Serial2.println();
 	Serial2.flush();
 
+	delay(1000);
+
+	setDbgLeds(0);delay(500);
 }
