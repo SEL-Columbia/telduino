@@ -1,4 +1,15 @@
-Serial2 is the debug serial it is available from the arduino libraries.
+OVERALL TODO:
+- Must send byte to SD Card after raising CS according to: http://elm-chan.org/docs/mmc/mmc_e.html
+- Standarize on success = 0
+- Fix build environment
+- make initialization naming conventions sane
+- fix the shift register naming conventions
+- Write generic code for switches
+- Write code to lighup mount light
+- Verify microsecond timing for SPI
+
+BUILD
+- There is a strange linking problem with prescaler.h that occurs if the default ADERegs are not consts. This also occurs with other modules as well.
 
 SD
 - The raw library seems to assume availability of the SD card. It is imperative that we make sure that the Ronald Reigel library doesn't cache writes and try to write when we are communicating with the ADE.
@@ -6,7 +17,14 @@ SD
 - Additionally, as the 1280 uses the same SPI ports as the 128(?) I added a simple #define which configures the ports similarly. I might be wrong about that though.
 - The lock (WP) and available(Card detect) pins must also be set to: 48/49 PL1,PL0 and the must also be configured nicely.
 - When the switch is flipped the AtMega should synchronize the data and make sure that the card is ready to be unmounted.
-- Should wrap Riegel's calls so that no accidents happen. Perhaps select/unselect should be rewritten to use selectSS device in select file.
+- Should wrap Riegel's calls so that no accidents happen. Perhaps select/unselect should be rewritten to use CSselectDevice in select file.
+- The biggest problem in getting the Reigel Library working is getting it linked
+- Forgot to call the init routine!
+
+ADE
+- How does the ADE handle gettin an 8-bit 2s complement number for a 6 bit register?
+- Need to convert 2s complement into signed magnitude numbers 
+- Need to error check input ranges before sending to ADE
 
 Docs
 - Use Doxygen to automatically generate documentation
@@ -59,27 +77,6 @@ QueryEngine
 	- Formats for GSM or logging
 	- Sends to GSM, logger
 
-TODO:
-    - make initialization naming conventions sane
-    - fix the shift register naming conventions
-    - Write generic code for switches
-    - Write code to lighup mount light
-
-Notes on SD Card
-	Forgot to call the init routine!
-Notes on ADE
-	Seems to spout out gibberish, but it is at least talking.
-	Need to make use of data member in ADEReg
 
 
-Notes on build:
-There is a strange linking problem with prescaler.h that occurs if the default ADERegs are not consts.
 
-ToDo:
-	- Check level translator lines
-	- Fix build environment
-	- Determine SD Card mode
-	- Standarize on success = 0
-	- Test each register read.
-	- Verify microsecond timing
-	- Must send byte to SD Card after raising CS according to: http://elm-chan.org/docs/mmc/mmc_e.html
