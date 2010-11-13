@@ -4,19 +4,19 @@ HEX := $(NAME).hex
 OUT := $(NAME).out
 MAP := $(NAME).map
 SOURCES := $(wildcard *.c)
-HEADERS := $(wildcard *.h)
-OBJECTS := $(patsubst %.c,%.o,$(SOURCES))
+HEADERS := $(wildcard *.h) ../Select/select.h
+OBJECTS := $(patsubst %.c,%.o,$(SOURCES)) ../Select/select.c
 
-MCU := atmega168
-MCU_AVRDUDE := m168
-MCU_FREQ := 16000000UL
+MCU := atmega1280
+MCU_AVRDUDE := m1280
+MCU_FREQ := 8000000UL
 
 CC := avr-gcc
 OBJCOPY := avr-objcopy
 SIZE := avr-size -A
 DOXYGEN := doxygen
 
-CFLAGS := -Wall -pedantic -mmcu=$(MCU) -std=c99 -g -Os -DF_CPU=$(MCU_FREQ)
+CFLAGS := -Wall -pedantic -mmcu=$(MCU) -std=c99 -g -Os -DF_CPU=$(MCU_FREQ) -I ../
 
 all: $(HEX)
 

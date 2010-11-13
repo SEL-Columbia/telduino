@@ -83,8 +83,8 @@
     #define configure_pin_ss() initSelect()//DDRL |= (1 << DDL2)   //Must change, sets PL2 to output 
     #define configure_pin_miso() DDRB &= ~(1 << DDB3)
 
-    #define select_card()   selectSPIDevice(SDCARD)//PORTL &= ~(1 << PL2)     //Changed, Sets PL2 to low
-    #define unselect_card() selectSPIDevice(DEVDISABLE)//PORTL |= (1 << PL2)      //Changed, sets PL2 to high
+    #define select_card()   CSSelectDevice(SDCARD)//PORTL &= ~(1 << PL2)     //Changed, Sets PL2 to low
+    #define unselect_card() CSSelectDevice(DEVDISABLE)//PORTL |= (1 << PL2)      //Changed, sets PL2 to high
 #else
     #error "no sd/mmc pin mapping available!"
 #endif

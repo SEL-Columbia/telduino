@@ -70,44 +70,4 @@ uint16_t getClockDivisionFactor() {
   return ((uint16_t)(1 << __clock_prescaler));
 }
 
-/**
- * Time in milliseconds.
- *
- * NOTE: This is the equivalent of the millis() function but it readjusts it according
- * to the current clock division. As such, be careful of how you make use of it, in
- * particular remember it will be wrong if the clock division factor is changed during the
- * course of computation. Remember that you can reset the overflow counter by calling the
- * init() function from wiring.h.
- */
-unsigned long trueMillis()
-{
-  return millis() * getClockDivisionFactor();
-}
-
-// Waits for #ms# milliseconds.
-// NOTE: Please see comment above.
-void trueDelay(unsigned long ms)
-{
-  unsigned long start = trueMillis();
-  while (trueMillis() - start < ms);
-}
-
-/**
- * Rescales given delay time according to division factor. Should be called before a call 
- * to delay(). Insures compatibility with function using delay().
- * Example use:
- * delay( rescaleDelay(1000) ); // equivalent to wait(1000)
- */
-unsigned long rescaleDuration(unsigned long d) {
-  return (d / getClockDivisionFactor());
-}
-
-/**
- * Rescales given time (in milliseconds or microseconds) according to division factor. Should
- * be called 
- */
-unsigned long rescaleTime(unsigned long t) {
-  return (t * getClockDivisionFactor());
-}
-
 #endif

@@ -51,6 +51,7 @@ arduino: telduino.cpp
 	#SR,Demux
 	avr-ar rcs build/core.a build/ShiftRegister.c.o
 	avr-ar rcs build/core.a build/Demux.c.o
+	avr-ar rcs build/core.a build/select.cpp.o
 	
 	
 	avr-ar rcs build/core.a build/HardwareSerial.cpp.o
@@ -62,7 +63,6 @@ arduino: telduino.cpp
 	#SPI,ADE
 	avr-ar rcs build/core.a build/SPI.cpp.o
 	avr-ar rcs build/core.a build/ADE7753.cpp.o
-	avr-ar rcs build/core.a build/select.cpp.o
 	avr-ar rcs build/core.a build/sd_raw.cpp.o
 	avr-ar rcs build/core.a build/DbgTel.cpp.o
 	

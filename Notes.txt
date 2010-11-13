@@ -82,3 +82,4 @@ ToDo:
 	- Standarize on success = 0
 	- Test each register read.
 	- Verify microsecond timing
+	- Must send byte to SD Card after raising CS according to: http://elm-chan.org/docs/mmc/mmc_e.html

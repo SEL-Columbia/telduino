@@ -101,10 +101,10 @@ void loop()
 
 	/* Select*/
 	/*
-	selectSPIDevice(SDCARD);
+	CSSelectDevice(SDCARD);
 	delay(1000);
 	for(int i =0; i < 21; i++){
-		selectSPIDevice(i);
+		CSSelectDevice(i);
 		delay(500);
 	}
 	*/
@@ -113,7 +113,7 @@ void loop()
 	//SD Card
 	/*
 	SPI.setDataMode(SPI_MODE0);
-	selectSPIDevice(SDCARD);
+	CSSelectDevice(SDCARD);
 	struct sd_raw_info info = {0}; 
 	sd_raw_get_info(&info);
 	if(info.manufacturer || info.revision) {
@@ -134,9 +134,9 @@ void loop()
 	//SPI
 	#define regist APOS
 	uint32_t data = 0;
-	selectSPIDevice(20);
+	CSSelectDevice(20);
 	byte out = readData(regist,&data);
-	selectSPIDevice(DEVDISABLE);
+	CSSelectDevice(DEVDISABLE);
 
 	Serial2.print("out:");
 	Serial2.println(out,BIN);
@@ -147,9 +147,9 @@ void loop()
 	Serial2.println(data,BIN);
 
 	int32_t iData = 0;
-	selectSPIDevice(20);
+	CSSelectDevice(20);
 	ADEgetRegister(regist, &iData);
-	selectSPIDevice(DEVDISABLE);
+	CSSelectDevice(DEVDISABLE);
 
 	Serial2.print("int iData:");
 	Serial2.println(iData);
@@ -157,10 +157,10 @@ void loop()
 	Serial2.println(iData,BIN);
 
 	
-	selectSPIDevice(20);
+	CSSelectDevice(20);
 	uint32_t aposVal = 0x00000000;
 	writeData(regist,&aposVal);
-	selectSPIDevice(DEVDISABLE);
+	CSSelectDevice(DEVDISABLE);
 	/*
 	int8_t PAT = 0;
 	if(data[0]){
