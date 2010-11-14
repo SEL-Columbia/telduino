@@ -7,14 +7,15 @@
 # -I adds directory to the head of the list to be searched for header files
 # -o place the output in file
 
-# atmel 1280 comes with a default clock prescaling of 8 - you were right! not now changed it though
+# atmel 1280 comes with a default clock prescaling of 8, but that is fixed in the telduino setup
 TARGETARCH  = atmega1280
 CLOCK = 8000000L
 PROJECT = telduino
-GCCFLAGS = -c -g -Os -w -ffunction-sections -fdata-sections -Ilibraries -mmcu=$(TARGETARCH) -DF_CPU=$(CLOCK)
+GCCFLAGS = -c -g -Os -w  -ffunction-sections -fdata-sections -Ilibraries -mmcu=$(TARGETARCH) -DF_CPU=$(CLOCK)
 G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries -mmcu=$(TARGETARCH) -DF_CPU=$(CLOCK)
 
 arduino: telduino.cpp
+	#First rule
 	avr-gcc $(GCCFLAGS) libraries/arduino/pins_arduino.c 	-obuild/pins_arduino.c.o
 	avr-gcc $(GCCFLAGS) libraries/arduino/WInterrupts.c 	-obuild/WInterrupts.c.o
 	avr-gcc $(GCCFLAGS) libraries/arduino/wiring.c 		-obuild/wiring.c.o
@@ -42,6 +43,7 @@ arduino: telduino.cpp
 	avr-g++ $(G++FLAGS) libraries/DbgTel/DbgTel.cpp 	-obuild/DbgTel.cpp.o
 	avr-g++ $(G++FLAGS) libraries/Select/select.cpp 	-obuild/select.cpp.o
 	
+	#Second rule
 	avr-ar rcs build/core.a build/pins_arduino.c.o
 	avr-ar rcs build/core.a build/WInterrupts.c.o
 	avr-ar rcs build/core.a build/wiring.c.o
@@ -68,7 +70,9 @@ arduino: telduino.cpp
 	avr-ar rcs build/core.a build/DbgTel.cpp.o
 	
 	
+	#first rule
 	avr-g++ $(G++FLAGS) telduino.cpp -obuild/telduino.o
+	#work
 	avr-gcc -Os -Wl,--gc-sections -mmcu=$(TARGETARCH) -o build/telduino.elf build/telduino.o build/core.a -Larduino -lm 
 	avr-objcopy -O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --no-change-warnings --change-section-lma .eeprom=0 build/telduino.elf build/telduino.eep 
 	avr-objcopy -O ihex -R .eeprom build/telduino.elf build/telduino.hex 
