@@ -297,7 +297,8 @@ void masterTester(){
 			
 			Serial2.write("\r\nMillis Output\r\n");
 			char charBuffer[12];
-			itoa(Timer0.millis(), charBuffer, 10);
+			//itoa(Timer0.millis(), charBuffer, 10);
+			ultoa(Timer0.millis(), charBuffer, 10);
 			Serial2.write(charBuffer);
 			Serial2.write("\r\n");
 			
