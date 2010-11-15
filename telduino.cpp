@@ -277,14 +277,14 @@ void masterTester(){
 			
 			//Constructs and send a get request on open socket
 			Serial2.write("Sending GET\r\n");
-			GsmMASTER.getHTTP(3000, GATEWAY_IP, "/sms/", "1.0", true);
+			GsmMASTER.getHTTP(3000, GATEWAY_IP, "/sms/ping", "1.0", true);
 			Serial2.write("\r\nGET sent\r\n");
 
 			//Constructs and sends a POST
 			Serial2.write("Sending POST 1\r\n");
 			Serial2.write(GsmMASTER.postHTTP(600,
 											 GATEWAY_IP,
-											 "/logs/pp/TelduinoUno/1/",
+											 "/logs/pp/TelduinoOne/1/",
 											 "default",
 											 "1.1",
 											 true, 
@@ -313,7 +313,7 @@ void masterTester(){
 			Serial2.write("Sending POST 2\r\n");
 			Serial2.write(GsmMASTER.postHTTP(600,
 											 GATEWAY_IP,
-											 "/logs/pp/TelduinoUno/2/",
+											 "/logs/pp/TelduinoOne/2/",
 											 "default", 
 											 "1.1", 
 											 true, 
@@ -348,6 +348,6 @@ void masterTester(){
 	//	GsmMASTER.setContextSGACT("2","0","WAP@CINGULARGPRS.COM","CINGULAR1");
 	//startTime=millisWrapper();
 	//while((millisWrapper()-startTime) < 5000);		// hang out 
-	Timer0.delay(5000);
+	Timer0.delay(60000);
 }
 
