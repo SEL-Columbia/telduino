@@ -32,8 +32,8 @@ const ADEReg MODE	= {"MODE",0x09,16,UNSIGN};
 const ADEReg IRQEN	= {"IRQEN",0x0A,16,UNSIGN};
 const ADEReg STATUS	= {"STATUS",0x0B,16,UNSIGN};
 const ADEReg RSTSTATUS	= {"RSTSTATUS",0x0C,16,UNSIGN};
-const ADEReg CH1OS	= {"CH1OS",0x0D,8,SIGNMAG }; //* signed mag two's complement
-const ADEReg CH2OS	= {"CH2OS",0x0E,8,SIGNMAG}; //* signed mag not two's complement
+const ADEReg CH1OS	= {"CH1OS",0x0D,8,UNSIGN }; //* signed mag two's complement
+const ADEReg CH2OS	= {"CH2OS",0x0E,8,UNSIGN}; //* signed mag not two's complement
 const ADEReg GAIN	= {"GAIN",0x0F,8,UNSIGN};
 const ADEReg PHCAL	= {"PHCAL",0x10,6,TWOS};
 const ADEReg APOS	= {"APOS",0x11,16,TWOS};
@@ -78,5 +78,7 @@ int readData(ADEReg, uint32_t*);
 int writeData(ADEReg, uint32_t*);
 int ADEgetRegister(ADEReg, int32_t*);
 int chksum(uint32_t);
+int getCHXOS(int X,int8_t *enableBit,int8_t *val);
+
 #endif
 
