@@ -52,6 +52,7 @@ int ADEgetRegister(ADEReg reg, int32_t *regValue)
 		//Make signed
 		*regValue = rawData;
 	} else if(reg.signType == SIGNMAG) {
+		//Was for CH1OS/CH2OS not used
 		bool sign = rawData&(1<<(sizeof(uint32_t)-1));
 		rawData &= ~(1<<(sizeof(uint32_t)-1));
 		if (sign) { //MSB is one
@@ -96,3 +97,37 @@ int chksum(uint32_t data)
 	return sum;
 }
 
+/**
+	The first bit of the CHX0S register is a flag and the last 5 bits are a signed magnitude value.
+*/
+int getCHXOS(int X,int8_t *enableBit,int8_t *val) 
+{
+	int retError;
+	int32_t data  = 0;
+	if (X == 1) {
+		retError = ADEgetRegister(CH1OS, &data);
+	} else if (X == 2){
+		retError = ADEgetRegister(CH2OS, &data);
+	} else {
+		return 3; //Invalid value
+	}
+
+	if (retError != 0) {
+		return retError;
+	}
+
+	//3 is the MSB
+	uint8_t msB = ((uint8_t*)(&data))[3];
+	*enableBit = (msB & 0x8f) > 0;
+
+	bool negv = msB & 0x20;
+
+	//The 6th bit is not used
+	*val       = msB & 0x1f; 
+
+	if (negv) {
+		*val = -(*val);
+	} 
+
+	return 0;
+}
