@@ -61,6 +61,52 @@ const ADEReg PERIOD	= {"PERIOD",0x27,16,UNSIGN};
 const ADEReg TMODE	= {"TMODE",0x3D,8,UNSIGN};
 const ADEReg CHKSUM	= {"CHKSUM",0x3E,6,UNSIGN};
 const ADEReg DIEREV	= {"DIEREV",0x3F,8,UNSIGN};
+
+/**
+	Interrupt Register MASKS
+*/
+const uint16_t AEHF    	= 0x0001; //bit 0
+const uint16_t SAG     	= 0x0002; //bit 1
+const uint16_t CYCEND  	= 0x0004; //bit 2
+const uint16_t WSMP    	= 0x0008; //bit 3
+const uint16_t ZX	= 0x0010; //bit 4
+const uint16_t TEMP	= 0x0020; //bit 5
+const uint16_t RESET	= 0x0040; //bit 6
+const uint16_t AEOF	= 0x0080; //bit 7
+const uint16_t PKV	= 0x0100; //bit 8
+const uint16_t PKI	= 0x0200; //bit 9 
+const uint16_t VAEHF	= 0x0400; //bit 10 A
+const uint16_t VAEOF	= 0x0800; //bit 11 B
+const uint16_t ZXTO	= 0x1000; //bit 12 C
+const uint16_t PPOS	= 0x2000; //bit 13 D
+const uint16_t PNEG	= 0x4000; //bit 14 E
+
+
+/**
+	Mode Register MASKS
+*/
+const uint16_t DISHPF	= 0x0001; //bit 0
+const uint16_t DISHPF2 	= 0x0002; //bit 1
+const uint16_t DISCF  	= 0x0004; //bit 2
+const uint16_t DISSAG  	= 0x0008; //bit 3
+const uint16_t ASUSPEND	= 0x0010; //bit 4
+const uint16_t TEMPSEL	= 0x0020; //bit 5
+const uint16_t SWRST	= 0x0040; //bit 6
+const uint16_t CYCMODE	= 0x0080; //bit 7
+const uint16_t DISCH1	= 0x0100; //bit 8
+const uint16_t DISCH2	= 0x0200; //bit 9 
+const uint16_t SWAP	= 0x0400; //bit 10 A
+const uint16_t DTRT10	= 0x1800; //bit 11,12 B,C
+const uint16_t WAVESEL10= 0x6000; //bit 13,14 D,E
+
+/**
+	Binary two-tuple constants
+*/
+const uint8_t ZZ=0b00;
+const uint8_t ZO=0b01;
+const uint8_t OZ=0b10;
+const uint8_t OO=0b11;
+
 ///*
 //const ADEReg *aardvark[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
 //*/

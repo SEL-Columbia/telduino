@@ -27,6 +27,8 @@ ADE
 - Need to convert 2s complement into signed magnitude numbers 
 - Need to error check input ranges before sending to ADE
 - Need to make sure that x bits are being used for numerical data.
+- CHKSUMs
+- Write handlers for calibration
 
 Docs
 - Use Doxygen to automatically generate documentation
