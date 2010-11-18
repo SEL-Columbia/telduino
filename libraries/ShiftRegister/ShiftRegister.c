@@ -1,57 +1,63 @@
+/** @file ShiftRegister.cpp
+@author Javier Rosa
+
+In order to make any changes to the shift register visible apart for clearing and enabling, latch must be called.
+
+*/
 #include "ShiftRegister.h"
 
-/*
-Author: Javier Rosa
-Version: 0.0.1
-Notes:
-
-Need to see what the correct endianness is
-*/
-
-//TPIC6B959 shift register on pins:
-#define NOTENABLE 28    //NOTG
-#define LATCH     27    //RCK 
-#define NOTCLR    26    //NOTSRCLR
-#define SHIFTCLK  25    //SRCK
-#define SERIN     29    //INPUT
-
-//#define WIDTH     24    //WIDTH
-//#define REVERSE   0     //Reverse order of shift
-
 #define CLOCK(pin) digitalWrite(pin,HIGH);digitalWrite(pin,LOW);
-
+/**
+*	Register output pins are initialized to outputs and cleared.
+*	The register is then set disabled.
+*/
 void initShiftRegister(){
+	pinMode(SERIN,OUTPUT);
 	pinMode(NOTENABLE,OUTPUT);
 	pinMode(LATCH,OUTPUT);
 	pinMode(NOTCLR,OUTPUT);
 	pinMode(SHIFTCLK,OUTPUT);
-	pinMode(SERIN,OUTPUT);
  
-	digitalWrite(SHIFTCLK, LOW);
+        digitalWrite(SERIN,LOW);
 	digitalWrite(LATCH, LOW);
-	setEnabled(true);
-	clear();
+        digitalWrite(NOTCLR,LOW);
+	digitalWrite(SHIFTCLK, LOW);
+	setEnabled(true); //May not be needed
+	clearShiftRegister();
 	latch();
 	setEnabled(false);
 }
 
-//enable/disable register
+/** 
+*	@brief Enable/disable register
+*/
 void setEnabled( boolean enabled ){
 	digitalWrite(NOTENABLE, enabled?LOW:HIGH);
 }
 
-//latch register contents on output pins
+/**
+*	@brief Manifest register contents on output pins
+*/
 void latch() {
 	CLOCK(LATCH);
 }
 
-//only one bit do not latch
+/** 
+*	@brief Pushes one bit onto the register.
+*/
 inline void shiftBit( boolean bit ){
-	digitalWrite(SERIN, bit?LOW:HIGH);
+	digitalWrite(SERIN, bit?HIGH:LOW);
 	CLOCK(SHIFTCLK);
 }
 
-//does not latch
+/** 
+*	@brief Pushes a set of bits as bytes onto the register.
+*	
+*	Pushes a set of bits as bytes onto the register.
+*	If bits[i] is not zero then the register line i is set to one.
+*
+*	@todo specify endianness
+*/
 void shiftArray( byte bits[] , uint8_t size){
 	int idx;
 	for(idx = 0; idx < size; idx++){
@@ -59,11 +65,29 @@ void shiftArray( byte bits[] , uint8_t size){
 	}
 }
 
-//clear register
-void clearShiftRegister(){
-	CLOCK(NOTCLR);
+/**
+*	@brief Clear register
+*/
+void clearShiftRegister()
+{
+	//Clear when LOW
+	digitalWrite(NOTCLR,LOW);
+	digitalWrite(NOTCLR,HIGH);
 }
 
+int8_t setCkt(int8_t sNum, int8_t onOff)
+{
+	//Define mapping
+
+}
+
+/**
+*	@brief Exercises ShiftRegister functions.
+*
+*	Initializes, pushes 101, latches, clears, 
+*	sends an array of alternative 0s and 1s except for 
+*	three 1s at the end.
+*/
 void testShiftRegister() {
 	byte testArray[21] = {1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,-7,12};
 
@@ -95,3 +119,4 @@ void testShiftRegister() {
 	latch();
 	setEnabled(false);
 }
+
