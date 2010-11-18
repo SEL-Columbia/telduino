@@ -26,6 +26,7 @@ ADE
 - How does the ADE handle gettin an 8-bit 2s complement number for a 6 bit register?
 - Need to convert 2s complement into signed magnitude numbers 
 - Need to error check input ranges before sending to ADE
+- CH1OS is 8bit but the MSB is a control bit and bits 0-5 are signed magnitude
 
 Docs
 - Use Doxygen to automatically generate documentation

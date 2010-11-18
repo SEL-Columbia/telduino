@@ -62,6 +62,42 @@ void setup()
 	sd_raw_init();
 
 	//SPI.setClockDivider(0);
+	
+	//Set the ch1 digital integrator on
+	#define regist CH1OS
+	
+	CSSelectDevice(20);
+	uint32_t ch1osVal = 0x00000000;
+	ch1osVal |= (1 << 7);
+	ch1osVal = ch1osVal << 24;
+	writeData(regist,&ch1osVal);
+	CSSelectDevice(DEVDISABLE);
+	
+	uint32_t data = 0;
+	CSSelectDevice(20);
+	byte out = readData(CH1OS,&data);
+	CSSelectDevice(DEVDISABLE);
+
+	Serial2.print("out:");
+	Serial2.println(out,BIN);
+
+	//Serial2.print("int data CH1OS:");
+	//Serial2.println(data);
+	Serial2.print("BIN data CH1OS:");
+	Serial2.println(data,BIN);
+
+	CSSelectDevice(20);
+	out = readData(GAIN,&data);
+	CSSelectDevice(DEVDISABLE);
+
+	Serial2.print("out:");
+	Serial2.println(out,BIN);
+
+	//Serial2.print("int data:");
+	//Serial2.println(data);
+	Serial2.print("BIN data GAIN:");
+	Serial2.println(data,BIN);
+	
 }
 
 void loop()
@@ -132,20 +168,39 @@ void loop()
 	/* ADE*/
 	//INIT SPI
 	//SPI
-	#define regist APOS
+	
+	
 	uint32_t data = 0;
 	CSSelectDevice(20);
-	byte out = readData(regist,&data);
+	byte out = readData(IRMS,&data);
 	CSSelectDevice(DEVDISABLE);
 
 	Serial2.print("out:");
 	Serial2.println(out,BIN);
+	data = data >> 8;
 
-	Serial2.print("int data:");
+	Serial2.print("int data IRMS:");
 	Serial2.println(data);
-	Serial2.print("BIN data:");
+	Serial2.print("BIN data IRMS:");
 	Serial2.println(data,BIN);
+	
+	data = 0;
+	CSSelectDevice(20);
+	out = readData(VRMS,&data);
+	CSSelectDevice(DEVDISABLE);
 
+	Serial2.print("out:");
+	Serial2.println(out,BIN);
+	data = data >> 8;
+
+	Serial2.print("int data VRMS:");
+	Serial2.println(data);
+	Serial2.print("BIN data VRMS:");
+	Serial2.println(data,BIN);
+	
+
+	
+/*	
 	int32_t iData = 0;
 	CSSelectDevice(20);
 	ADEgetRegister(regist, &iData);
@@ -155,12 +210,9 @@ void loop()
 	Serial2.println(iData);
 	Serial2.print("BIN iData:");
 	Serial2.println(iData,BIN);
-
+*/
 	
-	CSSelectDevice(20);
-	uint32_t aposVal = 0x00000000;
-	writeData(regist,&aposVal);
-	CSSelectDevice(DEVDISABLE);
+	
 	/*
 	int8_t PAT = 0;
 	if(data[0]){
