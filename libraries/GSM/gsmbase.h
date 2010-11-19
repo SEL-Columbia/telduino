@@ -27,14 +27,15 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
-#include "serial.h"
+//#include "serial.h"
+#include "HardwareSerial.h"
 #include "ioHelper.h"
 
 
 class GSMbase{
 
 	protected:
-typedef SerialPort Serial;      // change here to support your serial friend
+typedef HardwareSerial Serial;      // change here to support your serial friend
 				// Serial needs a read, write, flush, available functions  
 
 	Serial& telitPort; 	// serial object
