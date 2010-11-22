@@ -71,8 +71,10 @@ gsmMASTER GsmMASTER(Serial3,milP,&Serial2);//combine base SMS and GPRS
 int main(void){
 	sei(); 				//Enable interupts
 	//only these are declared, to turn on other serial ports do so in serial.h
-	Serial3.USART_Init(9600); 	//Telit serial
-	Serial2.USART_Init(9600); 	//debug serial
+	//	Serial3.USART_Init(9600); 	//Telit serial
+	//	Serial2.USART_Init(9600); 	//debug serial
+	Serial3.begin(9600); 	//Telit serial
+	Serial2.begin(9600); 	//debug serial
 	Serial2.write("\r\n\r\ntelduino power up\r\n");
 	Serial2.write(__TIME__);
 	Serial2.write("\r\n");
