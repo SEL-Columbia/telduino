@@ -23,13 +23,13 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <string.h>
-#include "serial.h"
-#include "ioHelper.h"
-#include "timer.h"
-#include "gsmbase.h"
-#include "gsmSMS.h"
-#include "gsmGPRS.h"
-#include "gsmMaster.h"
+#include "arduino/HardwareSerial.h"
+#include "GSM/ioHelper.h"
+#include "GSM/timer.h"
+#include "GSM/gsmbase.h"
+#include "GSM/gsmSMS.h"
+#include "GSM/gsmGPRS.h"
+#include "GSM/gsmMaster.h"
 
 // #define GATEWAY_IP "178.79.140.99" //this is the real live gateway
 #define GATEWAY_IP "173.203.94.233"  // test gateway
