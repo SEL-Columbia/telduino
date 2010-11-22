@@ -20,16 +20,16 @@ VPATH = libraries/GSM libraries/arduino libraries/Demux libraries/ShiftRegister 
     libraries/SPI libraries/SDRaw libraries/DbgTel libraries/Select \
     libraries/ADE7753
 
-GRND_OBJECTS = gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o timer.o \
+OBJECT_FILES = gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o timer.o \
 	pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_digital.o \
 	wiring_pulse.o wiring_shift.o Demux.o ShiftRegister.o main.o \
 	HardwareSerial.o Print.o WMath.o WString.o SPI.o ADE7753.o \
 	sd_raw.o DbgTel.o select.o $(PROJECT).o
 
-all : GRND program
+all : hex program
 
-GRND : $(GRND_OBJECTS)
-	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(GRND_OBJECTS) -Llibraries -lm
+hex : $(OBJECT_FILES)
+	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(OBJECT_FILES) -Llibraries -lm
 	avr-objcopy -j .text -j .data -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
 
 %.o : %.c
