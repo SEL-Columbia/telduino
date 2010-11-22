@@ -28,7 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 //#include "serial.h"
-#include "HardwareSerial.h"
+// fixme : why do i have to hardcode this link to hardware serial?
+#include "../arduino/HardwareSerial.h"
 #include "ioHelper.h"
 
 
