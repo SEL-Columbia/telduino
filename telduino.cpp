@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include "GSM/ioHelper.h"
-#include "GSM/timer.h"
 #include "GSM/gsmbase.h"
 #include "GSM/gsmSMS.h"
 #include "GSM/gsmGPRS.h"
@@ -21,12 +20,14 @@
 
 uint32_t millisWrapper();
 uint32_t (*milP)() = &millisWrapper;	//used, so with arduino you can pass &millis() straight in.
-uint32_t millisWrapper(){return Timer0.millis();}
+uint32_t millisWrapper(){return millis();}
 
 GSMbase GSMb(Serial3,milP,&Serial2);	//GSMbase TELIT BASE FUNCTIONALITY
+gsmMASTER GsmMASTER(Serial3,milP,&Serial2);//combine base SMS and GPRS
+
 gsmSMS  GsmSMS(Serial3,milP,&Serial2);	//gsmSMS TELIT SMS
 gsmGPRS GsmGPRS(Serial3,milP,&Serial2); //gsmGPRS TELIT GPRS
-gsmMASTER GsmMASTER(Serial3,milP,&Serial2);//combine base SMS and GPRS
+
 
 const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
 
