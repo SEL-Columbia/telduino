@@ -72,8 +72,10 @@ return strstr(theString,objectOfDesire);
 //Main function which retrives data from serial buffer and puts it into 
 //fullData, which has class scope.
 const char* const GSMbase::catchTelitData(uint32_t _timeout, 
-bool quickCheck,uint16_t dataSize,uint32_t baudDelay){
-	
+										  bool quickCheck,
+										  uint16_t dataSize,
+										  uint32_t baudDelay){
+	//DebugPort->write("GSMbase::catchTelitData\r\n");
 	//memory allocation issue with realloc writes over itself and malloc fragments the SRAM with
 	//too many calls I tried for a happy medium but unless i know your program flow this is the 
 	//best I can do.
@@ -85,16 +87,17 @@ bool quickCheck,uint16_t dataSize,uint32_t baudDelay){
 	malloc(sizeof(char) * (dataSize));
 	
 	if (storeData == NULL){		//if we get bad memory
-//		DebugPort->write("bad memory malloc 1\r\n");
+								//DebugPort->write("bad memory malloc 1\r\n");
 		return 0;
-		}
+	}
 
 	// block wait for reply
 	uint64_t startTimeGlobal = millis();		//9600/1000= 9.6bits per milli 6 milles ~6 bytes
 	while (telitPort.available() < 1){ 		// smallest message "<CR><LF>OK<CR><LF>"    
 		if((millis() - startTimeGlobal) > _timeout){ 
-//			DebugPort->write("returning from global timeout\r\n");
-			return 0;} 			// timed out bad message
+			//DebugPort->write("returning from global timeout\r\n");
+			return 0;
+		} 			// timed out bad message
 	}
 
 	uint16_t dataPos=0;
@@ -102,7 +105,7 @@ bool quickCheck,uint16_t dataSize,uint32_t baudDelay){
 	//if no data in 60 milli (baudDelay default) sendings done
 	while (1){
 		if ((dataPos+1) >= dataSize) {
-//			DebugPort->write("returning from overflow check\r\n");
+			DebugPort->write("returning from overflow check\r\n");
 			return 0;			//don't overflow buffer
 		}
 		storeData[dataPos++] = telitPort.read();	//Read out serial register
@@ -125,7 +128,7 @@ bool quickCheck,uint16_t dataSize,uint32_t baudDelay){
 					malloc(sizeof(char) * (dataPos+1));
 					
 					if (fullData == NULL) {
-					//	DebugPort->write("bad memory malloc 1\r\n");
+						//DebugPort->write("bad memory malloc 1\r\n");
 						return 0;
 					}
 					memcpy(fullData,storeData,dataPos+1);
@@ -139,8 +142,8 @@ bool quickCheck,uint16_t dataSize,uint32_t baudDelay){
 	}
 	
 	doneReceive:
-	//DebugPort->write("after doneReceive\r\n");
-	//DebugPort->write(fullData);
+		//DebugPort->write("after doneReceive\r\n");
+		//DebugPort->write(fullData);
 	if(quickCheck){
 //		if (parseFind(fullData, "\r\nOK\r\n")) {
 		if (parseFind(fullData, "OK")) {
@@ -227,19 +230,24 @@ return parsedData;
 //in header file and #define _cplusplus
 #define OnOffPin PA0
 bool GSMbase::turnOn(){
+	DebugPort->write("GSMbase::turnOn()\r\n");
 	if(sendRecQuickATCommand("AT")) return 1;		// the power is already on
 	setOutput(DDRA,OnOffPin); 				// set direction register pin
+											//pinMode(22, OUTPUT);
 	uint64_t startTime; 
 	while(1){
+		DebugPort->write("GSMbase::turnOn() top of while loop\r\n");
 		outputHigh(PORTA,OnOffPin); 			// bring pin high
-	 	startTime = millis();		
+												//digitalWrite(22, HIGH);
+		startTime = millis();		
 		while ((millis() - startTime) < 3000); 		// block 3 seconds
 		outputLow(PORTA,OnOffPin);			// bring pin low
-
+											//digitalWrite(22, LOW);
+		
 		startTime = millis();		
 		while ((millis() - startTime) < 10000);		// block 10 seconds
 		if(sendRecQuickATCommand("AT")) return 1;	//set no echo if you get a OK we are ON!
-DebugPort->write("stuck in ON");
+		DebugPort->write("stuck in ON");
 		}
 return 1;							//should never get here
 }
