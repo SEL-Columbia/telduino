@@ -20,7 +20,7 @@ VPATH = libraries/GSM libraries/arduino libraries/Demux libraries/ShiftRegister 
     libraries/SPI libraries/SDRaw libraries/DbgTel libraries/Select \
     libraries/ADE7753
 
-OBJECT_FILES = gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o timer.o \
+OBJECT_FILES = gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o \
 	pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_digital.o \
 	wiring_pulse.o wiring_shift.o Demux.o ShiftRegister.o main.o \
 	HardwareSerial.o Print.o WMath.o WString.o SPI.o ADE7753.o \
