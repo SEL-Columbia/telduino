@@ -82,7 +82,7 @@ void setup()
 	digitalWrite(37,HIGH);
 
 	//Serial port
-	Serial2.begin(9600);
+	//Serial2.begin(9600);
 
 	//Blink leds
 	initDbgTel();
@@ -143,6 +143,10 @@ void setup()
 
 void loop()
 {
+	
+	GSMb.sendRecATCommand("AT+CCLK?"); 
+	GSMb.sendRecATCommand("AT+CSQ");
+	
 	setDbgLeds(GYRPAT);
 	delay(500);
 	Serial2.println("START");
@@ -278,7 +282,7 @@ void loop()
 	Serial2.println();
 	Serial2.flush();
 
-	delay(1000);
+	delay(10000);
 
 	setDbgLeds(0);delay(500);
 }
