@@ -57,6 +57,9 @@ void setup()
 	Serial3.begin(9600); 	//Telit serial
 	Serial2.begin(9600); 	//debug serial
 	Serial2.write("\r\n\r\ntelduino power up\r\n");
+	Serial2.write("last compilation\r\n");
+	Serial2.write(__DATE__);
+	Serial2.write("\r\n");
 	Serial2.write(__TIME__);
 	Serial2.write("\r\n");
 	
