@@ -266,7 +266,7 @@ return 1;
 bool GSMbase::init(uint16_t _band){
 DebugPort->write("GSMbase::init - initalizing\r\n");
 
-	if (!sendRecQuickATCommand("ATE0"))        return 0;		//set echo 0 or 1
+	if (!sendRecQuickATCommand("ATE1"))        return 0;		//set echo 0 or 1
 	if (!sendRecQuickATCommand("AT#SELINT=2")) return 0;
 	if (!sendRecQuickATCommand("ATV1"))        return 0;		//set verbose mode
 	if (!sendRecQuickATCommand("AT&K0"))       return 0;		//set flow control off
