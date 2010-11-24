@@ -21,6 +21,8 @@ Steps to get the Current Metering Working on the Ade
 
 7. FOR VOLTAGE: With the specified full-scale ac analog input signal of 0.5 V, the output from the LPF1 swings between 0x2518 and 0xDAE8 at 60 Hz—see the Channel 2 ADC section. The equivalent rms value of this full-scale ac signal is approximately 1,561,400 (0x17D338) in the VRMS register.
 
-8. .02157 V/A calculated based on calibration measurements.
+8. .0215 V/A calculated based on calibration measurements.
 
 9. So we want to set the GAIN register to 2x actually.
+
+10. With the GAIN set to 2x, the IRMSOS needs to be set to 99 or 0x63

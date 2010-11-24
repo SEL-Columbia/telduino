@@ -64,39 +64,64 @@ void setup()
 	//SPI.setClockDivider(0);
 	
 	//Set the ch1 digital integrator on
-	#define regist CH1OS
-	
+	//#define regist CH1OS
 	CSSelectDevice(20);
 	uint32_t ch1osVal = 0x00000000;
 	ch1osVal |= (1 << 7);
 	ch1osVal = ch1osVal << 24;
-	writeData(regist,&ch1osVal);
+	writeData(CH1OS,&ch1osVal);
 	CSSelectDevice(DEVDISABLE);
 	
 	uint32_t data = 0;
 	CSSelectDevice(20);
 	byte out = readData(CH1OS,&data);
-	CSSelectDevice(DEVDISABLE);
-
+	CSSelectDevice(DEVDISABLE);	
 	Serial2.print("out:");
 	Serial2.println(out,BIN);
-
 	//Serial2.print("int data CH1OS:");
 	//Serial2.println(data);
-	Serial2.print("BIN data CH1OS:");
+	data = data >> 24;
+	Serial2.print("BIN CH1OS:");
 	Serial2.println(data,BIN);
+
+	//set the gain to 2 for channel 1 since the sensitivity appears to be 0.02157 V/Amp
+	CSSelectDevice(20);
+	uint32_t gainVal = 0x00000000;
+	gainVal |= 1;
+	gainVal = gainVal << 24;
+	writeData(GAIN,&gainVal);
+	CSSelectDevice(DEVDISABLE);
 
 	CSSelectDevice(20);
 	out = readData(GAIN,&data);
 	CSSelectDevice(DEVDISABLE);
-
 	Serial2.print("out:");
 	Serial2.println(out,BIN);
-
 	//Serial2.print("int data:");
 	//Serial2.println(data);
-	Serial2.print("BIN data GAIN:");
+	data = data >> 24;
+	Serial2.print("BIN GAIN:");
 	Serial2.println(data,BIN);
+	
+	//Set the IRMSOS to 0d99 or 0x63. This is the measured offset value.
+	CSSelectDevice(20);
+	uint32_t iRmsOsVal = 0x00000000;
+	iRmsOsVal |= 0x63;
+	iRmsOsVal = iRmsOsVal << 20;
+	writeData(IRMSOS,&iRmsOsVal);
+	CSSelectDevice(DEVDISABLE);
+
+	CSSelectDevice(20);
+	out = readData(IRMSOS,&data);
+	CSSelectDevice(DEVDISABLE);
+	Serial2.print("out:");
+	Serial2.println(out,BIN);
+	data = data >> 20; // note that this is a signed number. right now we are expecting a positive one
+	//Serial2.print("int data:");
+	//Serial2.println(data);
+	Serial2.print("HEX IRMSOS:");
+	Serial2.println(data,HEX);
+	
 	
 }
 
@@ -171,6 +196,7 @@ void loop()
 	
 	
 	uint32_t data = 0;
+	uint32_t iRMS = 0;
 	CSSelectDevice(20);
 	byte out = readData(IRMS,&data);
 	CSSelectDevice(DEVDISABLE);
@@ -178,11 +204,11 @@ void loop()
 	Serial2.print("out:");
 	Serial2.println(out,BIN);
 	data = data >> 8;
-
-	Serial2.print("int data IRMS:");
+	Serial2.print("int IRMS:");
 	Serial2.println(data);
-	Serial2.print("BIN data IRMS:");
-	Serial2.println(data,BIN);
+	iRMS = data*1000/40172/4;
+	Serial2.print("mAmps IRMS:");
+	Serial2.println(iRMS);
 	
 	data = 0;
 	CSSelectDevice(20);
@@ -192,11 +218,10 @@ void loop()
 	Serial2.print("out:");
 	Serial2.println(out,BIN);
 	data = data >> 8;
-
-	Serial2.print("int data VRMS:");
+	Serial2.print("int VRMS:");
 	Serial2.println(data);
-	Serial2.print("BIN data VRMS:");
-	Serial2.println(data,BIN);
+//	Serial2.print("BIN VRMS:");
+//	Serial2.println(data,BIN);
 	
 
 	
