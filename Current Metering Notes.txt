@@ -1,0 +1,26 @@
+Steps to get the Current Metering Working on the Ade
+=====================================================
+
+1. Set the MSB of CH1OS register to 1. This enables the digital integrator on that channel and thus lets us use the di/dt sensor.
+	
+	After setting this value, CH1OS = 0x01
+
+2. Check the Gain Register. We want 1x gain and full range on both analog channels
+
+	Right now GAIN = 0x00
+
+3. Full range for the current wave form is (0xD7AE14 to 0 to 0x2851EC) in increasing order. This is 0x2851EC (+2,642,412d) and 0xD7AE14 (–2,642,412d).
+
+	So its a 24bit 2's complement number with some subtleties.
+
+4. The di/dt sensor + integrator adds noise component at 20db per decade so we need to make sure that there is a total filtering of 40 db per decade.
+
+5. To Correct the offset: To measure the offset of the rms measurement, two data points are needed from non-zero input values, for example, the base current, Ib, and Imax/100. The offset can be calculated from these measurements.
+
+6. FOR CURRENT: With the specified full-scale analog input signal of 0.5 V, the ADC produces an output code that is approximately ±2,642,412d—see the Channel 1 ADC section. The equivalent rms value of a full-scale ac signal are 1,868,467d (0x1C82B3).
+
+7. FOR VOLTAGE: With the specified full-scale ac analog input signal of 0.5 V, the output from the LPF1 swings between 0x2518 and 0xDAE8 at 60 Hz—see the Channel 2 ADC section. The equivalent rms value of this full-scale ac signal is approximately 1,561,400 (0x17D338) in the VRMS register.
+
+8. .02157 V/A calculated based on calibration measurements.
+
+9. So we want to set the GAIN register to 2x actually.
