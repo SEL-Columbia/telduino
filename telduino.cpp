@@ -63,9 +63,12 @@ void setup()
 
 	//SPI.setClockDivider(0);
 	
+	#define testChannel 20
+	
 	//Set the ch1 digital integrator on
 	//#define regist CH1OS
-	CSSelectDevice(20);
+	
+	CSSelectDevice(testChannel);
 	uint32_t ch1osVal = 0x00000000;
 	ch1osVal |= (1 << 7);
 	ch1osVal = ch1osVal << 24;
@@ -73,7 +76,7 @@ void setup()
 	CSSelectDevice(DEVDISABLE);
 	
 	uint32_t data = 0;
-	CSSelectDevice(20);
+	CSSelectDevice(testChannel);
 	byte out = readData(CH1OS,&data);
 	CSSelectDevice(DEVDISABLE);	
 	Serial2.print("out:");
@@ -85,14 +88,14 @@ void setup()
 	Serial2.println(data,BIN);
 
 	//set the gain to 2 for channel 1 since the sensitivity appears to be 0.02157 V/Amp
-	CSSelectDevice(20);
+	CSSelectDevice(testChannel);
 	uint32_t gainVal = 0x00000000;
 	gainVal |= 1;
 	gainVal = gainVal << 24;
 	writeData(GAIN,&gainVal);
 	CSSelectDevice(DEVDISABLE);
 
-	CSSelectDevice(20);
+	CSSelectDevice(testChannel);
 	out = readData(GAIN,&data);
 	CSSelectDevice(DEVDISABLE);
 	Serial2.print("out:");
@@ -104,23 +107,39 @@ void setup()
 	Serial2.println(data,BIN);
 	
 	//Set the IRMSOS to 0d99 or 0x63. This is the measured offset value.
-	CSSelectDevice(20);
+	CSSelectDevice(testChannel);
 	uint32_t iRmsOsVal = 0x00000000;
 	iRmsOsVal |= 0x63;
 	iRmsOsVal = iRmsOsVal << 20;
 	writeData(IRMSOS,&iRmsOsVal);
 	CSSelectDevice(DEVDISABLE);
 
-	CSSelectDevice(20);
+	CSSelectDevice(testChannel);
 	out = readData(IRMSOS,&data);
 	CSSelectDevice(DEVDISABLE);
 	Serial2.print("out:");
 	Serial2.println(out,BIN);
 	data = data >> 20; // note that this is a signed number. right now we are expecting a positive one
-	//Serial2.print("int data:");
-	//Serial2.println(data);
 	Serial2.print("HEX IRMSOS:");
 	Serial2.println(data,HEX);
+	
+	//Set the IRMSOS to -0d522 or 0x63. This is the measured offset value.
+	CSSelectDevice(testChannel);
+	uint32_t vRmsOsVal = 0x00000000;
+	vRmsOsVal |= 0xDF6;
+	vRmsOsVal = vRmsOsVal << 20;
+	writeData(VRMSOS,&vRmsOsVal);
+	CSSelectDevice(DEVDISABLE);
+
+	CSSelectDevice(testChannel);
+	out = readData(VRMSOS,&data);
+	CSSelectDevice(DEVDISABLE);
+	Serial2.print("out:");
+	Serial2.println(out,BIN);
+	data = data >> 20; // note that this is a signed number. right now we are expecting a negative one
+	Serial2.print("HEX VRMSOS:");
+	Serial2.println(data,HEX);
+	
 	
 	
 }
@@ -197,7 +216,8 @@ void loop()
 	
 	uint32_t data = 0;
 	uint32_t iRMS = 0;
-	CSSelectDevice(20);
+	uint32_t vRMS = 0;
+	CSSelectDevice(testChannel);
 	byte out = readData(IRMS,&data);
 	CSSelectDevice(DEVDISABLE);
 
@@ -206,12 +226,12 @@ void loop()
 	data = data >> 8;
 	Serial2.print("int IRMS:");
 	Serial2.println(data);
-	iRMS = data*1000/40172/4;
+	iRMS = data/161;//data*1000/40172/4;
 	Serial2.print("mAmps IRMS:");
 	Serial2.println(iRMS);
 	
 	data = 0;
-	CSSelectDevice(20);
+	CSSelectDevice(testChannel);
 	out = readData(VRMS,&data);
 	CSSelectDevice(DEVDISABLE);
 
@@ -220,6 +240,9 @@ void loop()
 	data = data >> 8;
 	Serial2.print("int VRMS:");
 	Serial2.println(data);
+	vRMS = data/9142;
+	Serial2.print("Volts VRMS:");
+	Serial2.println(vRMS);
 //	Serial2.print("BIN VRMS:");
 //	Serial2.println(data,BIN);
 	
@@ -227,7 +250,7 @@ void loop()
 	
 /*	
 	int32_t iData = 0;
-	CSSelectDevice(20);
+	CSSelectDevice(testChannel);
 	ADEgetRegister(regist, &iData);
 	CSSelectDevice(DEVDISABLE);
 

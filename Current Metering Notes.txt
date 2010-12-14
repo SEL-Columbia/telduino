@@ -26,3 +26,12 @@ Steps to get the Current Metering Working on the Ade
 9. So we want to set the GAIN register to 2x actually.
 
 10. With the GAIN set to 2x, the IRMSOS needs to be set to 99 or 0x63
+
+11. Right now the peak to peak on each channel of the input voltage appears to be 0.5V. This means that we need to be at a higher voltage divider ratio in order to measure 250V **rms**.
+
+12. The slope is 9168.4696 counts/Volt.
+
+13. To minimize the noise effect in the reading, synchronize the rms reading with the zero crossings of the voltage input.
+
+14. To calculate VRMSOS, we need Vnomial = 85 V (VRMSnom = 777551) and Vnominal/10 = 8.5V (VRMSnom/10 = 78225).
+	So, VRMSOS = (V1*VRMS2 - V2*VRMS1)/(V2 - V1) = -522 = 0b110111110110 = 0xDF6
