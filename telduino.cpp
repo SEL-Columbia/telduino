@@ -30,6 +30,7 @@
 #include "gsmSMS.h"
 #include "gsmGPRS.h"
 #include "gsmMaster.h"
+#include "gatewayMessage.h"
 
 // #define GATEWAY_IP "178.79.140.99" //this is the real live gateway
 #define GATEWAY_IP "173.203.94.233"  // test gateway
@@ -55,6 +56,7 @@ void gsmSMSTester();	// test gsmSMS member functions
 //GPRS derived class tester
 void masterTester();
 //*****************************************8
+//const char* const generateTextString();
 
 //*****************************************8
 uint32_t millisWrapper();
@@ -67,6 +69,8 @@ GSMbase GSMb(Serial3,milP,&Serial2);	//GSMbase TELIT BASE FUNCTIONALITY
 gsmSMS  GsmSMS(Serial3,milP,&Serial2);	//gsmSMS TELIT SMS
 gsmGPRS GsmGPRS(Serial3,milP,&Serial2); //gsmGPRS TELIT GPRS
 gsmMASTER GsmMASTER(Serial3,milP,&Serial2);//combine base SMS and GPRS
+
+
 
 int main(void){
 	sei(); 				//Enable interupts
@@ -90,10 +94,14 @@ int main(void){
     }
 
 	while(1){
-		Serial2.write("Debug: Telit RTC request\r\n");
-		GSMb.sendRecATCommand("AT+CCLK?"); 
+		//Serial2.write("Debug: Telit RTC request\r\n");
+		//GSMb.sendRecATCommand("AT+CCLK?"); 
 		//talkReply();
-		masterTester();
+		//masterTester();
+		Serial2.write(generateTextString(1));
+		GsmSMS.sendNoSaveCMGS("6467142753","hello world!");
+		uint32_t startTime=millisWrapper();
+		while((millisWrapper()-startTime) < 20000);		// hang out 
 		//Timer0.delay(1000);
 	
 	}
@@ -350,4 +358,9 @@ void masterTester(){
 	//while((millisWrapper()-startTime) < 5000);		// hang out 
 	Timer0.delay(60000);
 }
+/*
+const char* const generateTextString(){
+return	"hello world";
+}*/
+
 
