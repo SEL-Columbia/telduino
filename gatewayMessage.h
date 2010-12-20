@@ -8,3 +8,5 @@
 const char* const generateTextString(const int mid);
 
 #endif
+
+//test
