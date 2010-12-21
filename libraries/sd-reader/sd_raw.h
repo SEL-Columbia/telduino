@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include "sd_raw_config.h"
+#include "Select/select.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -48,6 +49,11 @@ extern "C"
  * The card's layout is unknown.
  */
 #define SD_RAW_FORMAT_UNKNOWN 3
+
+void configure_pin_ss();
+void select_card();
+void unselect_card();
+
 
 /**
  * This struct is used by sd_raw_get_info() to return

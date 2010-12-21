@@ -10,7 +10,7 @@
 *	Yellow Y
 *	Red    R
 *	
-*	A pattern is specified with a three digit number GYR where G,Y,R are 0,1 to specifify if that LED is on or off. In the future the PWM functionality of those pins will be used for more complex signals.
+*	A pattern is specified with a three digit number GYR where G,Y,R are 0,1 to specifify if that LED is on or off. 
 *
 */
 

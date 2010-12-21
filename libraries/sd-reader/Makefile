@@ -3,9 +3,9 @@ NAME := sd-reader
 HEX := $(NAME).hex
 OUT := $(NAME).out
 MAP := $(NAME).map
-SOURCES := $(wildcard *.c)
-HEADERS := $(wildcard *.h) ../Select/select.h
-OBJECTS := $(patsubst %.c,%.o,$(SOURCES)) ../Select/select.c
+SOURCES := $(wildcard *.c) ../arduino/wiring.c ../Select/select.c ../Demux/Demux.c ../arduino/wiring_digital.c ../arduino/pins_arduino.c
+HEADERS := $(wildcard *.h) ../arduino/wiring.h ../Select/select.h ../Demux/Demux.h ../arduino/binary.h ../arduino/wiring_private.h ../arduino/pins_arduino.h
+OBJECTS := $(patsubst %.c,%.o,$(SOURCES)) 
 
 MCU := atmega1280
 MCU_AVRDUDE := m1280
@@ -16,7 +16,7 @@ OBJCOPY := avr-objcopy
 SIZE := avr-size -A
 DOXYGEN := doxygen
 
-CFLAGS := -Wall -pedantic -mmcu=$(MCU) -std=c99 -g -Os -DF_CPU=$(MCU_FREQ) -I ../
+CFLAGS := -Wall -pedantic -mmcu=$(MCU) -std=c99 -g -Os -DF_CPU=$(MCU_FREQ) -I ../ -I ../arduino/ -I ../Select/ -I ../Demux/
 
 all: $(HEX)
 

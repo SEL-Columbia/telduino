@@ -12,7 +12,6 @@
 #define SD_RAW_CONFIG_H
 
 #include <stdint.h>
-#include "Select/select.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -103,15 +102,16 @@ extern "C"
       defined(__AVR_ATmega1280__)
     #define configure_pin_mosi() DDRB |= (1 << DDB2)
     #define configure_pin_sck() DDRB |= (1 << DDB1)
-    //#define configure_pin_ss() DDRB |= (1 << DDB0)
-    #define configure_pin_ss() initSelect()//DDRL |= (1 << DDL2)   //Must change, sets PL2 to output 
     #define configure_pin_miso() DDRB &= ~(1 << DDB3)
 
+    //#define configure_pin_ss() DDRB |= (1 << DDB0)
 //    #define select_card() PORTB &= ~(1 << PORTB0)
 //    #define unselect_card() PORTB |= (1 << PORTB0)
 
-    void select_card()   {CSSelectDevice(  SDCARD  );}
-    void unselect_card() {CSSelectDevice(DEVDISABLE);}
+    //THE BELOW FUNCTIONALITY IS NOW IN SD_RAW
+    //void configure_pin_ss(){ initSelect(); }//DDRL |= (1 << DDL2)   //Must change, sets PL2 to output 
+    //void select_card(){CSSelectDevice(  SDCARD  );}
+    //void unselect_card(){CSSelectDevice(DEVDISABLE);}
 #else
     #error "no sd/mmc pin mapping available!"
 #endif

@@ -53,7 +53,7 @@ boolean muxSelect( int8_t line ){
 		digitalWrite(G, (line & 0x04)?HIGH:LOW);
 	} else {
 		//TODO: This is more an error than anything else.
-        	muxSetEnabled(false);
+        muxSetEnabled(false);
 		return false;
 	}
         muxSetEnabled(true);
@@ -68,12 +68,12 @@ void testDemux() {
 	
 	//Enable/Disable CS
 	for (ii=0; ii < 10; ii++) {
-		muxSetEnable(true);
+		muxSetEnabled(true);
 		delay(500);
-		muxSetEnable(false);
+		muxSetEnabled(false);
 	}
 
-	muxSetEnable(true);
+	muxSetEnabled(true);
 
 	for (ii=0; ii < 21; ii++) {
 		muxSelect(ii);
