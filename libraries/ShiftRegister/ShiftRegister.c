@@ -31,7 +31,7 @@ void initShiftRegister(){
 /** 
 *	@brief Enable/disable register
 */
-void setEnabled( boolean enabled ){
+void setEnabled( int8_t enabled ){
 	digitalWrite(NOTENABLE, enabled?LOW:HIGH);
 }
 
@@ -45,7 +45,7 @@ void latch() {
 /** 
 *	@brief Pushes one bit onto the register.
 */
-inline void shiftBit( boolean bit ){
+void shiftBit( int8_t bit ){
 	digitalWrite(SERIN, bit?HIGH:LOW);
 	CLOCK(SHIFTCLK);
 }
@@ -75,12 +75,6 @@ void clearShiftRegister()
 	digitalWrite(NOTCLR,HIGH);
 }
 
-int8_t setCkt(int8_t sNum, int8_t onOff)
-{
-	//Define mapping
-
-}
-
 /**
 *	@brief Exercises ShiftRegister functions.
 *
@@ -95,9 +89,9 @@ void testShiftRegister() {
 
 	//Enable and push 1,0,1, then test latch
 	setEnabled(true);
-	shiftbit(true);
-	shiftbit(false);
-	shiftbit(true);
+	shiftBit(true);
+	shiftBit(false);
+	shiftBit(true);
 	latch();
 
 	//test clear
@@ -106,9 +100,9 @@ void testShiftRegister() {
 	latch();
 
 	//test shiftArray
-	shiftbit(true);
-	shiftbit(false);
-	shiftbit(true);
+	shiftBit(true);
+	shiftBit(false);
+	shiftBit(true);
 	latch();
 	delay(1000);
 	

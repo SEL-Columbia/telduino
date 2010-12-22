@@ -8,6 +8,10 @@
 
 #ifndef SHIFTREGISTER_H
 #define SHIFTREGISTER_H
+#ifdef __cplusplus
+    extern "C" {
+#endif 
+
 
 #include <inttypes.h>
 #include "arduino/wiring.h"
@@ -28,12 +32,15 @@
 //#define REVERSE   0     //Reverse order of shift
 
 void initShiftRegister();
-void setEnabled( boolean enabled );
+void setEnabled( int8_t enabled );
 void latch();
-inline void shiftBit( boolean bit );
+void shiftBit( int8_t bit );
 void shiftArray( byte bits[] , uint8_t size);
 void clearShiftRegister();
 void testShiftRegister();
 
 
+#ifdef __cplusplus
+    }
+#endif
 #endif
