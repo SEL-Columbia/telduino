@@ -19,19 +19,38 @@ Steps to get the Current Metering Working on the Ade
 
 6. FOR CURRENT: With the specified full-scale analog input signal of 0.5 V, the ADC produces an output code that is approximately ±2,642,412d—see the Channel 1 ADC section. The equivalent rms value of a full-scale ac signal are 1,868,467d (0x1C82B3).
 
-7. FOR VOLTAGE: With the specified full-scale ac analog input signal of 0.5 V, the output from the LPF1 swings between 0x2518 and 0xDAE8 at 60 Hz—see the Channel 2 ADC section. The equivalent rms value of this full-scale ac signal is approximately 1,561,400 (0x17D338) in the VRMS register.
+7. FOR CURRENT: .0215 V/A calculated based on calibration measurements.
 
-8. .0215 V/A calculated based on calibration measurements.
+8. So we want to set the GAIN register to 2x actually.
 
-9. So we want to set the GAIN register to 2x actually.
+9. With the GAIN set to 2x, the IRMSOS needs to be set to 99 or 0x63
 
-10. With the GAIN set to 2x, the IRMSOS needs to be set to 99 or 0x63
+Voltage Metering
+=================
 
-11. Right now the peak to peak on each channel of the input voltage appears to be 0.5V. This means that we need to be at a higher voltage divider ratio in order to measure 250V **rms**.
+1. FOR VOLTAGE: With the specified full-scale ac analog input signal of 0.5 V, the output from the LPF1 swings between 0x2518 and 0xDAE8 at 60 Hz—see the Channel 2 ADC section. The equivalent rms value of this full-scale ac signal is approximately 1,561,400 (0x17D338) in the VRMS register.
 
-12. The slope is 9168.4696 counts/Volt.
+2. Right now the peak to peak on each channel of the input voltage appears to be 0.5V. This means that we need to be at a higher voltage divider ratio in order to measure 250V **rms**.
 
-13. To minimize the noise effect in the reading, synchronize the rms reading with the zero crossings of the voltage input.
+3. The slope is 9168.4696 counts/Volt.
 
-14. To calculate VRMSOS, we need Vnomial = 85 V (VRMSnom = 777551) and Vnominal/10 = 8.5V (VRMSnom/10 = 78225).
+4. To minimize the noise effect in the reading, synchronize the rms reading with the zero crossings of the voltage input.
+
+5. To calculate VRMSOS, we need Vnomial = 85 V (VRMSnom = 777551) and Vnominal/10 = 8.5V (VRMSnom/10 = 78225).
 	So, VRMSOS = (V1*VRMS2 - V2*VRMS1)/(V2 - V1) = -522 = 0b110111110110 = 0xDF6
+
+6. We want to use Positive-only accumulation mode by setting the MSB of the mode register (MODE[15]). This is normally set off.
+
+
+Steps to calibrate the Power/Energy readings of the ADE
+========================================================
+
+1. There are two registers to adjust for the active power measurement: APOS and WGAIN.
+
+2. First, the line accumulation mode and the line accumulation interrupt should be enabled. Next, the number of half line cycles for the energy accumulation is written to the LINECYC register. This sets the accumulation time. Reset the interrupt status register and wait for the line cycle accumulation interrupt. Also the CYCMODE bit in the mode register needs to be enabled.
+
+3. When LINECYC half line cycles have elapsed, the IRQ pin goes active low and the nominal LAENERGY with the test current applied can be read. This LAENERGY value is compared to the expected LAENERGY value to deter- mine the WGAIN value.
+
+4. If apparent energy gain calibration is performed at the same time, LVAENERGY can be read directly after LAENERGY. Both registers should be read before the next interrupt is issued on the IRQ pin. 
+
+5. 
