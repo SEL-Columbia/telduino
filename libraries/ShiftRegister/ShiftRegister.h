@@ -1,3 +1,5 @@
+// vim: autoindent:smartindent:tabstop=4:shiftwidth=4:noexpandtab
+
 /** @file ShiftRegister.h 
 
 @author: Javier Rosa
@@ -5,13 +7,11 @@
 @todo decide if we should assume sanitized inputs
 
 */
-
 #ifndef SHIFTREGISTER_H
 #define SHIFTREGISTER_H
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif 
-
 
 #include <inttypes.h>
 #include "arduino/wiring.h"
