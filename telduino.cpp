@@ -69,6 +69,7 @@ uint32_t data = 0;
 uint32_t iRMS = 0;
 uint32_t vRMS = 0;
 uint32_t lineAccAppEnergy = 0;
+uint32_t lineAccActiveEnergy = 0;
 uint32_t interruptStatus = 0;
 byte out = 0;
 uint32_t loopCounter = 0;
@@ -135,12 +136,19 @@ void loop()
 		Serial2.println(vRMS);
 		
 		data = 0;
-		lineAccAppEnergy = 0;
 		out = 0;		
 		out = readData(LVAENERGY,&data);
 		data = data >> 8;
-		Serial2.print("int Line Apparent Energy:");
+		Serial2.print("int Line Cycle Apparent Energy after 200 half-cycles:");
 		Serial2.println(data);
+		
+		data = 0;
+		out = 0;		
+		out = readData(LAENERGY,&data);
+		data = data >> 8;
+		Serial2.print("int Line Cycle Active Energy after 200 half-cycles:");
+		Serial2.println(data);
+		
 /*		iRMS = data/161;//data*1000/40172/4;
 		Serial2.print("mAmps IRMS:");
 		Serial2.println(iRMS);
@@ -194,14 +202,14 @@ void softSetup()
 	//Set the IRMSOS to 0d99 or 0x63. This is the measured offset value.
 	uint32_t iRmsOsVal = 0x00000000;
 	iRmsOsVal |= 0x163;
-	iRmsOsVal = iRmsOsVal << 20;
+	iRmsOsVal = iRmsOsVal << 16;
 	writeData(IRMSOS,&iRmsOsVal);
 	out = readData(IRMSOS,&data);
 	data = data >> 16; // note that this is a signed number.
 	Serial2.print("hex IRMSOS:");
 	Serial2.println(data, HEX);
 	
-	//Set the IRMSOS to -0d549. This is the measured offset value.
+	//Set the VRMSOS to -0d549. This is the measured offset value.
 	uint32_t vRmsOsVal = 0x00000000;
 	vRmsOsVal |= 0xDDB;
 	vRmsOsVal = vRmsOsVal << 16;
