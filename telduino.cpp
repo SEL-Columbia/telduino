@@ -60,80 +60,7 @@ void setup()
 
 	Serial2.print("\n\n\rStart Program\n\n\r");
 	
-	CSSelectDevice(testChannel); //start SPI comm with the test device channel
-	uint32_t data = 0;
-
-	//Turn on the digital integrator for channel 1
-	uint32_t ch1osVal = 0x00000000;
-	ch1osVal |= (1 << 7);
-	ch1osVal = ch1osVal << 24;
-	writeData(CH1OS,&ch1osVal);
-	byte out = readData(CH1OS,&data);
-	data = data >> 24;
-	Serial2.print("BIN CH1OS:");
-	Serial2.println(data,BIN);
-
-	//set the gain to 2 for channel 1 since the sensitivity appears to be 0.02157 V/Amp
-	uint32_t gainVal = 0x00000000;
-	gainVal |= 1;
-	gainVal = gainVal << 24;
-	writeData(GAIN,&gainVal);
-	out = readData(GAIN,&data);
-	data = data >> 24;
-	Serial2.print("BIN GAIN:");
-	Serial2.println(data,BIN);
-	
-	//Set the IRMSOS to 0d99 or 0x63. This is the measured offset value.
-	uint32_t iRmsOsVal = 0x00000000;
-	//iRmsOsVal |= 0x63;
-	iRmsOsVal = iRmsOsVal << 20;
-	writeData(IRMSOS,&iRmsOsVal);
-	out = readData(IRMSOS,&data);
-	data = data >> 20; // note that this is a signed number 
-	Serial2.print("hex IRMSOS:");
-	Serial2.println(data, HEX);
-	
-	//Set the VRMSOS to -0d549. This is the measured offset value.
-	uint32_t vRmsOsVal = 0x00000000;
-	vRmsOsVal |= 0xDDB;
-	vRmsOsVal = vRmsOsVal << 20;
-	writeData(VRMSOS,&vRmsOsVal);
-	out = readData(VRMSOS,&data);
-	data = data >> 20; // note that this is a signed number.
-	Serial2.print("hex VRMSOS:");
-	Serial2.println(data, HEX);
-	
-	//set the number of cycles to wait before taking a reading
-	uint32_t linecycVal = 0xC8; //200 half-cycles = 2 seconds.
-	linecycVal = linecycVal << 16;
-	writeData(LINECYC,&linecycVal);
-	out = readData(LINECYC,&data);
-	data = data >> 16; // 16 bits
-	Serial2.print("int linecycVal:");
-	Serial2.println(data);
-	
-	//read and set the CYCMODE bit on the MODE register
-	uint32_t modeReg = 0;
-	out = readData(MODE,&data);
-	modeReg = data >> 16; // 16 bits
-	Serial2.print("bin MODE register before setting CYCMODE:");
-	Serial2.println(modeReg, BIN);
-	modeReg |= CYCMODE;	 //set the line cycle accumulation mode bit
-	modeReg = modeReg << 16;
-	writeData(MODE,&modeReg);
-	out = readData(MODE,&data);
-	modeReg = data >> 16; // 16 bits
-	Serial2.print("bin MODE register after setting CYCMODE:");
-	Serial2.println(modeReg, BIN);
-	
-	//Read and reset the Interrupt status register
-	out = readData(RSTSTATUS, &data);
-	data = data >> 16; //need only 16 bits for the status
-	Serial2.print("bin Interrupt Status Register:");
-	Serial2.println(data, BIN);
-	
-	
-	CSSelectDevice(DEVDISABLE); //end SPI comm with the selected device	
+	softSetup();
 	
 } //end of setup section
 
@@ -265,23 +192,25 @@ void softSetup()
 	Serial2.println(data,BIN);
 	
 	//Set the IRMSOS to 0d99 or 0x63. This is the measured offset value.
-	/*uint32_t iRmsOsVal = 0x00000000;
-	iRmsOsVal |= 0x63;
+	uint32_t iRmsOsVal = 0x00000000;
+	iRmsOsVal |= 0x163;
 	iRmsOsVal = iRmsOsVal << 20;
-	writeData(IRMSOS,&iRmsOsVal);*/
+	writeData(IRMSOS,&iRmsOsVal);
 	out = readData(IRMSOS,&data);
-	data = data >> 20; // note that this is a signed number.
+	data = data >> 16; // note that this is a signed number.
 	Serial2.print("hex IRMSOS:");
 	Serial2.println(data, HEX);
 	
 	//Set the IRMSOS to -0d549. This is the measured offset value.
 	uint32_t vRmsOsVal = 0x00000000;
 	vRmsOsVal |= 0xDDB;
-	vRmsOsVal = vRmsOsVal << 20;
+	vRmsOsVal = vRmsOsVal << 16;
+	Serial2.print("hex VRMSOS being written:");
+	Serial2.println(vRmsOsVal, HEX);	
 	writeData(VRMSOS,&vRmsOsVal);
 	out = readData(VRMSOS,&data);
-	data = data >> 20; // note that this is a signed number.
-	Serial2.print("hex VRMSOS:");
+	data = data >> 16; // note that this is a signed number.
+	Serial2.print("hex VRMSOS read from register:");
 	Serial2.println(data, HEX);
 	
 	//set the number of cycles to wait before taking a reading

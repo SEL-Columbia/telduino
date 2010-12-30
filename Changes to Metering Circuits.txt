@@ -1,0 +1,7 @@
+Changes to be made to the Metering Circuits
+===========================================
+
+1. Add ferrite bead to the voltage sensor lines?
+2. We need to increase the voltage divider ratio. We have not accounted for the fact that we were thinking about RMS voltages when we used the 500K to 1K ratio.
+	1. What we need is that the ratio is 1000K to 1K
+3. We also want to use a filter with a higher corner frequency. right now, the corner frequency is 4 kHz. This seems close to our band of interest of 40-2khz. The internal low-pass filter has a corner frequency of 140 Hz. having an attenuation of 10 kHz would be beneficial to having a linear range across the frequency range of interest.
