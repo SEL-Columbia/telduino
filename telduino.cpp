@@ -12,7 +12,7 @@ const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY
 
 char ctrlz = 26;
 
-#define testChannel 20
+#define testChannel 1
 #define CYCEND 0x04 //bit 2 of the Interrupt Status register
 #define CYCMODE 0x80 //bit 7 of the MODE register
 
