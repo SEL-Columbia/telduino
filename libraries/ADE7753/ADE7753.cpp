@@ -14,7 +14,11 @@ bool initSPI()
 int readData(ADEReg reg, uint32_t *data)
 {
 	SPI.setDataMode(SPI_MODE1);
-		int nBytes = (reg.nBits+7)/8;
+
+    //SPI speed is f_osc/128
+    SPI.setClockDivider(SPI_CLOCK_DIV128);
+	
+    int nBytes = (reg.nBits+7)/8;
 
 	*data = 0;
 
@@ -73,7 +77,11 @@ int ADEgetRegister(ADEReg reg, int32_t *regValue)
 int writeData(ADEReg reg, uint32_t *data)
 {
 	SPI.setDataMode(SPI_MODE1);
-		int nBytes = (reg.nBits+7)/8;
+	int nBytes = (reg.nBits+7)/8;
+
+    //SPI speed is f_osc/128
+    SPI.setClockDivider(SPI_CLOCK_DIV128);
+
 
 		//now transfer the write Instuction/registerAddress: i.e. 10xxxxxx -JR
 	SPI.transfer(reg.addr | 0x80);
