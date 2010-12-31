@@ -53,4 +53,10 @@ Steps to calibrate the Power/Energy readings of the ADE
 
 4. If apparent energy gain calibration is performed at the same time, LVAENERGY can be read directly after LAENERGY. Both registers should be read before the next interrupt is issued on the IRQ pin. 
 
-5. 
+Test Setup
+===========
+
+1. Test Points required: 
+	1. 0.01 and 5 amps
+	2. 12 and 120 volts
+	3. 2.4 watts to 24? watts

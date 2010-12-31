@@ -74,6 +74,8 @@ uint32_t interruptStatus = 0;
 byte out = 0;
 uint32_t loopCounter = 0;
 int incomingByte = 0;
+uint32_t iRMSSlope = 147;
+uint32_t vRMSSlope = 4586;
 
 void loop()
 {	
@@ -120,7 +122,7 @@ void loop()
 		data = data >> 8;
 		Serial2.print("int IRMS:");
 		Serial2.println(data);
-		iRMS = data/161;//data*1000/40172/4;
+		iRMS = data/iRMSSlope;//data*1000/40172/4;
 		Serial2.print("mAmps IRMS:");
 		Serial2.println(iRMS);
 		
@@ -131,7 +133,7 @@ void loop()
 		data = data >> 8;
 		Serial2.print("int VRMS:");
 		Serial2.println(data);
-		vRMS = data/4586; //old value:9142
+		vRMS = data/vRMSSlope; //old value:9142
 		Serial2.print("Volts VRMS:");
 		Serial2.println(vRMS);
 		
@@ -199,9 +201,9 @@ void softSetup()
 	Serial2.print("BIN GAIN:");
 	Serial2.println(data,BIN);
 	
-	//Set the IRMSOS to 0d99 or 0x63. This is the measured offset value.
+	//Set the IRMSOS to -0d324 or 0xFEBC. This is the measured offset value.
 	uint32_t iRmsOsVal = 0x00000000;
-	iRmsOsVal |= 0x163;
+	iRmsOsVal |= 0xFEBC;
 	iRmsOsVal = iRmsOsVal << 16;
 	writeData(IRMSOS,&iRmsOsVal);
 	out = readData(IRMSOS,&data);
@@ -211,10 +213,10 @@ void softSetup()
 	
 	//Set the VRMSOS to -0d549. This is the measured offset value.
 	uint32_t vRmsOsVal = 0x00000000;
-	vRmsOsVal |= 0xDDB;
+	vRmsOsVal |= 0xFDDB;
 	vRmsOsVal = vRmsOsVal << 16;
-	Serial2.print("hex VRMSOS being written:");
-	Serial2.println(vRmsOsVal, HEX);	
+	//Serial2.print("hex VRMSOS being written:");
+	//Serial2.println(vRmsOsVal, HEX);	
 	writeData(VRMSOS,&vRmsOsVal);
 	out = readData(VRMSOS,&data);
 	data = data >> 16; // note that this is a signed number.
