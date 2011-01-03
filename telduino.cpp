@@ -15,7 +15,9 @@ const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY
 
 char ctrlz = 26;
 
-#define testChannel 0
+
+#define testChannel 1
+
 #define CYCEND 0x04 //bit 2 of the Interrupt Status register
 #define CYCMODE 0x80 //bit 7 of the MODE register
 
@@ -48,7 +50,8 @@ void setup()
 	pinMode(37, OUTPUT);
 	digitalWrite(37,HIGH);
 
-	Serial2.begin(9600); //Serial port
+	Serial1.begin(9600); //Serial port
+	Serial1.print("\n\n\rHello World!\n\n\r");
 	initDbgTel(); //Blink leds
 	initShiftRegister(); //Shift registers
 	initDemux(); //Muxers
@@ -61,7 +64,7 @@ void setup()
 	//Set the ch1 digital integrator on
 	//#define regist CH1OS
 
-	Serial2.print("\n\n\rStart Program\n\n\r");
+	Serial1.print("\n\n\rStart Program\n\n\r");
 	
 	softSetup();
 	
@@ -77,19 +80,21 @@ uint32_t interruptStatus = 0;
 byte out = 0;
 uint32_t loopCounter = 0;
 int incomingByte = 0;
-uint32_t iRMSSlope = 147;
-uint32_t vRMSSlope = 4586;
+uint32_t iRMSSlope = 164;
+uint32_t vRMSSlope = 4700;
+uint32_t appEnergyDiv = 5;
+uint32_t energyJoules = 0;
 
 void loop()
 {	
-	// Look for incoming data on Serial2 line
-	if (Serial2.available() > 0) {
+	// Look for incoming data on Serial1 line
+	if (Serial1.available() > 0) {
 		// read the incoming byte:
-		incomingByte = Serial2.read();
+		incomingByte = Serial1.read();
 
 		// say what you got:
-		Serial2.print("\n\n\rI received: ");
-		Serial2.print(incomingByte);
+		Serial1.print("\n\n\rI received: ");
+		Serial1.print(incomingByte);
 		if(incomingByte == 'R')
 			softSetup(); //do a soft reset.
 	}
@@ -104,8 +109,8 @@ void loop()
 	interruptStatus = data >> 16; //need only 16 bits for the status
 	
 	if(0 /*loopCounter%4096*/ ){
-		Serial2.print("bin Interrupt Status Register:");
-		Serial2.println(interruptStatus, BIN);
+		Serial1.print("bin Interrupt Status Register:");
+		Serial1.println(interruptStatus, BIN);
 		
 	}	//endif
 	
@@ -113,62 +118,73 @@ void loop()
 	if(interruptStatus & CYCEND){
 		
 		setDbgLeds(GYRPAT);
-		Serial2.print("\n\rIn Loop Number:");
-		Serial2.println(loopCounter);
-		Serial2.print("bin Interrupt Status Register:");
-		Serial2.println(interruptStatus, BIN);
+		Serial1.print("\n\rIn Loop Number:");
+		Serial1.println(loopCounter);
+		Serial1.print("bin Interrupt Status Register:");
+		Serial1.println(interruptStatus, BIN);
 		
+		//IRMS SECTION
 		data = 0;
 		iRMS = 0;
 		out = 0;		
 		out = readData(IRMS,&data);
 		data = data >> 8;
-		Serial2.print("int IRMS:");
-		Serial2.println(data);
+		Serial1.print("int IRMS:");
+		Serial1.println(data);
 		iRMS = data/iRMSSlope;//data*1000/40172/4;
-		Serial2.print("mAmps IRMS:");
-		Serial2.println(iRMS);
+		Serial1.print("mAmps IRMS:");
+		Serial1.println(iRMS);
 		
+		//VRMS SECTION
 		data = 0;
 		vRMS = 0;
 		out = 0;		
 		out = readData(VRMS,&data);
 		data = data >> 8;
-		Serial2.print("int VRMS:");
-		Serial2.println(data);
+		Serial1.print("int VRMS:");
+		Serial1.println(data);
 		vRMS = data/vRMSSlope; //old value:9142
-		Serial2.print("Volts VRMS:");
-		Serial2.println(vRMS);
+		Serial1.print("Volts VRMS:");
+		Serial1.println(vRMS);
 		
+		//APPARENT ENERGY SECTION
 		data = 0;
 		out = 0;		
 		out = readData(LVAENERGY,&data);
 		data = data >> 8;
-		Serial2.print("int Line Cycle Apparent Energy after 200 half-cycles:");
-		Serial2.println(data);
+		Serial1.print("int Line Cycle Apparent Energy after 200 half-cycles:");
+		Serial1.println(data);
+		energyJoules = data*2014/10000;
+		Serial1.print("Energy in Joules over the past 2 seconds:");
+		Serial1.println(energyJoules);
+		Serial1.print("Calculated apparent power usage:");
+		Serial1.println(energyJoules/2);
 		
+		//THIS IS NOT WORKING FOR SOME REASON
+		//WE NEED TO FIX THE ACTIVE ENERGY REGISTER AT SOME POINT
+		//ACTIVE ENERGY SECTION
 		data = 0;
 		out = 0;		
-		out = readData(LAENERGY,&data);
+		out = readData(LAENERGY,&data); 
 		data = data >> 8;
-		Serial2.print("int Line Cycle Active Energy after 200 half-cycles:");
-		Serial2.println(data);
+		Serial1.print("int Line Cycle Active Energy after 200 half-cycles:");
+		Serial1.println(data);
 		
 /*		iRMS = data/161;//data*1000/40172/4;
-		Serial2.print("mAmps IRMS:");
-		Serial2.println(iRMS);
+		Serial1.print("mAmps IRMS:");
+		Serial1.println(iRMS);
 */
 		
 		delay(500);
 		/*
 		out = readData(RSTSTATUS, &data);
 		interruptStatus = data >> 16; //need only 16 bits for the status
-		Serial2.print("bin Interrupt Status Register after Reset:");
-		Serial2.println(interruptStatus, BIN);*/
+		Serial1.print("bin Interrupt Status Register after Reset:");
+		Serial1.println(interruptStatus, BIN);*/
 		
 	} //end of if statement
 
-	//Serial2.flush();
+	//Serial1.flush();
 	CSSelectDevice(DEVDISABLE);
 	
 	setDbgLeds(0);
@@ -179,7 +195,7 @@ void loop()
 
 void softSetup() 
 {
-	Serial2.print("\n\n\rReStarted Program\n\n\r");
+	Serial1.print("\n\n\rReStarted Program\n\n\r");
 	
 	CSSelectDevice(testChannel); //start SPI comm with the test device channel
 	uint32_t data = 0;
@@ -191,8 +207,8 @@ void softSetup()
 	writeData(CH1OS,&ch1osVal);
 	byte out = readData(CH1OS,&data);
 	data = data >> 24;
-	Serial2.print("BIN CH1OS:");
-	Serial2.println(data,BIN);
+	Serial1.print("BIN CH1OS:");
+	Serial1.println(data,BIN);
 
 	//set the gain to 2 for channel 1 since the sensitivity appears to be 0.02157 V/Amp
 	uint32_t gainVal = 0x00000000;
@@ -201,30 +217,30 @@ void softSetup()
 	writeData(GAIN,&gainVal);
 	out = readData(GAIN,&data);
 	data = data >> 24;
-	Serial2.print("BIN GAIN:");
-	Serial2.println(data,BIN);
+	Serial1.print("BIN GAIN:");
+	Serial1.println(data,BIN);
 	
-	//Set the IRMSOS to -0d324 or 0xFEBC. This is the measured offset value.
+	//Set the IRMSOS to 0d444 or 0x01BC. This is the measured offset value.
 	uint32_t iRmsOsVal = 0x00000000;
-	iRmsOsVal |= 0xFEBC;
+	iRmsOsVal |= 0x01BC;
 	iRmsOsVal = iRmsOsVal << 16;
 	writeData(IRMSOS,&iRmsOsVal);
 	out = readData(IRMSOS,&data);
 	data = data >> 16; // note that this is a signed number.
-	Serial2.print("hex IRMSOS:");
-	Serial2.println(data, HEX);
+	Serial1.print("hex IRMSOS:");
+	Serial1.println(data, HEX);
 	
 	//Set the VRMSOS to -0d549. This is the measured offset value.
 	uint32_t vRmsOsVal = 0x00000000;
-	vRmsOsVal |= 0xFDDB;
+	vRmsOsVal |= 0x07FF;//F800;
 	vRmsOsVal = vRmsOsVal << 16;
-	//Serial2.print("hex VRMSOS being written:");
-	//Serial2.println(vRmsOsVal, HEX);	
+	//Serial1.print("hex VRMSOS being written:");
+	//Serial1.println(vRmsOsVal, HEX);	
 	writeData(VRMSOS,&vRmsOsVal);
 	out = readData(VRMSOS,&data);
 	data = data >> 16; // note that this is a signed number.
-	Serial2.print("hex VRMSOS read from register:");
-	Serial2.println(data, HEX);
+	Serial1.print("hex VRMSOS read from register:");
+	Serial1.println(data, HEX);
 	
 	//set the number of cycles to wait before taking a reading
 	uint32_t linecycVal = 0xC8;
@@ -232,28 +248,28 @@ void softSetup()
 	writeData(LINECYC,&linecycVal);
 	out = readData(LINECYC,&data);
 	data = data >> 16; // 16 bits
-	Serial2.print("int linecycVal:");
-	Serial2.println(data);
+	Serial1.print("int linecycVal:");
+	Serial1.println(data);
 	
 	//read and set the CYCMODE bit on the MODE register
 	uint32_t modeReg = 0;
 	out = readData(MODE,&data);
 	modeReg = data >> 16; // 16 bits
-	Serial2.print("bin MODE register before setting CYCMODE:");
-	Serial2.println(modeReg, BIN);
+	Serial1.print("bin MODE register before setting CYCMODE:");
+	Serial1.println(modeReg, BIN);
 	modeReg |= CYCMODE;	 //set the line cycle accumulation mode bit
 	modeReg = modeReg << 16;
 	writeData(MODE,&modeReg);
 	out = readData(MODE,&data);
 	modeReg = data >> 16; // 16 bits
-	Serial2.print("bin MODE register after setting CYCMODE:");
-	Serial2.println(modeReg, BIN);
+	Serial1.print("bin MODE register after setting CYCMODE:");
+	Serial1.println(modeReg, BIN);
 	
 	//reset the Interrupt status register
 	out = readData(RSTSTATUS, &data);
 	data = data >> 16; //need only 16 bits for the status
-	Serial2.print("bin Interrupt Status Register:");
-	Serial2.println(data, BIN);
+	Serial1.print("bin Interrupt Status Register:");
+	Serial1.println(data, BIN);
 	modeReg |= CYCMODE;
 	
 	
@@ -309,12 +325,12 @@ void softSetup()
 	sd_raw_get_info(&info);
 	if(info.manufacturer || info.revision) {
 		setDbgLeds(GPAT);
-		Serial2.println("manufacturer");
-		Serial2.println(info.manufacturer,BIN);
-		Serial2.println("revision");
-		Serial2.println(info.revision,BIN);
+		Serial1.println("manufacturer");
+		Serial1.println(info.manufacturer,BIN);
+		Serial1.println("revision");
+		Serial1.println(info.revision,BIN);
 	} else { 
-		Serial2.println("Nothing From SD Card Received");
+		Serial1.println("Nothing From SD Card Received");
 	}
 	delay(1000);
 	*/
@@ -330,10 +346,10 @@ void softSetup()
 	ADEgetRegister(regist, &iData);
 	CSSelectDevice(DEVDISABLE);
 
-	Serial2.print("int iData:");
-	Serial2.println(iData);
-	Serial2.print("BIN iData:");
-	Serial2.println(iData,BIN);
+	Serial1.print("int iData:");
+	Serial1.println(iData);
+	Serial1.print("BIN iData:");
+	Serial1.println(iData,BIN);
 */
 
 
@@ -352,12 +368,12 @@ void softSetup()
 	delay(10000);
 	*/
 	/*
-	Serial2.print("CLKPR:");
-	Serial2.println(CLKPR, BIN);
-	Serial2.print("SPCR:");
-	Serial2.println(SPCR,BIN);
-	Serial2.print("SPDR:");
-	Serial2.println(SPDR,BIN);
+	Serial1.print("CLKPR:");
+	Serial1.println(CLKPR, BIN);
+	Serial1.print("SPCR:");
+	Serial1.println(SPCR,BIN);
+	Serial1.print("SPDR:");
+	Serial1.println(SPDR,BIN);
 	
 	1000100011010 
 	*/
