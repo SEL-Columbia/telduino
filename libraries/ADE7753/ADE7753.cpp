@@ -1,53 +1,64 @@
 #include "ADE7753.h"
+#include <limits.h>
+//TODO Add range checks for all safe functions
+//TODO writeData shouldn't use pointer neither should readData
 
-bool initSPI()
-{
-		//Change SPI speed/endianness as empirically determined. -JR	
-	//Needs to be done before reads/writes
-}
 /**
 * returns BYTES from the ADE in a uint32_t value
 * MSB of ADE output is the MSB of the data output
 * @warning SPI mode is changed after calling this funciton
-* *TODO : Chksum if chksum fails return 2
 */
-int readData(ADEReg reg, uint32_t *data)
+void ADEreadData(ADEReg reg, uint32_t *data)
 {
-	SPI.setDataMode(SPI_MODE1);
+    uint8_t nBytes = (reg.nBits+7)/8;
 
     //SPI speed is f_osc/128
     SPI.setClockDivider(SPI_CLOCK_DIV128);
-	
-    int nBytes = (reg.nBits+7)/8;
+	SPI.setDataMode(SPI_MODE1);
 
-	*data = 0;
-
-		//now transfer the readInstuction/registerAddress: i.e. 00xxxxxx -AM
+	//now transfer the readInstuction/registerAddress: i.e. 00xxxxxx -AM
 	SPI.transfer(reg.addr);
-	//delayMicroseconds(4);
-		//now read the data on the SPI data register byte-by-byte with the MSB first - AM
-	const int msb = sizeof(*data)-1;
-		for (int i=0; i<nBytes; i++) {
-			((byte*)data)[msb-i] = SPI.transfer(0x00);
-		}
-
-		return 0;
+	//now read the data on the SPI data register byte-by-byte with the MSB first - AM
+	const uint8_t msb = sizeof(*data)-1;
+	*data = 0;
+	for (int i=0; i<nBytes; i++) {
+		((byte*)data)[msb-i] = SPI.transfer(0x00);
+	}
 }
 
+void ADEwriteData(ADEReg reg, uint32_t *data)
+{
+	uint8_t nBytes = (reg.nBits+7)/8;
+
+    //SPI speed is f_osc/128
+	SPI.setDataMode(SPI_MODE1);
+    SPI.setClockDivider(SPI_CLOCK_DIV128);
+
+	//now transfer the write Instuction/registerAddress: i.e. 10xxxxxx -JR
+	SPI.transfer(reg.addr | 0x80);
+	//now write the data on the SPI data register byte-by-byte with the MSB first - AM
+	const uint8_t msb = sizeof(*data)-1;
+	for (uint8_t i=0; i<nBytes; i++) {
+		 SPI.transfer( ((byte*)data)[msb-i] );
+	}
+}
 
 /**
-	returns 1 if the read failed
-	returns 2 if the CHKSUM fails
+*	returns SUCCESS if the read failed
+*	returns COMMERR if the computed check sum fails to make the ADE chksum
 */
-int ADEgetRegister(ADEReg reg, int32_t *regValue)
+uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 {
 	//get raw data, MSB of data is MSB from ADE irrespective of byte length
+	uint8_t retCode = SUCCESS;
 	uint32_t rawData = 0;
-	int nBytes = (reg.nBits+7)/8;
+	uint8_t nBytes = (reg.nBits+7)/8;
 
-	int failure = readData(reg, &rawData);
-	if (failure) {
-		return failure;
+	ADEreadData(reg, &rawData);
+	uint32_t chksum = 0;
+	ADEreadData(CHKSUM,&chksum);
+	if (ADEchksum(rawData) != ((uint8_t*)chksum)[3]) {
+		retCode = COMMERR;
 	}
 	
 	//Push bits into MSB for irregular sizes
@@ -55,50 +66,63 @@ int ADEgetRegister(ADEReg reg, int32_t *regValue)
 	if (reg.signType == TWOS) {
 		//Make signed
 		*regValue = rawData;
-	} else if(reg.signType == SIGNMAG) {
+		//Use signed shift for 8 byte alignment, then to move LSB to 0 byte
+		(*regValue) >>= (nBytes*8-reg.nBits);
+		(*regValue) >>= ((sizeof(regValue)-nBytes)*8);
+	} else if (reg.signType == UNSIGN) {
+		//Use unsigned shift for 8 byte alignment, then to move LSB to 0 byte
+		rawData >>= (nBytes*8-reg.nBits);
+		rawData >>= ((sizeof(rawData)-nBytes)*8);
+		*regValue = rawData;
+	} else {
 		//Was for CH1OS/CH2OS not used
+		/* if(reg.signType == SIGNMAG) {
 		bool sign = rawData&(1<<(sizeof(uint32_t)-1));
 		rawData &= ~(1<<(sizeof(uint32_t)-1));
 		if (sign) { //MSB is one
 			*regValue = -rawData;
 		} else {
 			*regValue = rawData;
-		}
-	} else { //unsigned
-		*regValue = rawData;
+		}*/
 	}
-	//Use signed shift for 8 byte alignment, then to move LSB to 0 byte
-	(*regValue) >>= (nBytes*8-reg.nBits);
-	(*regValue) >>= ((sizeof(uint32_t)-nBytes)*8);
 
-	return 0;
+	return retCode;
 }
 
-int writeData(ADEReg reg, uint32_t *data)
+
+uint8_t ADEsetRegister(ADEReg reg, int32_t *value)
 {
-	SPI.setDataMode(SPI_MODE1);
-	int nBytes = (reg.nBits+7)/8;
+	uint8_t retCode = SUCCESS;
+	uint32_t rawData;
+	uint8_t nBytes = (reg.nBits+7)/8;
 
-    //SPI speed is f_osc/128
-    SPI.setClockDivider(SPI_CLOCK_DIV128);
+	if (reg.signType == TWOS || reg.signType == UNSIGN) {
+		rawData = *value;
+		//rawData <<= (nBytes*8-reg.nBits);
+		rawData <<= ((sizeof(rawData)-nBytes)*8);
+	} else { //Do nothing
+		retCode = FAILURE;
+	}
+	//write data
+	ADEwriteData(reg, &rawData);
 
-
-		//now transfer the write Instuction/registerAddress: i.e. 10xxxxxx -JR
-	SPI.transfer(reg.addr | 0x80);
-		//now write the data on the SPI data register byte-by-byte with the MSB first - AM
-	const int msb = sizeof(*data)-1;
-		for (int i=0; i<nBytes; i++) {
-			 SPI.transfer( ((byte*)data)[msb-i] );
-		}
-	//TODO CHKSUM 
-
-		return 0;
+	//read data and verify
+	uint32_t readData;
+	ADEreadData(reg,&readData);
+	if (rawData != readData) {
+		retCode = COMMERR;
+	}
+	
+	return retCode;
 }
 
-int chksum(uint32_t data) 
+/**
+*	@return sum of 1 bits in data
+*/
+uint8_t ADEchksum(uint32_t data) 
 {
-	int sum = 0;
-	for (int i=0; i < sizeof(data)*8; i++) {
+	uint8_t sum = 0;
+	for (uint8_t i=0; i < sizeof(data)*8; i++) {
 		sum += data & 0x01;
 		data >>= 1;
 	}
@@ -107,35 +131,98 @@ int chksum(uint32_t data)
 
 /**
 	The first bit of the CHX0S register is a flag and the last 5 bits are a signed magnitude value.
+	i.e. F_SBBBBB
+	CH2 does not use the enableInt bit.
+	@warning CH2 is a negative offset so positive values decrease CH2
+
+	@return SUCCESS, ARGEVALUEERR or ADEgetRegister errors
 */
-int getCHXOS(int X,int8_t *enableBit,int8_t *val) 
+uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val) 
 {
-	int retError;
+	int retCode = SUCCESS;
 	int32_t data  = 0;
+
 	if (X == 1) {
-		retError = ADEgetRegister(CH1OS, &data);
+		retCode = ADEgetRegister(CH1OS, &data);
 	} else if (X == 2){
-		retError = ADEgetRegister(CH2OS, &data);
+		retCode = ADEgetRegister(CH2OS, &data);
 	} else {
-		return 3; //Invalid value
+		retCode = ARGVALUEERR;
 	}
 
-	if (retError != 0) {
-		return retError;
-	}
-
-	//3 is the MSB
 	uint8_t msB = ((uint8_t*)(&data))[3];
-	*enableBit = (msB & 0x8f) > 0;
-
-	bool negv = msB & 0x20;
+	*enableInt = msB & 0x80;
 
 	//The 6th bit is not used
 	*val       = msB & 0x1f; 
 
-	if (negv) {
+	//Sign
+	if (msB & 0x20) {
 		*val = -(*val);
 	} 
-
-	return 0;
+	return retCode;
 }
+
+/** TODO fix rollover with timeout code, the code can exit early or wait 30 days
+  * @return 0,1 value of interrupt. Returns a negative error code if a failure occurs. 
+  */
+int8_t ADEreadInterrupt(uint16_t regMask)
+{
+	uint32_t status;
+	uint8_t retCode = ADEgetRegister(STATUS,&status);
+	if (retCode == SUCCESS) {
+		return status & regMask;
+	} else {
+		return -retCode;
+	}
+}
+
+/** Will wait at least waitTimems milliseconds before exiting.
+  @return SUCCESS if interrupt was fired, FAILURE otherwise.
+
+  */
+int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
+{
+	uint8_t retCode = ADEgetRegister(STATUS,&status);
+	uint32_t time = millis();
+	unsigned long endTime = time + waitTimems;
+	uint32_t status;
+	uint8_t retCode;
+	if (time > endTime) {
+		//wait for rollover
+		do {
+			retCode = ADEgetRegister(STATUS,&status);
+			if (retCode == SUCCESS && (status & regMask)) {
+				return SUCCESS;
+			} 
+		} while (millis() > endTime);
+	}
+	//now time=millis() should be less than endTime unless time 
+	//overflowed to be much less than endTime to the point
+	//where it is more than waitTimems far away
+	do {
+		retCode = ADEgetRegister(STATUS,&status);
+		if (retCode == SUCCESS && (status & regMask)) {
+			return SUCCESS;
+		} 
+	} while (time=millis() < endTime && endTime-time < waitTimems);
+	return FAILURE;
+}
+
+int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit)
+{
+	uint32_t mode;
+	uint8_t retCode;
+	retCode = ADEgetRegister(MODE, &mode);
+	if (retCode != SUCCESS) {
+		return retCode;
+	}
+
+	mode = mode & ~regMask;
+	if (bit != 0) {
+		mode = mode | regMask;
+	}
+
+	return ADEsetRegister(MODE, &mode);
+}
+

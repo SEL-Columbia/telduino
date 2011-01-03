@@ -1,0 +1,25 @@
+
+Current is CH 1
+Voltage is CH 2
+
+
+Settings:
+IGAIN = 0x01
+
+
+
+Calibration:
+Turn on integrator on MSB for CH1OS
+ENABLE Line Accumulation Mode and Line Accumulation Interrupt
+ENABLE CYCMODE to enable linecycle interrupt and set LINECYC to number of half cycles before interrupt
+For any readings must wait until a zero crossing is detected and then read
+
+
+Two Voltage and Current points gives us CHXOS
+CH1OS = 0x80  + magic number determined by a two point calibration
+CH2OS = another magic number determined by a two point calibration
+
+
+Once CHXOS is set set WAGAIN and WGAIN according to give expected value for LVAENERGY and LAENERGY.
+
+Set Minimum load.

@@ -2,7 +2,9 @@
 #define ADE7753_H
 
 #include <inttypes.h> 
+#include "ReturnValues/returnvalues.h"
 #include "SPI/SPI.h"	
+#include "arduino/wiring.h"
 
 /**
 * The type of number retrieved from the ADE
@@ -65,21 +67,21 @@ const ADEReg DIEREV	= {"DIEREV",0x3F,8,UNSIGN};
 /**
 	Interrupt Register MASKS
 */
-const uint16_t AEHF    	= 0x0001; //bit 0
-const uint16_t SAG     	= 0x0002; //bit 1
-const uint16_t CYCEND  	= 0x0004; //bit 2
-const uint16_t WSMP    	= 0x0008; //bit 3
-const uint16_t ZX	= 0x0010; //bit 4
+const uint16_t AEHF		= 0x0001; //bit 0
+const uint16_t SAG		= 0x0002; //bit 1
+const uint16_t CYCEND	= 0x0004; //bit 2
+const uint16_t WSMP		= 0x0008; //bit 3
+const uint16_t ZX		= 0x0010; //bit 4
 const uint16_t TEMPREG	= 0x0020; //bit 5 ---I changed this from TEMP to TEMPREG because of the ADEReg with the same name.
 const uint16_t RESET	= 0x0040; //bit 6
-const uint16_t AEOF	= 0x0080; //bit 7
-const uint16_t PKV	= 0x0100; //bit 8
-const uint16_t PKI	= 0x0200; //bit 9 
+const uint16_t AEOF		= 0x0080; //bit 7
+const uint16_t PKV		= 0x0100; //bit 8
+const uint16_t PKI		= 0x0200; //bit 9 
 const uint16_t VAEHF	= 0x0400; //bit 10 A
 const uint16_t VAEOF	= 0x0800; //bit 11 B
-const uint16_t ZXTO	= 0x1000; //bit 12 C
-const uint16_t PPOS	= 0x2000; //bit 13 D
-const uint16_t PNEG	= 0x4000; //bit 14 E
+const uint16_t ZXTO		= 0x1000; //bit 12 C
+const uint16_t PPOS		= 0x2000; //bit 13 D
+const uint16_t PNEG		= 0x4000; //bit 14 E
 
 
 /**
@@ -112,19 +114,26 @@ const uint8_t OO=0b11;
 //*/
 
 /**
- * @warning SPI.begin() must have already been called
+ * @warning SPI.begin() must have already been called before any of these commands are used
  * @warning the CS line for the associated ADE must be low and others high
  */
-bool initADE(); 
+void ADEreadData(ADEReg, uint32_t*);
+void ADEwriteData(ADEReg, uint32_t*);
+uint8_t ADEgetRegister(ADEReg, int32_t*);
+uint8_t ADEchksum(uint32_t);
+uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableBit,int8_t *val);
+int8_t ADEreadInterrupt(uint16_t regMask);
+int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems);
+int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit);
 
-/**
-*  
-*/
-int readData(ADEReg, uint32_t*);
-int writeData(ADEReg, uint32_t*);
-int ADEgetRegister(ADEReg, int32_t*);
-int chksum(uint32_t);
-int getCHXOS(int X,int8_t *enableBit,int8_t *val);
+
+
+//Sample circuit functions
+//Get stuff
+//Block for crossing
+//Check for sags
+//Other maintenance code?
+
 
 #endif
 
