@@ -1,3 +1,5 @@
+Line frequency 60hz
+
 voltage
 ========
 

@@ -1,5 +1,6 @@
 #include "ADE7753.h"
 #include <limits.h>
+#include "arduino/WProgram.h"
 //TODO Add range checks for all safe functions
 //TODO writeData shouldn't use pointer neither should readData
 
@@ -19,7 +20,7 @@ void ADEreadData(ADEReg reg, uint32_t *data)
 	//now transfer the readInstuction/registerAddress: i.e. 00xxxxxx -AM
 	SPI.transfer(reg.addr);
 	//now read the data on the SPI data register byte-by-byte with the MSB first - AM
-	const uint8_t msb = sizeof(*data)-1;
+	uint8_t msb = sizeof(*data)-1;
 	*data = 0;
 	for (int i=0; i<nBytes; i++) {
 		((byte*)data)[msb-i] = SPI.transfer(0x00);
@@ -53,14 +54,25 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 	uint8_t retCode = SUCCESS;
 	uint32_t rawData = 0;
 	uint8_t nBytes = (reg.nBits+7)/8;
+	uint32_t chksum = 0;
 
 	ADEreadData(reg, &rawData);
-	uint32_t chksum = 0;
 	ADEreadData(CHKSUM,&chksum);
-	if (ADEchksum(rawData) != ((uint8_t*)chksum)[3]) {
+
+	if (ADEchksum(rawData) != ((uint8_t*)&chksum)[3]) {
 		retCode = COMMERR;
 	}
-	
+	/*
+	Serial1.print("ADEgetRegister rawData: ");
+	Serial1.println(rawData,BIN);
+	Serial1.print("ADEgetRegister chksum(rawdata): ");
+	Serial1.println((int)ADEchksum(rawData));
+	Serial1.print("ADEgetRegister chksum from ADE: ");
+	Serial1.println(chksum,BIN);
+	Serial1.print("ADEgetRegister chksum from ADE after shift: ");
+	Serial1.println((int)(((uint8_t*)&chksum)[3]),BIN);
+	Serial1.println(RCstr(retCode));
+	*/
 	//Push bits into MSB for irregular sizes
 	rawData <<= (nBytes*8-reg.nBits);
 	if (reg.signType == TWOS) {
@@ -86,6 +98,7 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 		}*/
 	}
 
+	/*Serial1.println("ADEgetRegister EXIT");*/
 	return retCode;
 }
 
@@ -168,8 +181,8 @@ uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val)
   */
 int8_t ADEreadInterrupt(uint16_t regMask)
 {
-	uint32_t status;
-	uint8_t retCode = ADEgetRegister(STATUS,&status);
+	int32_t status;
+	int8_t retCode = ADEgetRegister(RSTSTATUS,&status);
 	if (retCode == SUCCESS) {
 		return status & regMask;
 	} else {
@@ -183,15 +196,14 @@ int8_t ADEreadInterrupt(uint16_t regMask)
   */
 int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 {
-	uint8_t retCode = ADEgetRegister(STATUS,&status);
+	int32_t status;
+	int8_t retCode = ADEgetRegister(RSTSTATUS,&status);
 	uint32_t time = millis();
 	unsigned long endTime = time + waitTimems;
-	uint32_t status;
-	uint8_t retCode;
 	if (time > endTime) {
 		//wait for rollover
 		do {
-			retCode = ADEgetRegister(STATUS,&status);
+			retCode = ADEgetRegister(RSTSTATUS,&status);
 			if (retCode == SUCCESS && (status & regMask)) {
 				return SUCCESS;
 			} 
@@ -201,7 +213,7 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	//overflowed to be much less than endTime to the point
 	//where it is more than waitTimems far away
 	do {
-		retCode = ADEgetRegister(STATUS,&status);
+		retCode = ADEgetRegister(RSTSTATUS,&status);
 		if (retCode == SUCCESS && (status & regMask)) {
 			return SUCCESS;
 		} 
@@ -211,8 +223,8 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 
 int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit)
 {
-	uint32_t mode;
-	uint8_t retCode;
+	int32_t mode;
+	int8_t retCode;
 	retCode = ADEgetRegister(MODE, &mode);
 	if (retCode != SUCCESS) {
 		return retCode;

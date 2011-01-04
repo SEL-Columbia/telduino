@@ -23,6 +23,7 @@ arduino: telduino.cpp
 	avr-gcc $(GCCFLAGS) libraries/arduino/wiring_digital.c 	-obuild/wiring_digital.c.o
 	avr-gcc $(GCCFLAGS) libraries/arduino/wiring_pulse.c 	-obuild/wiring_pulse.c.o
 	avr-gcc $(GCCFLAGS) libraries/arduino/wiring_shift.c 	-obuild/wiring_shift.c.o 
+	avr-gcc $(GCCFLAGS) libraries/ReturnCode/returncode.c 	-obuild/returncode.c.o 
 	
 	#SR, Demux
 	avr-gcc $(GCCFLAGS) libraries/Demux/Demux.c 		-obuild/Demux.c.o 
@@ -54,6 +55,7 @@ arduino: telduino.cpp
 	#SR,Demux
 	avr-ar rcs build/core.a build/ShiftRegister.c.o
 	avr-ar rcs build/core.a build/Demux.c.o
+	avr-ar rcs build/core.a build/returncode.c.o
 	avr-ar rcs build/core.a build/select.cpp.o
 	
 	
@@ -76,8 +78,9 @@ arduino: telduino.cpp
 	avr-gcc -Os -Wl,--gc-sections -mmcu=$(TARGETARCH) -o build/telduino.elf build/telduino.o build/core.a -Larduino -lm 
 	avr-objcopy -O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --no-change-warnings --change-section-lma .eeprom=0 build/telduino.elf build/telduino.eep 
 	avr-objcopy -O ihex -R .eeprom build/telduino.elf build/telduino.hex 
-
+	avr-size -C --mcu=atmega1280 build/telduino.elf 
 	avrdude -p$(TARGETARCH) -cdragon_isp -Pusb -Uflash:w:build/$(PROJECT).hex -B10
+	avr-size -C --mcu=atmega1280 build/$(PROJECT).elf
 
 
 

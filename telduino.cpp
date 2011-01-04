@@ -6,9 +6,7 @@
 #include "DbgTel/DbgTel.h"
 #include "Select/select.h"
 #include "prescaler.h"
-
-#define readData ADEreadData
-#define writeData ADEwriteData
+#include "ReturnCode/returncode.h"
 
 
 const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
@@ -72,12 +70,12 @@ void setup()
 
 //Declare the variables used in the loop
 uint32_t data = 0;
+int32_t val;
 uint32_t iRMS = 0;
 uint32_t vRMS = 0;
 uint32_t lineAccAppEnergy = 0;
 uint32_t lineAccActiveEnergy = 0;
 uint32_t interruptStatus = 0;
-byte out = 0;
 uint32_t loopCounter = 0;
 int incomingByte = 0;
 uint32_t iRMSSlope = 164;
@@ -95,7 +93,7 @@ void loop()
 		// say what you got:
 		Serial1.print("\n\n\rI received: ");
 		Serial1.print(incomingByte);
-		if(incomingByte == 'R')
+		if(incomingByte == 'r')
 			softSetup(); //do a soft reset.
 	}
 	//Set variables to 0
@@ -105,7 +103,7 @@ void loop()
 	CSSelectDevice(testChannel);
 	
 	//Read the Interrupt Status Register
-	out = readData(RSTSTATUS, &data);
+	ADEreadData(RSTSTATUS, &data);
 	interruptStatus = data >> 16; //need only 16 bits for the status
 	
 	if(0 /*loopCounter%4096*/ ){
@@ -126,35 +124,32 @@ void loop()
 		//IRMS SECTION
 		data = 0;
 		iRMS = 0;
-		out = 0;		
-		out = readData(IRMS,&data);
+		ADEreadData(IRMS,&data);
 		data = data >> 8;
 		Serial1.print("int IRMS:");
 		Serial1.println(data);
-		iRMS = data/iRMSSlope;//data*1000/40172/4;
-		Serial1.print("mAmps IRMS:");
+
+		Serial1.print("getReg mAmps IRMS:");
+		Serial1.println( RCstr(ADEgetRegister(IRMS,&val)) );
+		iRMS = val/iRMSSlope;//data*1000/40172/4;
 		Serial1.println(iRMS);
 		
+		iRMS = data/iRMSSlope;//data*1000/40172/4;
+
 		//VRMS SECTION
-		data = 0;
-		vRMS = 0;
-		out = 0;		
-		out = readData(VRMS,&data);
-		data = data >> 8;
-		Serial1.print("int VRMS:");
-		Serial1.println(data);
-		vRMS = data/vRMSSlope; //old value:9142
+		Serial1.print("VRMS getReg:");
+		Serial1.println(RCstr(ADEgetRegister(VRMS,&val)));
+
+		vRMS = val/vRMSSlope; //old value:9142
 		Serial1.print("Volts VRMS:");
 		Serial1.println(vRMS);
+
 		
 		//APPARENT ENERGY SECTION
-		data = 0;
-		out = 0;		
-		out = readData(LVAENERGY,&data);
-		data = data >> 8;
+		ADEgetRegister(LVAENERGY,&val);
 		Serial1.print("int Line Cycle Apparent Energy after 200 half-cycles:");
-		Serial1.println(data);
-		energyJoules = data*2014/10000;
+		Serial1.println(val);
+		energyJoules = val*2014/10000;
 		Serial1.print("Energy in Joules over the past 2 seconds:");
 		Serial1.println(energyJoules);
 		Serial1.print("Calculated apparent power usage:");
@@ -163,12 +158,9 @@ void loop()
 		//THIS IS NOT WORKING FOR SOME REASON
 		//WE NEED TO FIX THE ACTIVE ENERGY REGISTER AT SOME POINT
 		//ACTIVE ENERGY SECTION
-		data = 0;
-		out = 0;		
-		out = readData(LAENERGY,&data); 
-		data = data >> 8;
+		ADEgetRegister(LAENERGY,&val);
 		Serial1.print("int Line Cycle Active Energy after 200 half-cycles:");
-		Serial1.println(data);
+		Serial1.println(val);
 		
 /*		iRMS = data/161;//data*1000/40172/4;
 		Serial1.print("mAmps IRMS:");
@@ -177,7 +169,7 @@ void loop()
 		
 		delay(500);
 		/*
-		out = readData(RSTSTATUS, &data);
+		ADEreadData(RSTSTATUS, &data);
 		interruptStatus = data >> 16; //need only 16 bits for the status
 		Serial1.print("bin Interrupt Status Register after Reset:");
 		Serial1.println(interruptStatus, BIN);*/
@@ -204,8 +196,8 @@ void softSetup()
 	uint32_t ch1osVal = 0x00000000;
 	ch1osVal |= (1 << 7);
 	ch1osVal = ch1osVal << 24;
-	writeData(CH1OS,&ch1osVal);
-	byte out = readData(CH1OS,&data);
+	ADEwriteData(CH1OS,&ch1osVal);
+	ADEreadData(CH1OS,&data);
 	data = data >> 24;
 	Serial1.print("BIN CH1OS:");
 	Serial1.println(data,BIN);
@@ -214,8 +206,8 @@ void softSetup()
 	uint32_t gainVal = 0x00000000;
 	gainVal |= 1;
 	gainVal = gainVal << 24;
-	writeData(GAIN,&gainVal);
-	out = readData(GAIN,&data);
+	ADEwriteData(GAIN,&gainVal);
+	ADEreadData(GAIN,&data);
 	data = data >> 24;
 	Serial1.print("BIN GAIN:");
 	Serial1.println(data,BIN);
@@ -224,8 +216,8 @@ void softSetup()
 	uint32_t iRmsOsVal = 0x00000000;
 	iRmsOsVal |= 0x01BC;
 	iRmsOsVal = iRmsOsVal << 16;
-	writeData(IRMSOS,&iRmsOsVal);
-	out = readData(IRMSOS,&data);
+	ADEwriteData(IRMSOS,&iRmsOsVal);
+	ADEreadData(IRMSOS,&data);
 	data = data >> 16; // note that this is a signed number.
 	Serial1.print("hex IRMSOS:");
 	Serial1.println(data, HEX);
@@ -236,8 +228,8 @@ void softSetup()
 	vRmsOsVal = vRmsOsVal << 16;
 	//Serial1.print("hex VRMSOS being written:");
 	//Serial1.println(vRmsOsVal, HEX);	
-	writeData(VRMSOS,&vRmsOsVal);
-	out = readData(VRMSOS,&data);
+	ADEwriteData(VRMSOS,&vRmsOsVal);
+	ADEreadData(VRMSOS,&data);
 	data = data >> 16; // note that this is a signed number.
 	Serial1.print("hex VRMSOS read from register:");
 	Serial1.println(data, HEX);
@@ -245,28 +237,28 @@ void softSetup()
 	//set the number of cycles to wait before taking a reading
 	uint32_t linecycVal = 0xC8;
 	linecycVal = linecycVal << 16;
-	writeData(LINECYC,&linecycVal);
-	out = readData(LINECYC,&data);
+	ADEwriteData(LINECYC,&linecycVal);
+	ADEreadData(LINECYC,&data);
 	data = data >> 16; // 16 bits
 	Serial1.print("int linecycVal:");
 	Serial1.println(data);
 	
 	//read and set the CYCMODE bit on the MODE register
 	uint32_t modeReg = 0;
-	out = readData(MODE,&data);
+	ADEreadData(MODE,&data);
 	modeReg = data >> 16; // 16 bits
 	Serial1.print("bin MODE register before setting CYCMODE:");
 	Serial1.println(modeReg, BIN);
 	modeReg |= CYCMODE;	 //set the line cycle accumulation mode bit
 	modeReg = modeReg << 16;
-	writeData(MODE,&modeReg);
-	out = readData(MODE,&data);
+	ADEwriteData(MODE,&modeReg);
+	ADEreadData(MODE,&data);
 	modeReg = data >> 16; // 16 bits
 	Serial1.print("bin MODE register after setting CYCMODE:");
 	Serial1.println(modeReg, BIN);
 	
 	//reset the Interrupt status register
-	out = readData(RSTSTATUS, &data);
+	ADEreadData(RSTSTATUS, &data);
 	data = data >> 16; //need only 16 bits for the status
 	Serial1.print("bin Interrupt Status Register:");
 	Serial1.println(data, BIN);
