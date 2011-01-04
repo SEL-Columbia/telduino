@@ -163,7 +163,7 @@ uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val)
 		retCode = ARGVALUEERR;
 	}
 
-	uint8_t msB = ((uint8_t*)(&data))[3];
+	uint8_t msB = ((uint8_t*)(&data))[0];
 	*enableInt = msB & 0x80;
 
 	//The 6th bit is not used

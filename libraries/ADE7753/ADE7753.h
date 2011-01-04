@@ -120,6 +120,7 @@ static const uint8_t OO=0b11;
 void ADEreadData(ADEReg, uint32_t*);
 void ADEwriteData(ADEReg, uint32_t*);
 uint8_t ADEgetRegister(ADEReg, int32_t*);
+uint8_t ADEsetRegister(ADEReg, int32_t*);
 uint8_t ADEchksum(uint32_t);
 uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableBit,int8_t *val);
 int8_t ADEreadInterrupt(uint16_t regMask);

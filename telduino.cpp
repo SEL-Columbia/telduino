@@ -16,7 +16,7 @@ char ctrlz = 26;
 
 #define testChannel 1
 
-#define CYCEND 0x04 //bit 2 of the Interrupt Status register
+//#define CYCEND 0x04 //bit 2 of the Interrupt Status register
 #define CYCMODE 0x80 //bit 7 of the MODE register
 
 
@@ -69,13 +69,12 @@ void setup()
 } //end of setup section
 
 //Declare the variables used in the loop
-uint32_t data = 0;
 int32_t val;
 uint32_t iRMS = 0;
 uint32_t vRMS = 0;
 uint32_t lineAccAppEnergy = 0;
 uint32_t lineAccActiveEnergy = 0;
-uint32_t interruptStatus = 0;
+int32_t interruptStatus = 0;
 uint32_t loopCounter = 0;
 int incomingByte = 0;
 uint32_t iRMSSlope = 164;
@@ -91,20 +90,19 @@ void loop()
 		incomingByte = Serial1.read();
 
 		// say what you got:
-		Serial1.print("\n\n\rI received: ");
-		Serial1.print(incomingByte);
+		//Serial1.print("\n\n\rI received: ");
+		//Serial1.print(incomingByte);
 		if(incomingByte == 'r')
 			softSetup(); //do a soft reset.
 	}
-	//Set variables to 0
-	interruptStatus = 0;
 	
 	//Select the Device
 	CSSelectDevice(testChannel);
 	
 	//Read the Interrupt Status Register
-	ADEreadData(RSTSTATUS, &data);
-	interruptStatus = data >> 16; //need only 16 bits for the status
+	ADEgetRegister(RSTSTATUS, &interruptStatus);
+	
+	//Serial1.println(interruptStatus,BIN);
 	
 	if(0 /*loopCounter%4096*/ ){
 		Serial1.print("bin Interrupt Status Register:");
@@ -122,20 +120,11 @@ void loop()
 		Serial1.println(interruptStatus, BIN);
 		
 		//IRMS SECTION
-		data = 0;
-		iRMS = 0;
-		ADEreadData(IRMS,&data);
-		data = data >> 8;
-		Serial1.print("int IRMS:");
-		Serial1.println(data);
-
 		Serial1.print("getReg mAmps IRMS:");
 		Serial1.println( RCstr(ADEgetRegister(IRMS,&val)) );
 		iRMS = val/iRMSSlope;//data*1000/40172/4;
 		Serial1.println(iRMS);
 		
-		iRMS = data/iRMSSlope;//data*1000/40172/4;
-
 		//VRMS SECTION
 		Serial1.print("VRMS getReg:");
 		Serial1.println(RCstr(ADEgetRegister(VRMS,&val)));
@@ -187,82 +176,73 @@ void loop()
 
 void softSetup() 
 {
+	int32_t data = 0;
+
+	//int32_t data2 = 0;
+	//int32_t ch1osVal2 = 0x00000000;
+
 	Serial1.print("\n\n\rReStarted Program\n\n\r");
 	
 	CSSelectDevice(testChannel); //start SPI comm with the test device channel
-	uint32_t data = 0;
-
 	//Turn on the Digital Integrator for Channel 1
-	uint32_t ch1osVal = 0x00000000;
-	ch1osVal |= (1 << 7);
-	ch1osVal = ch1osVal << 24;
-	ADEwriteData(CH1OS,&ch1osVal);
-	ADEreadData(CH1OS,&data);
-	data = data >> 24;
-	Serial1.print("BIN CH1OS:");
-	Serial1.println(data,BIN);
+	int32_t ch1osVal2 =(1 << 7);
+	int32_t data2;
+	int8_t ch1os,enableBit;
+
+	Serial1.print("set CH1OS:");
+	Serial1.println(RCstr(ADEsetRegister(CH1OS,&ch1osVal2)));
+	Serial1.print("get CH1OS:");
+	Serial1.println(RCstr(ADEgetCHXOS(1,&enableBit,&ch1os)));
+	Serial1.print("enabled: ");
+	Serial1.println(enableBit,BIN);
+	Serial1.print("offset: ");
+	Serial1.println(ch1os);
 
 	//set the gain to 2 for channel 1 since the sensitivity appears to be 0.02157 V/Amp
-	uint32_t gainVal = 0x00000000;
-	gainVal |= 1;
-	gainVal = gainVal << 24;
-	ADEwriteData(GAIN,&gainVal);
-	ADEreadData(GAIN,&data);
-	data = data >> 24;
+	int32_t gainVal = 1;
+
 	Serial1.print("BIN GAIN:");
-	Serial1.println(data,BIN);
+	Serial1.print(RCstr(ADEsetRegister(GAIN,&gainVal)));
+	RCstr(ADEgetRegister(GAIN,&gainVal));
+	Serial1.println(gainVal,BIN);
 	
 	//Set the IRMSOS to 0d444 or 0x01BC. This is the measured offset value.
-	uint32_t iRmsOsVal = 0x00000000;
-	iRmsOsVal |= 0x01BC;
-	iRmsOsVal = iRmsOsVal << 16;
-	ADEwriteData(IRMSOS,&iRmsOsVal);
-	ADEreadData(IRMSOS,&data);
-	data = data >> 16; // note that this is a signed number.
+	int32_t iRmsOsVal = 0x01BC;
+	ADEsetRegister(IRMSOS,&iRmsOsVal);
+	ADEgetRegister(IRMSOS,&iRmsOsVal);
 	Serial1.print("hex IRMSOS:");
-	Serial1.println(data, HEX);
+	Serial1.println(iRmsOsVal, HEX);
 	
+	//WHAT'S GOING ON WITH THIS OFFSET? THE COMMENT DOESN'T MATCH THE VALUE
 	//Set the VRMSOS to -0d549. This is the measured offset value.
-	uint32_t vRmsOsVal = 0x00000000;
-	vRmsOsVal |= 0x07FF;//F800;
-	vRmsOsVal = vRmsOsVal << 16;
-	//Serial1.print("hex VRMSOS being written:");
-	//Serial1.println(vRmsOsVal, HEX);	
-	ADEwriteData(VRMSOS,&vRmsOsVal);
-	ADEreadData(VRMSOS,&data);
-	data = data >> 16; // note that this is a signed number.
+	int32_t vRmsOsVal = 0x07FF;//F800
+	ADEsetRegister(VRMSOS,&vRmsOsVal);
+	ADEgetRegister(VRMSOS,&vRmsOsVal);
 	Serial1.print("hex VRMSOS read from register:");
-	Serial1.println(data, HEX);
+	Serial1.println(vRmsOsVal, HEX);
 	
 	//set the number of cycles to wait before taking a reading
-	uint32_t linecycVal = 0xC8;
-	linecycVal = linecycVal << 16;
-	ADEwriteData(LINECYC,&linecycVal);
-	ADEreadData(LINECYC,&data);
-	data = data >> 16; // 16 bits
+	int32_t linecycVal = 0xC8;
+	ADEsetRegister(LINECYC,&linecycVal);
+	ADEgetRegister(LINECYC,&linecycVal);
 	Serial1.print("int linecycVal:");
-	Serial1.println(data);
+	Serial1.println(linecycVal);
 	
 	//read and set the CYCMODE bit on the MODE register
-	uint32_t modeReg = 0;
-	ADEreadData(MODE,&data);
-	modeReg = data >> 16; // 16 bits
+	int32_t modeReg = 0;
+	ADEgetRegister(MODE,&modeReg);
 	Serial1.print("bin MODE register before setting CYCMODE:");
 	Serial1.println(modeReg, BIN);
 	modeReg |= CYCMODE;	 //set the line cycle accumulation mode bit
-	modeReg = modeReg << 16;
-	ADEwriteData(MODE,&modeReg);
-	ADEreadData(MODE,&data);
-	modeReg = data >> 16; // 16 bits
+	ADEsetRegister(MODE,&modeReg);
+	ADEgetRegister(MODE,&modeReg);
 	Serial1.print("bin MODE register after setting CYCMODE:");
 	Serial1.println(modeReg, BIN);
 	
 	//reset the Interrupt status register
-	ADEreadData(RSTSTATUS, &data);
-	data = data >> 16; //need only 16 bits for the status
+	ADEgetRegister(RSTSTATUS, &data);
 	Serial1.print("bin Interrupt Status Register:");
 	Serial1.println(data, BIN);
-	modeReg |= CYCMODE;
 	
 	
 	CSSelectDevice(DEVDISABLE); //end SPI comm with the selected device	
