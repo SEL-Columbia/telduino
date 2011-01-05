@@ -12,6 +12,9 @@
 #include <inttypes.h>
 #include "arduino/wiring.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** 
 * 
@@ -24,16 +27,20 @@
 #define SHIFTCLK  25    //SRCK
 #define SERIN     29    //INPUT
 
-//#define WIDTH     24    //WIDTH
+const int WIDTH   =  24;    //WIDTH
 //#define REVERSE   0     //Reverse order of shift
 
 void initShiftRegister();
 void setEnabled( boolean enabled );
 void latch();
-inline void shiftBit( boolean bit );
-void shiftArray( byte bits[] , uint8_t size);
+void shiftBit( boolean bit );
+void shiftArray( byte bits[] , int8_t size);
 void clearShiftRegister();
+void all1ShiftRegister();
 void testShiftRegister();
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

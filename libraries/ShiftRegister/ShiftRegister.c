@@ -18,11 +18,11 @@ void initShiftRegister(){
 	pinMode(NOTCLR,OUTPUT);
 	pinMode(SHIFTCLK,OUTPUT);
  
-        digitalWrite(SERIN,LOW);
+	digitalWrite(SERIN,LOW);
 	digitalWrite(LATCH, LOW);
-        digitalWrite(NOTCLR,LOW);
+	digitalWrite(NOTCLR,LOW);
 	digitalWrite(SHIFTCLK, LOW);
-	setEnabled(true); //May not be needed
+	setEnabled(true); 
 	clearShiftRegister();
 	latch();
 	setEnabled(false);
@@ -45,23 +45,19 @@ void latch() {
 /** 
 *	@brief Pushes one bit onto the register.
 */
-inline void shiftBit( boolean bit ){
+void shiftBit( boolean bit ){
 	digitalWrite(SERIN, bit?HIGH:LOW);
 	CLOCK(SHIFTCLK);
 }
 
 /** 
-*	@brief Pushes a set of bits as bytes onto the register.
-*	
-*	Pushes a set of bits as bytes onto the register.
-*	If bits[i] is not zero then the register line i is set to one.
+*	@brief Pushes a set of bits specified by booleans onto the register.
+*	Pushes a set of bits specified by booleans onto the register. If bits[i] is not zero then the register line i is set to one. Therefore, bits[0] is the last bit shifted into the register.
 *
-*	@todo specify endianness
 */
-void shiftArray( byte bits[] , uint8_t size){
-	int idx;
-	for(idx = 0; idx < size; idx++){
-		shiftBit(bits[idx] != 0);
+void shiftArray(byte bits[] , int8_t size){
+	for(size = size-1; size >= 0; size--){
+		shiftBit(bits[size] != 0);
 	}
 }
 
@@ -75,10 +71,11 @@ void clearShiftRegister()
 	digitalWrite(NOTCLR,HIGH);
 }
 
-int8_t setCkt(int8_t sNum, int8_t onOff)
+void all1ShiftRegister() 
 {
-	//Define mapping
-
+	clearShiftRegister();
+	uint8_t bits[] = {1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1};
+	shiftArray(bits, WIDTH);
 }
 
 /**

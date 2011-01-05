@@ -36,7 +36,7 @@ boolean muxSelect( int8_t line ){
 		//EFG are irrelevant as the second muxer is disabled until ABCD=1111. The demuxers have all of their output set to high if the input is high.
 		//As the muxers are chained via the last output if the first muxer is not set to 1111 the second has all of its lines high.
                 
-                //Just to keep the timings the same
+		//Just to keep the timings the same
 		digitalWrite(E, LOW);
 		digitalWrite(F, LOW);
 		digitalWrite(G, LOW);

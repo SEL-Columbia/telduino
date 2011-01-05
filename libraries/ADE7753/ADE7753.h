@@ -123,6 +123,7 @@ uint8_t ADEgetRegister(ADEReg, int32_t*);
 uint8_t ADEsetRegister(ADEReg, int32_t*);
 uint8_t ADEchksum(uint32_t);
 uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableBit,int8_t *val);
+uint8_t ADEsetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val);
 int8_t ADEreadInterrupt(uint16_t regMask);
 int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems);
 int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit);

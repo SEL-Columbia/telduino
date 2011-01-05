@@ -103,6 +103,11 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 }
 
 
+/**
+*	
+*	@warning Range of input value is not checked. Refer to the ADE7753 datasheet for proper input ranges.
+*	@return return code
+  */
 uint8_t ADEsetRegister(ADEReg reg, int32_t *value)
 {
 	uint8_t retCode = SUCCESS;
@@ -113,7 +118,7 @@ uint8_t ADEsetRegister(ADEReg reg, int32_t *value)
 		rawData = *value;
 		//rawData <<= (nBytes*8-reg.nBits);
 		rawData <<= ((sizeof(rawData)-nBytes)*8);
-	} else { //Do nothing
+	} else { //Do nothing this shouldn't happen
 		retCode = FAILURE;
 	}
 	//write data
@@ -176,6 +181,32 @@ uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val)
 	return retCode;
 }
 
+uint8_t ADEsetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val) 
+{
+	int retCode = SUCCESS;
+	int32_t data  =*val;
+
+	//convert to signed magnitude
+	if (data < 0) {
+		data = -data;
+		data |= 0x20;
+	}
+
+	data &= ~0x80;
+	if (enableInt) {
+		data |= 0x80;
+	}
+
+	if (X == 1) {
+		retCode = ADEsetRegister(CH1OS, &data);
+	} else if (X == 2){
+		retCode = ADEsetRegister(CH2OS, &data);
+	} else {
+		retCode = ARGVALUEERR;
+	}
+	return retCode;
+}
+
 /** TODO fix rollover with timeout code, the code can exit early or wait 30 days
   * @return 0,1 value of interrupt. Returns a negative error code if a failure occurs. 
   */
@@ -196,9 +227,9 @@ int8_t ADEreadInterrupt(uint16_t regMask)
   */
 int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 {
-	int32_t status;
-	int8_t retCode = ADEgetRegister(RSTSTATUS,&status);
-	uint32_t time = millis();
+	int32_t status = 0;
+	int8_t retCode = SUCCESS;
+	unsigned long time = millis();
 	unsigned long endTime = time + waitTimems;
 	if (time > endTime) {
 		//wait for rollover
@@ -217,10 +248,24 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 		if (retCode == SUCCESS && (status & regMask)) {
 			return SUCCESS;
 		} 
-	} while (time=millis() < endTime && endTime-time < waitTimems);
-	return FAILURE;
+		time = millis();
+	} while ((time <= endTime) && (endTime-time <= waitTimems));
+	/*
+	Serial1.print("waitforInterrupt waiting(ms):");
+	Serial1.println(waitTimems);
+	Serial1.print("waitforInterrupt time(ms):");
+	Serial1.println(time);
+	Serial1.print("waitforInterrupt endTime(ms):");
+	Serial1.println(endTime);
+	*/
+	return TIMEOUT;
 }
 
+/**
+	Reads the mode register changes the bit specified by bitMask to be 
+	0 of bit is zero and 1 if  bit is otherwise.
+	@return SUCCESS if bit has been changed.
+  */
 int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit)
 {
 	int32_t mode;

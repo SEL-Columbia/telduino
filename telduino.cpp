@@ -3,26 +3,69 @@
 //JR-Cal
 #include "SDRaw/sd_raw.h"
 #include "ADE7753/ADE7753.h"
+#include "ShiftRegister/ShiftRegister.h"
 #include "DbgTel/DbgTel.h"
 #include "Select/select.h"
 #include "prescaler.h"
 #include "ReturnCode/returncode.h"
+#include <stdlib.h>
+#include <errno.h>
 
 
 const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
 
-char ctrlz = 26;
+//Switches.c
+void SWsetSwitches(uint8_t enabledC[WIDTH]) 
+{
+	setEnabled(true);
+	//This map is its own inverse
+	const int mapRegToSw[] = {0,1,2,3,7,6,5,4,8,9,10,11,15,14,13,12,19,18,17,16,20,21,22,23};
+	uint8_t regBits[WIDTH] = {0};
+	for (int8_t sreg = 0; sreg < WIDTH; sreg++) {
+		regBits[sreg] = !enabledC[mapRegToSw[sreg]];
+	}
+	shiftArray(regBits,WIDTH);
+	latch();
+}
+void SWallOff()
+{
+	//Since the switches are always on we have to put a 1 to turn off the circuit
+	uint8_t bits[WIDTH] = {1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1};
+	setEnabled(true);
+	shiftArray(bits,WIDTH);
+	latch();
+}
+void SWallOn()
+{
+	//Since the switches are always on we have to put a 0 to turn on the circuit
+	setEnabled(true);
+	clearShiftRegister();
+	latch();
+}
 
+int testChannel = 1;
+unsigned long long lastFire10 = 0;
 
-#define testChannel 1
+int32_t val;
+uint32_t iRMS = 0;
+uint32_t vRMS = 0;
+uint32_t lineAccAppEnergy = 0;
+uint32_t lineAccActiveEnergy = 0;
+int32_t interruptStatus = 0;
+uint32_t iRMSSlope = 164;
+uint32_t vRMSSlope = 4700;
+uint32_t appEnergyDiv = 5;
+uint32_t energyJoules = 0;
 
-//#define CYCEND 0x04 //bit 2 of the Interrupt Status register
-#define CYCMODE 0x80 //bit 7 of the MODE register
-
+//disabled channels
+uint8_t enabledC[WIDTH] = {0};
 
 void setup();
 void loop();
 void softSetup();
+void displayChannelInfo(); 
+void displayEnabled();
+int getChannelID();
 
 //JR needed to make compiler happy
 extern "C" {
@@ -43,134 +86,86 @@ extern "C" {
 void setup()
 {
 	setClockPrescaler(CLOCK_PRESCALER_1); //Get rid of prescaler.
+
+	Serial1.begin(9600); //Serial port
+	Serial1.print("\n\rEXECUTING SETUP\n\r");
 	
 	//Level shifters
 	pinMode(37, OUTPUT);
 	digitalWrite(37,HIGH);
 
-	Serial1.begin(9600); //Serial port
-	Serial1.print("\n\n\rHello World!\n\n\r");
 	initDbgTel(); //Blink leds
 	initShiftRegister(); //Shift registers
 	initDemux(); //Muxers
-	initSelect(); //Select
-	SPI.begin(); //SPI
+	initSelect(); //Select Circuit
 	sd_raw_init(); //SDCard
+	SPI.begin(); //SPI
 
-	//SPI.setClockDivider(0);
+	Serial1.print("\n\rStart Program\n\r");
 	
-	//Set the ch1 digital integrator on
-	//#define regist CH1OS
 
-	Serial1.print("\n\n\rStart Program\n\n\r");
-	
-	softSetup();
-	
+	//Shut off/on all circuits
+	for (int i =0; i < 1; i++){
+		SWallOn();
+		delay(50);
+		SWallOff();
+		delay(50);
+	}
+	delay(1000);
+	//Start turning each switch on with 1 second in between
+	for (int i = 0; i < WIDTH; i++) {
+		enabledC[i] = 1;
+		SWsetSwitches(enabledC);
+		delay(1000);
+	}
+
 } //end of setup section
 
-//Declare the variables used in the loop
-int32_t val;
-uint32_t iRMS = 0;
-uint32_t vRMS = 0;
-uint32_t lineAccAppEnergy = 0;
-uint32_t lineAccActiveEnergy = 0;
-int32_t interruptStatus = 0;
-uint32_t loopCounter = 0;
-int incomingByte = 0;
-uint32_t iRMSSlope = 164;
-uint32_t vRMSSlope = 4700;
-uint32_t appEnergyDiv = 5;
-uint32_t energyJoules = 0;
 
+void displayEnabled()
+{
+	Serial1.println("Enabled Channels:");
+	for (int i =0; i < WIDTH; i++) {
+		Serial1.print(i);
+		Serial1.print(":");
+		Serial1.print(enabledC[i],DEC);
+		if (i%4 == 3) {
+			Serial1.println();
+		} else {
+			Serial1.print('\t');
+		}
+	}
+	Serial1.println();
+}
 void loop()
 {	
 	// Look for incoming data on Serial1 line
 	if (Serial1.available() > 0) {
-		// read the incoming byte:
-		incomingByte = Serial1.read();
-
-		// say what you got:
-		//Serial1.print("\n\n\rI received: ");
-		//Serial1.print(incomingByte);
-		if(incomingByte == 'r')
+		char incoming = Serial1.read(); 
+		if (incoming == 'R') {
 			softSetup(); //do a soft reset.
+		} else if (incoming == 'C') {
+			//set display channel
+			testChannel = getChannelID();
+		} else if (incoming == 'c') {
+			displayChannelInfo();
+		} else if (incoming == 'T') {
+			//Toggle channel circuit
+			int ID = getChannelID();
+			enabledC[ID] = 1-enabledC[ID];
+			SWsetSwitches(enabledC);
+		} else if (incoming == 't') {
+			displayEnabled();	
+		} else {
+			//Indicate received character
+			Serial1.print("\n\r\n\rReceived: \'");
+			Serial1.print(incoming);
+			Serial1.println("\'");
+		}
 	}
-	
-	//Select the Device
-	CSSelectDevice(testChannel);
-	
-	//Read the Interrupt Status Register
-	ADEgetRegister(RSTSTATUS, &interruptStatus);
-	
-	//Serial1.println(interruptStatus,BIN);
-	
-	if(0 /*loopCounter%4096*/ ){
-		Serial1.print("bin Interrupt Status Register:");
-		Serial1.println(interruptStatus, BIN);
-		
-	}	//endif
-	
-	//if the CYCEND bit of the Interrupt Status Registers is flagged
-	if(interruptStatus & CYCEND){
-		
-		setDbgLeds(GYRPAT);
-		Serial1.print("\n\rIn Loop Number:");
-		Serial1.println(loopCounter);
-		Serial1.print("bin Interrupt Status Register:");
-		Serial1.println(interruptStatus, BIN);
-		
-		//IRMS SECTION
-		Serial1.print("getReg mAmps IRMS:");
-		Serial1.println( RCstr(ADEgetRegister(IRMS,&val)) );
-		iRMS = val/iRMSSlope;//data*1000/40172/4;
-		Serial1.println(iRMS);
-		
-		//VRMS SECTION
-		Serial1.print("VRMS getReg:");
-		Serial1.println(RCstr(ADEgetRegister(VRMS,&val)));
 
-		vRMS = val/vRMSSlope; //old value:9142
-		Serial1.print("Volts VRMS:");
-		Serial1.println(vRMS);
-
-		
-		//APPARENT ENERGY SECTION
-		ADEgetRegister(LVAENERGY,&val);
-		Serial1.print("int Line Cycle Apparent Energy after 200 half-cycles:");
-		Serial1.println(val);
-		energyJoules = val*2014/10000;
-		Serial1.print("Energy in Joules over the past 2 seconds:");
-		Serial1.println(energyJoules);
-		Serial1.print("Calculated apparent power usage:");
-		Serial1.println(energyJoules/2);
-		
-		//THIS IS NOT WORKING FOR SOME REASON
-		//WE NEED TO FIX THE ACTIVE ENERGY REGISTER AT SOME POINT
-		//ACTIVE ENERGY SECTION
-		ADEgetRegister(LAENERGY,&val);
-		Serial1.print("int Line Cycle Active Energy after 200 half-cycles:");
-		Serial1.println(val);
-		
-/*		iRMS = data/161;//data*1000/40172/4;
-		Serial1.print("mAmps IRMS:");
-		Serial1.println(iRMS);
-*/
-		
-		delay(500);
-		/*
-		ADEreadData(RSTSTATUS, &data);
-		interruptStatus = data >> 16; //need only 16 bits for the status
-		Serial1.print("bin Interrupt Status Register after Reset:");
-		Serial1.println(interruptStatus, BIN);*/
-		
-	} //end of if statement
-
-	//Serial1.flush();
-	CSSelectDevice(DEVDISABLE);
 	
 	setDbgLeds(0);
-	loopCounter++;
-
 } //end of main loop
 
 
@@ -178,19 +173,15 @@ void softSetup()
 {
 	int32_t data = 0;
 
-	//int32_t data2 = 0;
-	//int32_t ch1osVal2 = 0x00000000;
-
-	Serial1.print("\n\n\rReStarted Program\n\n\r");
+	Serial1.print("\n\n\rSetting Channel:");
+	Serial1.println(testChannel,DEC);
 	
 	CSSelectDevice(testChannel); //start SPI comm with the test device channel
-	//Turn on the Digital Integrator for Channel 1
-	int32_t ch1osVal2 =(1 << 7);
-	int32_t data2;
-	int8_t ch1os,enableBit;
+	//Turn on the Digital Integrator for testChannel
+	int8_t ch1os=0,enableBit=1;
 
 	Serial1.print("set CH1OS:");
-	Serial1.println(RCstr(ADEsetRegister(CH1OS,&ch1osVal2)));
+	Serial1.println(RCstr(ADEsetCHXOS(1,&enableBit,&ch1os)));
 	Serial1.print("get CH1OS:");
 	Serial1.println(RCstr(ADEgetCHXOS(1,&enableBit,&ch1os)));
 	Serial1.print("enabled: ");
@@ -198,7 +189,7 @@ void softSetup()
 	Serial1.print("offset: ");
 	Serial1.println(ch1os);
 
-	//set the gain to 2 for channel 1 since the sensitivity appears to be 0.02157 V/Amp
+	//set the gain to 2 for channel testChannel since the sensitivity appears to be 0.02157 V/Amp
 	int32_t gainVal = 1;
 
 	Serial1.print("BIN GAIN:");
@@ -222,7 +213,7 @@ void softSetup()
 	Serial1.println(vRmsOsVal, HEX);
 	
 	//set the number of cycles to wait before taking a reading
-	int32_t linecycVal = 0xC8;
+	int32_t linecycVal = 200;
 	ADEsetRegister(LINECYC,&linecycVal);
 	ADEgetRegister(LINECYC,&linecycVal);
 	Serial1.print("int linecycVal:");
@@ -243,12 +234,107 @@ void softSetup()
 	ADEgetRegister(RSTSTATUS, &data);
 	Serial1.print("bin Interrupt Status Register:");
 	Serial1.println(data, BIN);
-	
+
+	Serial1.print("Waiting for next cycle: ");
+	Serial1.println(RCstr(ADEwaitForInterrupt(CYCEND,3000)));
 	
 	CSSelectDevice(DEVDISABLE); //end SPI comm with the selected device	
 	
 }
 
+void displayChannelInfo() {
+	int8_t retCode;
+	//Select the Device
+	CSSelectDevice(testChannel);
+	
+	//Read and clear the Interrupt Status Register
+	ADEgetRegister(RSTSTATUS, &interruptStatus);
+	
+	if (0 /*loopCounter%4096*/ ){
+		Serial1.print("bin Interrupt Status Register:");
+		Serial1.println(interruptStatus, BIN);
+		
+	}	//endif
+	
+	//if the CYCEND bit of the Interrupt Status Registers is flagged
+	Serial1.print("Waiting for next cycle: ");
+	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	Serial1.println(RCstr(retCode));
+
+	ifsuccess(retCode) {
+		setDbgLeds(GYRPAT);
+
+		Serial1.print("testChannel:");
+		Serial1.println(testChannel,DEC);
+
+		Serial1.print("bin Interrupt Status Register:");
+		Serial1.println(interruptStatus, BIN);
+		
+		//IRMS SECTION
+		Serial1.print("mAmps IRMS:");
+		Serial1.println( RCstr(ADEgetRegister(IRMS,&val)) );
+		iRMS = val/iRMSSlope;//data*1000/40172/4;
+		Serial1.println(iRMS);
+		
+		//VRMS SECTION
+		Serial1.print("VRMS:");
+		Serial1.println(RCstr(ADEgetRegister(VRMS,&val)));
+
+		vRMS = val/vRMSSlope; //old value:9142
+		Serial1.print("Volts VRMS:");
+		Serial1.println(vRMS);
+
+		
+		//APPARENT ENERGY SECTION
+		ADEgetRegister(LVAENERGY,&val);
+		Serial1.print("int Line Cycle Apparent Energy after 200 half-cycles:");
+		Serial1.println(val);
+		energyJoules = val*2014/10000;
+		Serial1.print("Apparent Energy in Joules over the past 2 seconds:");
+		Serial1.println(energyJoules);
+		Serial1.print("Calculated apparent power usage:");
+		Serial1.println(energyJoules/2);
+		
+		//THIS IS NOT WORKING FOR SOME REASON
+		//WE NEED TO FIX THE ACTIVE ENERGY REGISTER AT SOME POINT
+		//ACTIVE ENERGY SECTION
+		ifsuccess(ADEgetRegister(LAENERGY,&val)) {
+			Serial1.print("int Line Cycle Active Energy after 200 half-cycles:");
+			Serial1.println(val);
+		} else {
+			Serial1.println("Line Cycle Active Energy read failed.");
+		}
+		
+/*		iRMS = data/161;//data*1000/40172/4;
+		Serial1.print("mAmps IRMS:");
+		Serial1.println(iRMS);
+*/
+		
+		delay(500);
+	} //end of if statement
+
+	CSSelectDevice(DEVDISABLE);
+}
+
+int getChannelID() 
+{
+	int ID = -1;
+	while (ID == -1) {
+		Serial1.println("Waiting for ID (0-20):");		
+		char in[3] = {'\0'};
+		while (Serial1.available() == 0);
+		in[0] = Serial1.read();
+		while (Serial1.available() == 0);
+		in[1] = Serial1.read();
+		ID = atoi(in);
+		if (ID < 0 || 20 < ID || errno != 0) {
+			Serial1.print("Incorrect ID:");
+			Serial1.println(ID,DEC);
+			ID = -1;
+		}
+	}
+	return ID;
+}
 
 //*****Commented Section Below*****	
 	

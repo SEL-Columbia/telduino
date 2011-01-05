@@ -1,7 +1,7 @@
 #include "returncode.h"
 
 /**
-	Requires a return code and a string buffer of at least 10 characters
+	Requires a return code otherwise returns "RCERR".
 */
 const char* RCstr(int8_t retCode)
 {
