@@ -27,7 +27,7 @@ extern "C" {
 #define SHIFTCLK  25    //SRCK
 #define SERIN     29    //INPUT
 
-const int WIDTH   =  24;    //WIDTH
+static const int WIDTH   =  24;    //WIDTH
 //#define REVERSE   0     //Reverse order of shift
 
 void initShiftRegister();

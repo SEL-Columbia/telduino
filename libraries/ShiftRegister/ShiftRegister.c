@@ -1,4 +1,4 @@
-/** @file ShiftRegister.cpp
+/** @file ShiftRegister.c
 @author Javier Rosa
 
 In order to make any changes to the shift register visible apart for clearing and enabling, latch must be called.

@@ -24,6 +24,7 @@ arduino: telduino.cpp
 	avr-gcc $(GCCFLAGS) libraries/arduino/wiring_pulse.c 	-obuild/wiring_pulse.c.o
 	avr-gcc $(GCCFLAGS) libraries/arduino/wiring_shift.c 	-obuild/wiring_shift.c.o 
 	avr-gcc $(GCCFLAGS) libraries/ReturnCode/returncode.c 	-obuild/returncode.c.o 
+	avr-gcc $(GCCFLAGS) libraries/Switches/switches.c 	-obuild/switches.c.o 
 	
 	#SR, Demux
 	avr-gcc $(GCCFLAGS) libraries/Demux/Demux.c 		-obuild/Demux.c.o 
@@ -52,6 +53,7 @@ arduino: telduino.cpp
 	avr-ar rcs build/core.a build/wiring_digital.c.o
 	avr-ar rcs build/core.a build/wiring_pulse.c.o
 	avr-ar rcs build/core.a build/wiring_shift.c.o
+	avr-ar rcs build/core.a build/switches.c.o
 	#SR,Demux
 	avr-ar rcs build/core.a build/ShiftRegister.c.o
 	avr-ar rcs build/core.a build/Demux.c.o

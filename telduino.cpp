@@ -8,40 +8,12 @@
 #include "Select/select.h"
 #include "prescaler.h"
 #include "ReturnCode/returncode.h"
+#include "Switches/switches.h"
 #include <stdlib.h>
 #include <errno.h>
 
 
 const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
-
-//Switches.c
-void SWsetSwitches(uint8_t enabledC[WIDTH]) 
-{
-	setEnabled(true);
-	//This map is its own inverse
-	const int mapRegToSw[] = {0,1,2,3,7,6,5,4,8,9,10,11,15,14,13,12,19,18,17,16,20,21,22,23};
-	uint8_t regBits[WIDTH] = {0};
-	for (int8_t sreg = 0; sreg < WIDTH; sreg++) {
-		regBits[sreg] = !enabledC[mapRegToSw[sreg]];
-	}
-	shiftArray(regBits,WIDTH);
-	latch();
-}
-void SWallOff()
-{
-	//Since the switches are always on we have to put a 1 to turn off the circuit
-	uint8_t bits[WIDTH] = {1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1};
-	setEnabled(true);
-	shiftArray(bits,WIDTH);
-	latch();
-}
-void SWallOn()
-{
-	//Since the switches are always on we have to put a 0 to turn on the circuit
-	setEnabled(true);
-	clearShiftRegister();
-	latch();
-}
 
 int testChannel = 1;
 unsigned long long lastFire10 = 0;
