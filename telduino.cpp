@@ -1,59 +1,43 @@
+#include <stdlib.h>
+#include <errno.h>
 #include "arduino/WProgram.h"
 
 //JR-Cal
-#include "SDRaw/sd_raw.h"
-#include "ADE7753/ADE7753.h"
-#include "ShiftRegister/ShiftRegister.h"
-#include "DbgTel/DbgTel.h"
-#include "Select/select.h"
 #include "prescaler.h"
 #include "ReturnCode/returncode.h"
+#include "DbgTel/DbgTel.h"
+#include "ADE7753/ADE7753.h"
+#include "ShiftRegister/shiftregister.h"
+#include "Demux/Demux.h"
+#include "Select/select.h"
+#include "SDRaw/sd_raw.h"
 #include "Switches/switches.h"
-#include <stdlib.h>
-#include <errno.h>
 
 
 const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
 
-int testChannel = 1;
+int _testChannel = 1;
 unsigned long long lastFire10 = 0;
-
-int32_t val;
-uint32_t iRMS = 0;
-uint32_t vRMS = 0;
-uint32_t lineAccAppEnergy = 0;
-uint32_t lineAccActiveEnergy = 0;
-int32_t interruptStatus = 0;
-uint32_t iRMSSlope = 164;
-uint32_t vRMSSlope = 4700;
-uint32_t appEnergyDiv = 5;
-uint32_t energyJoules = 0;
-
-//disabled channels
-uint8_t enabledC[WIDTH] = {0};
 
 void setup();
 void loop();
 void softSetup();
 void displayChannelInfo(); 
-void displayEnabled();
-int getChannelID();
+void displayEnabled(const int8_t enabledC[WIDTH]);
+int8_t getChannelID();
+void testHardware();
 
 //JR needed to make compiler happy
-extern "C" {
-#include "ShiftRegister/ShiftRegister.h"
-#include "Demux/Demux.h"
-	void __cxa_pure_virtual(void) {
-		while(1) {
-			setDbgLeds(RPAT);
-			delay(332);
-			setDbgLeds(YPAT);
-			delay(332);
-			setDbgLeds(GPAT);
-			delay(332);
-		}
+void __cxa_pure_virtual(void) {
+	while(1) {
+		setDbgLeds(RPAT);
+		delay(332);
+		setDbgLeds(YPAT);
+		delay(332);
+		setDbgLeds(GPAT);
+		delay(332);
 	}
-} 
+}
 
 void setup()
 {
@@ -67,49 +51,20 @@ void setup()
 	digitalWrite(37,HIGH);
 
 	initDbgTel(); //Blink leds
-	initShiftRegister(); //Shift registers
+	SRinit(); //Shift registers
 	initDemux(); //Muxers
 	initSelect(); //Select Circuit
 	sd_raw_init(); //SDCard
 	SPI.begin(); //SPI
 
-	Serial1.print("\n\rStart Program\n\r");
+	Serial1.print("\n\rStart loop()\n\r");
 	
-
-	//Shut off/on all circuits
-	for (int i =0; i < 1; i++){
-		SWallOn();
-		delay(50);
-		SWallOff();
-		delay(50);
-	}
-	delay(1000);
-	//Start turning each switch on with 1 second in between
-	for (int i = 0; i < WIDTH; i++) {
-		enabledC[i] = 1;
-		SWsetSwitches(enabledC);
-		delay(1000);
-	}
-
+	_testChannel = 20;
 } //end of setup section
 
 
-void displayEnabled()
-{
-	Serial1.println("Enabled Channels:");
-	for (int i =0; i < WIDTH; i++) {
-		Serial1.print(i);
-		Serial1.print(":");
-		Serial1.print(enabledC[i],DEC);
-		if (i%4 == 3) {
-			Serial1.println();
-		} else {
-			Serial1.print('\t');
-		}
-	}
-	Serial1.println();
-}
 void loop()
+
 {	
 	// Look for incoming data on Serial1 line
 	if (Serial1.available() > 0) {
@@ -118,25 +73,25 @@ void loop()
 			softSetup(); //do a soft reset.
 		} else if (incoming == 'C') {
 			//set display channel
-			testChannel = getChannelID();
+			_testChannel = getChannelID();
 		} else if (incoming == 'c') {
 			displayChannelInfo();
-		} else if (incoming == 'T') {
+		} else if (incoming == 'S') {
 			//Toggle channel circuit
-			int ID = getChannelID();
-			enabledC[ID] = 1-enabledC[ID];
-			SWsetSwitches(enabledC);
-		} else if (incoming == 't') {
-			displayEnabled();	
+			int8_t ID = getChannelID();
+			SWset(ID,!SWisOn(ID));
+		} else if (incoming == 's') {
+			displayEnabled(SWgetSwitchState());	
+		} else if (incoming == 'T'){
+			testHardware();
 		} else {
 			//Indicate received character
-			Serial1.print("\n\r\n\rReceived: \'");
+			Serial1.print("\n\rNot_Recognized: \'");
 			Serial1.print(incoming);
 			Serial1.println("\'");
 		}
 	}
-
-	
+	SWallOff();
 	setDbgLeds(0);
 } //end of main loop
 
@@ -146,10 +101,10 @@ void softSetup()
 	int32_t data = 0;
 
 	Serial1.print("\n\n\rSetting Channel:");
-	Serial1.println(testChannel,DEC);
+	Serial1.println(_testChannel,DEC);
 	
-	CSSelectDevice(testChannel); //start SPI comm with the test device channel
-	//Turn on the Digital Integrator for testChannel
+	CSSelectDevice(_testChannel); //start SPI comm with the test device channel
+	//Turn on the Digital Integrator for _testChannel
 	int8_t ch1os=0,enableBit=1;
 
 	Serial1.print("set CH1OS:");
@@ -161,12 +116,14 @@ void softSetup()
 	Serial1.print("offset: ");
 	Serial1.println(ch1os);
 
-	//set the gain to 2 for channel testChannel since the sensitivity appears to be 0.02157 V/Amp
+	//set the gain to 2 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
 	int32_t gainVal = 1;
 
-	Serial1.print("BIN GAIN:");
+	Serial1.print("BIN GAIN (set,get):");
 	Serial1.print(RCstr(ADEsetRegister(GAIN,&gainVal)));
-	RCstr(ADEgetRegister(GAIN,&gainVal));
+	Serial1.print(",");
+	Serial1.print(RCstr(ADEgetRegister(GAIN,&gainVal)));
+	Serial1.print(":");
 	Serial1.println(gainVal,BIN);
 	
 	//Set the IRMSOS to 0d444 or 0x01BC. This is the measured offset value.
@@ -207,17 +164,24 @@ void softSetup()
 	Serial1.print("bin Interrupt Status Register:");
 	Serial1.println(data, BIN);
 
-	Serial1.print("Waiting for next cycle: ");
-	Serial1.println(RCstr(ADEwaitForInterrupt(CYCEND,3000)));
-	
 	CSSelectDevice(DEVDISABLE); //end SPI comm with the selected device	
-	
 }
 
 void displayChannelInfo() {
 	int8_t retCode;
+	int32_t val;
+	uint32_t iRMS = 0;
+	uint32_t vRMS = 0;
+	uint32_t lineAccAppEnergy = 0;
+	uint32_t lineAccActiveEnergy = 0;
+	int32_t interruptStatus = 0;
+	uint32_t iRMSSlope = 164;
+	uint32_t vRMSSlope = 4700;
+	uint32_t appEnergyDiv = 5;
+	uint32_t energyJoules = 0;
+
 	//Select the Device
-	CSSelectDevice(testChannel);
+	CSSelectDevice(_testChannel);
 	
 	//Read and clear the Interrupt Status Register
 	ADEgetRegister(RSTSTATUS, &interruptStatus);
@@ -236,8 +200,8 @@ void displayChannelInfo() {
 	ifsuccess(retCode) {
 		setDbgLeds(GYRPAT);
 
-		Serial1.print("testChannel:");
-		Serial1.println(testChannel,DEC);
+		Serial1.print("_testChannel:");
+		Serial1.println(_testChannel,DEC);
 
 		Serial1.print("bin Interrupt Status Register:");
 		Serial1.println(interruptStatus, BIN);
@@ -288,16 +252,18 @@ void displayChannelInfo() {
 	CSSelectDevice(DEVDISABLE);
 }
 
-int getChannelID() 
+int8_t getChannelID() 
 {
 	int ID = -1;
 	while (ID == -1) {
-		Serial1.println("Waiting for ID (0-20):");		
+		Serial1.print("Waiting for ID (0-20):");		
 		char in[3] = {'\0'};
 		while (Serial1.available() == 0);
 		in[0] = Serial1.read();
+		Serial1.print(in[0]);
 		while (Serial1.available() == 0);
 		in[1] = Serial1.read();
+		Serial1.println(in[1]);
 		ID = atoi(in);
 		if (ID < 0 || 20 < ID || errno != 0) {
 			Serial1.print("Incorrect ID:");
@@ -305,38 +271,65 @@ int getChannelID()
 			ID = -1;
 		}
 	}
-	return ID;
+	return (int8_t)ID;
 }
 
-//*****Commented Section Below*****	
-	
-	/* Shift Reg.
-	 * 
-	int8_t first1 = 20;
-	setEnabled(true);
-	for (int8_t i = first1; i < first1 + 1; i++){
-		shiftBit(true);
-		//shiftBit(false);
-		//latch();
+void testHardware() {
+	int8_t enabledC[WIDTH] = {0};
+	int32_t val;
+
+	Serial1.print("\n\rTest switches\n\r");
+	//Shut off/on all circuits
+	for (int i =0; i < 1; i++){
+		SWallOn();
+		delay(50);
+		SWallOff();
+		delay(50);
 	}
-	for(int i = 0; i < first1; i++){
-		shiftBit(false);
+	//Start turning each switch on with 1 second in between
+	for (int i = 0; i < WIDTH; i++) {
+		enabledC[i] = 1;
+		delay(1000);
+		SWsetSwitches(enabledC);
 	}
-	latch();
 	delay(1000);
-	clearShiftRegister();
-	latch();
-	*/
+	SWallOff();
 
-	/* Demux*/
-	/*
-	//muxSetEnabled(true);
-	muxSelect(16);
-	for (int i = 0; i < 21; i++){
-		//muxSelect(i);
-		//delay(1000);
-	}*/
+	//Test communications with each ADE
+	for (int i = 0; i < 21; i++) {
+		CSSelectDevice(i);
+		
+		Serial1.print("Can communicate with channel ");
+		Serial1.print(i,DEC);
+		Serial1.print(": ");
 
+		int retCode = ADEgetRegister(DIEREV,&val);
+		ifnsuccess(retCode) {
+			Serial1.print("NO-");
+			Serial1.println(RCstr(retCode));
+		} else {
+			Serial1.print("YES-DIEREV:");
+			Serial1.println(val,DEC);
+		}
+		CSSelectDevice(DEVDISABLE);
+	}
+}
+	
+void displayEnabled(const int8_t enabledC[WIDTH])
+{
+	Serial1.println("Enabled Channels:");
+	for (int i =0; i < WIDTH; i++) {
+		Serial1.print(i);
+		Serial1.print(":");
+		Serial1.print(enabledC[i],DEC);
+		if (i%4 == 3) {
+			Serial1.println();
+		} else {
+			Serial1.print('\t');
+		}
+	}
+	Serial1.println();
+}
 	/* Select*/
 	/*
 	CSSelectDevice(SDCARD);
@@ -364,48 +357,3 @@ int getChannelID()
 	}
 	delay(1000);
 	*/
-	
-
-	/* ADE*/
-	//INIT SPI
-	//SPI
-
-/*
-	int32_t iData = 0;
-	CSSelectDevice(testChannel);
-	ADEgetRegister(regist, &iData);
-	CSSelectDevice(DEVDISABLE);
-
-	Serial1.print("int iData:");
-	Serial1.println(iData);
-	Serial1.print("BIN iData:");
-	Serial1.println(iData,BIN);
-*/
-
-
-	/*
-	int8_t PAT = 0;
-	if(data[0]){
-		PAT |= GRNPAT;
-	}
-	if(data[1]){
-		PAT |= YELPAT;
-	}
-	if(data[2]){
-		PAT |=REDPAT;
-	}
-	setDbgLeds(PAT);
-	delay(10000);
-	*/
-	/*
-	Serial1.print("CLKPR:");
-	Serial1.println(CLKPR, BIN);
-	Serial1.print("SPCR:");
-	Serial1.println(SPCR,BIN);
-	Serial1.print("SPDR:");
-	Serial1.println(SPDR,BIN);
-	
-	1000100011010 
-	*/
-	
-

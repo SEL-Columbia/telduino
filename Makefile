@@ -28,7 +28,7 @@ arduino: telduino.cpp
 	
 	#SR, Demux
 	avr-gcc $(GCCFLAGS) libraries/Demux/Demux.c 		-obuild/Demux.c.o 
-	avr-gcc $(GCCFLAGS) libraries/ShiftRegister/ShiftRegister.c -obuild/ShiftRegister.c.o 
+	avr-gcc $(GCCFLAGS) libraries/ShiftRegister/shiftregister.c -obuild/shiftregister.c.o 
 	
 	avr-g++ $(G++FLAGS) libraries/arduino/HardwareSerial.cpp -obuild/HardwareSerial.cpp.o
 	avr-g++ $(G++FLAGS) libraries/arduino/main.cpp 		-obuild/main.cpp.o
@@ -55,7 +55,7 @@ arduino: telduino.cpp
 	avr-ar rcs build/core.a build/wiring_shift.c.o
 	avr-ar rcs build/core.a build/switches.c.o
 	#SR,Demux
-	avr-ar rcs build/core.a build/ShiftRegister.c.o
+	avr-ar rcs build/core.a build/shiftregister.c.o
 	avr-ar rcs build/core.a build/Demux.c.o
 	avr-ar rcs build/core.a build/returncode.c.o
 	avr-ar rcs build/core.a build/select.cpp.o

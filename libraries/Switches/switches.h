@@ -2,7 +2,7 @@
 #define SWITCHES_H
 
 #include "ReturnCode/returncode.h"
-#include "ShiftRegister/ShiftRegister.h"
+#include "ShiftRegister/shiftregister.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,11 +11,18 @@ extern "C" {
 /**
   This mapping from shift register positions to circuit IDs is its own inverse.
   */
-const int mapRegToSw[] = {0,1,2,3,7,6,5,4,8,9,10,11,15,14,13,12,19,18,17,16,20,21,22,23};
+static const int8_t mapRegToSw[] = {0,1,2,3,7,6,5,4,8,9,10,11,15,14,13,12,19,18,17,16,20,21,22,23};
 
-void SWsetSwitches(uint8_t enabledC[WIDTH]);
+//Enabled circuits
+static int8_t _enabledC[WIDTH];
+
+
+void SWsetSwitches(int8_t enabledC[WIDTH]);
+int8_t SWset(int8_t sw, int8_t on);
 void SWallOff();
 void SWallOn();
+const int8_t* SWgetSwitchState();
+uint8_t SWisOn(int8_t sw);
 
 #ifdef __cplusplus
 }

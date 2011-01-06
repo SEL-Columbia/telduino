@@ -1,4 +1,4 @@
-/** @file ShiftRegister.h 
+/** @file shiftregister.h 
 
 @author: Javier Rosa
 @todo Need to see what a sane endianness is.
@@ -27,17 +27,17 @@ extern "C" {
 #define SHIFTCLK  25    //SRCK
 #define SERIN     29    //INPUT
 
-static const int WIDTH   =  24;    //WIDTH
+#define WIDTH   24    //WIDTH
 //#define REVERSE   0     //Reverse order of shift
 
-void initShiftRegister();
-void setEnabled( boolean enabled );
-void latch();
-void shiftBit( boolean bit );
-void shiftArray( byte bits[] , int8_t size);
-void clearShiftRegister();
-void all1ShiftRegister();
-void testShiftRegister();
+void SRinit();
+void SRsetEnabled( boolean enabled );
+void SRlatch();
+void SRshiftBit( boolean bit );
+void SRshiftArray( byte bits[] , int8_t size);
+void SRclear();
+void SRall1();
+void SRtest();
 
 #ifdef __cplusplus
 }

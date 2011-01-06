@@ -14,7 +14,7 @@ void ADEreadData(ADEReg reg, uint32_t *data)
     uint8_t nBytes = (reg.nBits+7)/8;
 
     //SPI speed is f_osc/128
-    SPI.setClockDivider(SPI_CLOCK_DIV128);
+    //SPI.setClockDivider(SPI_CLOCK_DIV64);
 	SPI.setDataMode(SPI_MODE1);
 
 	//now transfer the readInstuction/registerAddress: i.e. 00xxxxxx -AM
@@ -33,7 +33,7 @@ void ADEwriteData(ADEReg reg, uint32_t *data)
 
     //SPI speed is f_osc/128
 	SPI.setDataMode(SPI_MODE1);
-    SPI.setClockDivider(SPI_CLOCK_DIV128);
+    //SPI.setClockDivider(SPI_CLOCK_DIV64);
 
 	//now transfer the write Instuction/registerAddress: i.e. 10xxxxxx -JR
 	SPI.transfer(reg.addr | 0x80);

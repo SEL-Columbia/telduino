@@ -1,17 +1,17 @@
-/** @file ShiftRegister.c
+/** @file shiftregister.c
 @author Javier Rosa
 
 In order to make any changes to the shift register visible apart for clearing and enabling, latch must be called.
 
 */
-#include "ShiftRegister.h"
+#include "shiftregister.h"
 
 #define CLOCK(pin) digitalWrite(pin,HIGH);digitalWrite(pin,LOW);
 /**
 *	Register output pins are initialized to outputs and cleared.
 *	The register is then set disabled.
 */
-void initShiftRegister(){
+void SRinit(){
 	pinMode(SERIN,OUTPUT);
 	pinMode(NOTENABLE,OUTPUT);
 	pinMode(LATCH,OUTPUT);
@@ -22,60 +22,60 @@ void initShiftRegister(){
 	digitalWrite(LATCH, LOW);
 	digitalWrite(NOTCLR,LOW);
 	digitalWrite(SHIFTCLK, LOW);
-	setEnabled(true); 
-	clearShiftRegister();
-	latch();
-	setEnabled(false);
+	SRsetEnabled(true); 
+	SRclear();
+	SRlatch();
+	SRsetEnabled(false);
 }
 
 /** 
 *	@brief Enable/disable register
 */
-void setEnabled( boolean enabled ){
+void SRsetEnabled(boolean enabled){
 	digitalWrite(NOTENABLE, enabled?LOW:HIGH);
 }
 
 /**
 *	@brief Manifest register contents on output pins
 */
-void latch() {
+void SRlatch() {
 	CLOCK(LATCH);
 }
 
 /** 
 *	@brief Pushes one bit onto the register.
 */
-void shiftBit( boolean bit ){
+void SRshiftBit( boolean bit ){
 	digitalWrite(SERIN, bit?HIGH:LOW);
 	CLOCK(SHIFTCLK);
 }
 
 /** 
 *	@brief Pushes a set of bits specified by booleans onto the register.
-*	Pushes a set of bits specified by booleans onto the register. If bits[i] is not zero then the register line i is set to one. Therefore, bits[0] is the last bit shifted into the register.
+*	Pushes a set of bits specified by booleans onto the register. If bits[i] is 0 then the register line i is set to 1. Therefore, bits[0] is the last bit shifted into the register.
 *
 */
-void shiftArray(byte bits[] , int8_t size){
+void SRshiftArray(byte bits[] , int8_t size){
 	for(size = size-1; size >= 0; size--){
-		shiftBit(bits[size] != 0);
+		SRshiftBit(bits[size] != 0);
 	}
 }
 
 /**
 *	@brief Clear register
 */
-void clearShiftRegister()
+void SRclear()
 {
 	//Clear when LOW
 	digitalWrite(NOTCLR,LOW);
 	digitalWrite(NOTCLR,HIGH);
 }
 
-void all1ShiftRegister() 
+void SRall1() 
 {
-	clearShiftRegister();
+	SRclear();
 	uint8_t bits[] = {1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1};
-	shiftArray(bits, WIDTH);
+	SRshiftArray(bits, WIDTH);
 }
 
 /**
@@ -85,35 +85,35 @@ void all1ShiftRegister()
 *	sends an array of alternative 0s and 1s except for 
 *	three 1s at the end.
 */
-void testShiftRegister() {
+void SRtest() {
 	byte testArray[21] = {1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,-7,12};
 
-	init();
+	SRinit();
 
 	//Enable and push 1,0,1, then test latch
-	setEnabled(true);
-	shiftbit(true);
-	shiftbit(false);
-	shiftbit(true);
-	latch();
+	SRsetEnabled(true);
+	SRshiftbit(true);
+	SRshiftbit(false);
+	SRshiftbit(true);
+	SRlatch();
 
 	//test clear
 	delay(1000);
-	clear();
-	latch();
+	SRclear();
+	SRlatch();
 
 	//test shiftArray
-	shiftbit(true);
-	shiftbit(false);
-	shiftbit(true);
-	latch();
+	SRshiftbit(true);
+	SRshiftbit(false);
+	SRshiftbit(true);
+	SRlatch();
 	delay(1000);
 	
-	shiftArray(testArray,21);
-	latch();
+	SRshiftArray(testArray,21);
+	SRlatch();
 	delay(1000);
-	clear();
-	latch();
-	setEnabled(false);
+	SRclear();
+	SRlatch();
+	SRsetEnabled(false);
 }
 
