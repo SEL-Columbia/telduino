@@ -34,6 +34,7 @@ all : hex program
 hex : $(OBJECT_FILES)
 	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(OBJECT_FILES) -Llibraries -lm
 	avr-objcopy -j .text -j .data -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
+	avr-size -C --mcu=atmega1280 $(PROJECT).elf 
 
 %.o : %.c
 	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@
