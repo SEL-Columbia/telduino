@@ -14,8 +14,8 @@
 
 CLOCK = 8000000L
 PROJECT = telduino
-GCCFLAGS = -c -g -Os -w -std=c99 -ffunction-sections -fdata-sections -Ilibraries
-G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
+GCCFLAGS = -c -g -Os -w -std=c99 -Ilibraries
+G++FLAGS = -c -g -Os -w -fno-exceptions -Ilibraries
 VPATH = libraries/GSM libraries/arduino libraries/Demux libraries/ShiftRegister \
     libraries/SPI libraries/DbgTel libraries/Select \
     libraries/ADE7753 \

@@ -39,6 +39,7 @@ void setup();
 void loop();
 
 //JR needed to make compiler happy
+extern "C" {
 void __cxa_pure_virtual(void) {
 	while(1) {
 		setDbgLeds(RPAT);
@@ -48,6 +49,7 @@ void __cxa_pure_virtual(void) {
 		setDbgLeds(GPAT);
 		delay(332);
 	}
+}
 }
 
 void setup()

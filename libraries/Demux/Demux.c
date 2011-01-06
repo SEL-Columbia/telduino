@@ -73,7 +73,7 @@ void testDemux() {
 		muxSetEnabled(false);
 	}
 
-	muxSetEnable(true);
+	muxSetEnabled(true);
 
 	for (ii=0; ii < 21; ii++) {
 		muxSelect(ii);

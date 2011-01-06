@@ -92,9 +92,9 @@ void SRtest() {
 
 	//Enable and push 1,0,1, then test latch
 	SRsetEnabled(true);
-	SRshiftbit(true);
-	SRshiftbit(false);
-	SRshiftbit(true);
+	SRshiftBit(true);
+	SRshiftBit(false);
+	SRshiftBit(true);
 	SRlatch();
 
 	//test clear
@@ -103,9 +103,9 @@ void SRtest() {
 	SRlatch();
 
 	//test shiftArray
-	SRshiftbit(true);
-	SRshiftbit(false);
-	SRshiftbit(true);
+	SRshiftBit(true);
+	SRshiftBit(false);
+	SRshiftBit(true);
 	SRlatch();
 	delay(1000);
 	
