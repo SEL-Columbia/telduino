@@ -52,12 +52,12 @@ void SRshiftBit( boolean bit ){
 
 /** 
 *	@brief Pushes a set of bits specified by booleans onto the register.
-*	Pushes a set of bits specified by booleans onto the register. If bits[i] is 0 then the register line i is set to 1. Therefore, bits[0] is the last bit shifted into the register.
+*	Pushes a set of bits specified by booleans onto the register. If bits[i] is true then the register line i is set to 1. bits[0] is the last bit shifted into the register.
 *
 */
 void SRshiftArray(byte bits[] , int8_t size){
 	for(size = size-1; size >= 0; size--){
-		SRshiftBit(bits[size] != 0);
+		SRshiftBit(bits[size]);
 	}
 }
 

@@ -57,9 +57,10 @@ void setup()
 	sd_raw_init(); //SDCard
 	SPI.begin(); //SPI
 
-	Serial1.print("\n\rStart loop()\n\r");
-	
+	SWallOff();
 	_testChannel = 20;
+
+	Serial1.print("\n\rStart loop()\n\r");
 } //end of setup section
 
 
@@ -79,6 +80,9 @@ void loop()
 		} else if (incoming == 'S') {
 			//Toggle channel circuit
 			int8_t ID = getChannelID();
+			//Serial1.print("!SWisOn:");
+			//Serial1.print(!SWisOn(ID),DEC);
+			//Serial1.println(RCstr());
 			SWset(ID,!SWisOn(ID));
 		} else if (incoming == 's') {
 			displayEnabled(SWgetSwitchState());	
@@ -91,7 +95,6 @@ void loop()
 			Serial1.println("\'");
 		}
 	}
-	SWallOff();
 	setDbgLeds(0);
 } //end of main loop
 
@@ -263,12 +266,15 @@ int8_t getChannelID()
 		Serial1.print(in[0]);
 		while (Serial1.available() == 0);
 		in[1] = Serial1.read();
-		Serial1.println(in[1]);
+		Serial1.print(in[1]);
 		ID = atoi(in);
+		Serial1.print(":");
 		if (ID < 0 || 20 < ID || errno != 0) {
 			Serial1.print("Incorrect ID:");
 			Serial1.println(ID,DEC);
 			ID = -1;
+		} else {
+			Serial1.println((int8_t)ID,DEC);
 		}
 	}
 	return (int8_t)ID;

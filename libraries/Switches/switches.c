@@ -2,52 +2,56 @@
 #include "ShiftRegister/shiftregister.h"
 #include "ReturnCode/returncode.h"
 
-/**
-	There are WIDTH switches in the circuit as defined in shiftregister.h.
-	if enabledC[i] == 1 then the switch is on and off if it is 0.
-  */
-void SWsetSwitches(int8_t enabledC[WIDTH]) 
+void _SWsetSwitches() 
 {
-	SRsetEnabled(true);
 	uint8_t regBits[WIDTH];
 	int8_t sreg;
+	SRsetEnabled(true);
 	for (sreg = 0; sreg < WIDTH; sreg++) {
-		regBits[sreg] = !enabledC[mapRegToSw[sreg]];
+		regBits[sreg] = !_enabledC[mapRegToSw[sreg]];
 	}
 	SRshiftArray(regBits,WIDTH);
 	SRlatch();
+}
+
+/**
+	There are WIDTH switches in the circuit as defined in shiftregister.h.
+	if enabledC[i] == 1 then the circuit is on and off if it is 0. Note that the relay actually turns ON when the circuit is OFF.
+  */
+void SWsetSwitches(int8_t enabledC[WIDTH]) 
+{
+	int8_t i =0;
+	for (i =0; i < WIDTH; i++) {
+		_enabledC[i] = enabledC[i];
+	}
+	_SWsetSwitches();
 }
 /**
   0 <= sw < WIDTH
   */
 int8_t SWset(int8_t sw, int8_t on) 
 {
-	if (0 <= sw && sw <= WIDTH) {
+	if (0 <= sw && sw < WIDTH) {
 		_enabledC[sw] = on;
-		SWsetSwitches(_enabledC);
+		_SWsetSwitches();
 		return SUCCESS;
 	}
 	return ARGVALUEERR;
 }
 void SWallOff()
 {
-	//The shift register code inverts the logic so that a 0 implies
-	//the circuit is off.
 	int8_t i = 0;
 	for (i = 0; i < WIDTH; i++) {
-		_enabledC[i] = 0;
+		_enabledC[i] = false;
 	}
 	SRsetEnabled(true);
-	SRshiftArray(_enabledC,WIDTH);
-	SRlatch();
+	_SWsetSwitches();
 }
 void SWallOn()
 {
-	//The switches are always on by default so clearing the register turns
-	//them all on
 	int8_t i;
 	for (i = 0; i < WIDTH; i++) {
-		_enabledC[i] = 1;
+		_enabledC[i] = true;
 	}
 	SRsetEnabled(true);
 	SRclear();
@@ -66,8 +70,8 @@ const int8_t* SWgetSwitchState()
   */
 uint8_t SWisOn(int8_t sw)
 {
-	if ( 0<=sw && sw < WIDTH ) {
-		return _enabledC[sw] == 1;
+	if (0<=sw && sw<WIDTH) {
+		return _enabledC[sw] != 0;
 	}
 }
 
