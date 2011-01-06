@@ -1,2 +1,5 @@
 build
+*.hex
+*.o
 *.swp
+*.elf
