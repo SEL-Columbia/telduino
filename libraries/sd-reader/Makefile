@@ -4,8 +4,8 @@ HEX := $(NAME).hex
 OUT := $(NAME).out
 MAP := $(NAME).map
 SOURCES := $(wildcard *.c)
-HEADERS := $(wildcard *.h) ../Select/select.h
-OBJECTS := $(patsubst %.c,%.o,$(SOURCES)) ../Select/select.c
+HEADERS := $(wildcard *.h) ../Select/select.h ../Demux/Demux.h
+OBJECTS := $(patsubst %.c,%.o,$(SOURCES)) ../Select/select.c ../Demux/Demux.c
 
 MCU := atmega1280
 MCU_AVRDUDE := m1280

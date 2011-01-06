@@ -12,10 +12,6 @@
 #define SD_RAW_CONFIG_H
 
 #include <stdint.h>
-<<<<<<< HEAD
-=======
-#include "Select/select.h"
->>>>>>> ArduinoHead
 
 #ifdef __cplusplus
 extern "C"
@@ -48,11 +44,7 @@ extern "C"
  *
  * \note This option has no effect when SD_RAW_WRITE_SUPPORT is 0.
  */
-<<<<<<< HEAD
 #define SD_RAW_WRITE_BUFFERING 0
-=======
-#define SD_RAW_WRITE_BUFFERING 1
->>>>>>> ArduinoHead
 
 /**
  * \ingroup sd_raw_config
@@ -110,7 +102,6 @@ extern "C"
       defined(__AVR_ATmega1280__)
     #define configure_pin_mosi() DDRB |= (1 << DDB2)
     #define configure_pin_sck() DDRB |= (1 << DDB1)
-<<<<<<< HEAD
     #define configure_pin_miso() DDRB &= ~(1 << DDB3)
 
     //#define configure_pin_ss() DDRB |= (1 << DDB0)
@@ -121,17 +112,6 @@ extern "C"
     //void configure_pin_ss(){ initSelect(); }//DDRL |= (1 << DDL2)   //Must change, sets PL2 to output 
     //void select_card(){CSSelectDevice(  SDCARD  );}
     //void unselect_card(){CSSelectDevice(DEVDISABLE);}
-=======
-    //#define configure_pin_ss() DDRB |= (1 << DDB0)
-    #define configure_pin_ss() initSelect()//DDRL |= (1 << DDL2)   //Must change, sets PL2 to output 
-    #define configure_pin_miso() DDRB &= ~(1 << DDB3)
-
-//    #define select_card() PORTB &= ~(1 << PORTB0)
-//    #define unselect_card() PORTB |= (1 << PORTB0)
-
-    void select_card()   {CSSelectDevice(  SDCARD  );}
-    void unselect_card() {CSSelectDevice(DEVDISABLE);}
->>>>>>> ArduinoHead
 #else
     #error "no sd/mmc pin mapping available!"
 #endif

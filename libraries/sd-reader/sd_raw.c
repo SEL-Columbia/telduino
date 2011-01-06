@@ -155,14 +155,11 @@ static uint8_t raw_block_written;
 #endif
 #endif
 
-<<<<<<< HEAD
 void configure_pin_ss(){ initSelect(); }
 void select_card(){CSSelectDevice(  SDCARD  );}
 void unselect_card(){CSSelectDevice(DEVDISABLE);}
 
 
-=======
->>>>>>> ArduinoHead
 /* card type state */
 static uint8_t sd_raw_card_type;
 

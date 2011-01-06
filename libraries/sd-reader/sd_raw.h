@@ -13,10 +13,7 @@
 
 #include <stdint.h>
 #include "sd_raw_config.h"
-<<<<<<< HEAD
 #include "Select/select.h"
-=======
->>>>>>> ArduinoHead
 
 #ifdef __cplusplus
 extern "C"
@@ -53,14 +50,11 @@ extern "C"
  */
 #define SD_RAW_FORMAT_UNKNOWN 3
 
-<<<<<<< HEAD
 void configure_pin_ss();
 void select_card();
 void unselect_card();
 
 
-=======
->>>>>>> ArduinoHead
 /**
  * This struct is used by sd_raw_get_info() to return
  * manufacturing and status information of the card.

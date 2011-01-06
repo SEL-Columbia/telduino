@@ -52,6 +52,8 @@ LOAD main.o
 LOAD partition.o
 LOAD sd_raw.o
 LOAD uart.o
+LOAD /tmp/cc65kqTq.o
+LOAD /tmp/ccHuFLOw.o
 LOAD /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a
 LOAD /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a
 LOAD /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a
@@ -146,7 +148,7 @@ LOAD /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000     0x39d0
+.text           0x00000000     0x3b02
  *(.vectors)
  .vectors       0x00000000       0xe4 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
                 0x00000000                __vectors
@@ -154,41 +156,42 @@ LOAD /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a
  *(.vectors)
  *(.progmem.gcc*)
  *(.progmem*)
- .progmem.data  0x000000e4      0x1f4 main.o
-                0x000002d8                . = ALIGN (0x2)
-                0x000002d8                __trampolines_start = .
+ .progmem.data  0x000000e4      0x1db main.o
+                0x000002c0                . = ALIGN (0x2)
+ *fill*         0x000002bf        0x1 00
+                0x000002c0                __trampolines_start = .
  *(.trampolines)
- .trampolines   0x000002d8        0x0 linker stubs
+ .trampolines   0x000002c0        0x0 linker stubs
  *(.trampolines*)
-                0x000002d8                __trampolines_end = .
+                0x000002c0                __trampolines_end = .
  *(.jumptables)
  *(.jumptables*)
  *(.lowtext)
  *(.lowtext*)
-                0x000002d8                __ctors_start = .
+                0x000002c0                __ctors_start = .
  *(.ctors)
-                0x000002d8                __ctors_end = .
-                0x000002d8                __dtors_start = .
+                0x000002c0                __ctors_end = .
+                0x000002c0                __dtors_start = .
  *(.dtors)
-                0x000002d8                __dtors_end = .
+                0x000002c0                __dtors_end = .
  SORT(*)(.ctors)
  SORT(*)(.dtors)
  *(.init0)
- .init0         0x000002d8        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
-                0x000002d8                __init
+ .init0         0x000002c0        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
+                0x000002c0                __init
  *(.init0)
  *(.init1)
  *(.init1)
  *(.init2)
- .init2         0x000002d8        0xc /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
+ .init2         0x000002c0        0xc /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
  *(.init2)
  *(.init3)
  *(.init3)
  *(.init4)
- .init4         0x000002e4       0x1a /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
-                0x000002e4                __do_copy_data
- .init4         0x000002fe       0x10 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
-                0x000002fe                __do_clear_bss
+ .init4         0x000002cc       0x1a /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
+                0x000002cc                __do_copy_data
+ .init4         0x000002e6       0x10 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
+                0x000002e6                __do_clear_bss
  *(.init4)
  *(.init5)
  *(.init5)
@@ -199,175 +202,184 @@ LOAD /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a
  *(.init8)
  *(.init8)
  *(.init9)
- .init9         0x0000030e        0x8 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
+ .init9         0x000002f6        0x8 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
  *(.init9)
  *(.text)
- .text          0x00000316        0x4 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
-                0x00000316                __vector_38
-                0x00000316                __vector_22
-                0x00000316                __vector_28
-                0x00000316                __vector_1
-                0x00000316                __vector_32
-                0x00000316                __vector_34
-                0x00000316                __vector_24
-                0x00000316                __vector_12
-                0x00000316                __vector_55
-                0x00000316                __vector_46
-                0x00000316                __bad_interrupt
-                0x00000316                __vector_6
-                0x00000316                __vector_31
-                0x00000316                __vector_35
-                0x00000316                __vector_39
-                0x00000316                __vector_3
-                0x00000316                __vector_23
-                0x00000316                __vector_30
-                0x00000316                __vector_45
-                0x00000316                __vector_11
-                0x00000316                __vector_54
-                0x00000316                __vector_13
-                0x00000316                __vector_17
-                0x00000316                __vector_19
-                0x00000316                __vector_56
-                0x00000316                __vector_7
-                0x00000316                __vector_49
-                0x00000316                __vector_41
-                0x00000316                __vector_43
-                0x00000316                __vector_27
-                0x00000316                __vector_5
-                0x00000316                __vector_33
-                0x00000316                __vector_47
-                0x00000316                __vector_52
-                0x00000316                __vector_37
-                0x00000316                __vector_4
-                0x00000316                __vector_44
-                0x00000316                __vector_51
-                0x00000316                __vector_9
-                0x00000316                __vector_2
-                0x00000316                __vector_21
-                0x00000316                __vector_15
-                0x00000316                __vector_36
-                0x00000316                __vector_29
-                0x00000316                __vector_40
-                0x00000316                __vector_8
-                0x00000316                __vector_26
-                0x00000316                __vector_48
-                0x00000316                __vector_14
-                0x00000316                __vector_53
-                0x00000316                __vector_10
-                0x00000316                __vector_50
-                0x00000316                __vector_16
-                0x00000316                __vector_18
-                0x00000316                __vector_20
-                0x00000316                __vector_42
- .text          0x0000031a        0x0 byteordering.o
- .text          0x0000031a     0x1ff6 fat.o
-                0x0000031a                fat_close
-                0x00000668                fat_close_file
-                0x00000674                fat_read_file
-                0x00000908                fat_close_dir
-                0x00000914                fat_reset_dir
-                0x0000092e                fat_delete_file
-                0x00000a32                fat_get_fs_size
-                0x00000a70                fat_get_fs_free
-                0x00000c8c                fat_read_dir
-                0x000010a4                fat_open
-                0x000018ba                fat_create_dir
-                0x00001a38                fat_create_file
-                0x00001b00                fat_resize_file
-                0x00001d42                fat_seek_file
-                0x00001dfa                fat_write_file
-                0x000020f4                fat_open_dir
-                0x0000216e                fat_open_file
-                0x000021da                fat_get_dir_entry_of_path
-                0x000022fc                unselect_card
-                0x00002306                select_card
- .text          0x00002310      0x736 main.o
-                0x00002564                main
- .text          0x00002a46      0x1dc partition.o
-                0x00002a46                partition_close
-                0x00002a56                partition_open
- .text          0x00002c22      0x9bc sd_raw.o
-                0x00002c22                sd_raw_available
-                0x00002c2e                sd_raw_locked
-                0x00002d16                sd_raw_get_info
-                0x00002f6a                sd_raw_write
-                0x00003130                sd_raw_sync
-                0x00003164                sd_raw_read
-                0x000032f2                sd_raw_read_interval
-                0x000033d2                sd_raw_write_interval
-                0x00003488                sd_raw_init
- .text          0x000035de      0x258 uart.o
-                0x000035de                uart_init
-                0x000035f6                uart_putc
-                0x00003614                uart_putc_hex
-                0x0000364c                uart_putw_hex
-                0x00003660                uart_putdw_hex
-                0x00003686                uart_putw_dec
-                0x00003702                uart_putdw_dec
-                0x000037d4                uart_puts
-                0x000037ee                uart_puts_p
-                0x0000380a                uart_getc
-                0x00003834                __vector_25
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_mulsi3.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodhi4.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_divmodhi4.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodsi4.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
- .text          0x00003836        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
-                0x00003836                . = ALIGN (0x2)
+ .text          0x000002fe        0x4 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
+                0x000002fe                __vector_38
+                0x000002fe                __vector_22
+                0x000002fe                __vector_28
+                0x000002fe                __vector_1
+                0x000002fe                __vector_32
+                0x000002fe                __vector_34
+                0x000002fe                __vector_24
+                0x000002fe                __vector_12
+                0x000002fe                __vector_55
+                0x000002fe                __vector_46
+                0x000002fe                __bad_interrupt
+                0x000002fe                __vector_6
+                0x000002fe                __vector_31
+                0x000002fe                __vector_35
+                0x000002fe                __vector_39
+                0x000002fe                __vector_3
+                0x000002fe                __vector_23
+                0x000002fe                __vector_30
+                0x000002fe                __vector_45
+                0x000002fe                __vector_11
+                0x000002fe                __vector_54
+                0x000002fe                __vector_13
+                0x000002fe                __vector_17
+                0x000002fe                __vector_19
+                0x000002fe                __vector_56
+                0x000002fe                __vector_7
+                0x000002fe                __vector_49
+                0x000002fe                __vector_41
+                0x000002fe                __vector_43
+                0x000002fe                __vector_27
+                0x000002fe                __vector_5
+                0x000002fe                __vector_33
+                0x000002fe                __vector_47
+                0x000002fe                __vector_52
+                0x000002fe                __vector_37
+                0x000002fe                __vector_4
+                0x000002fe                __vector_44
+                0x000002fe                __vector_51
+                0x000002fe                __vector_9
+                0x000002fe                __vector_2
+                0x000002fe                __vector_21
+                0x000002fe                __vector_15
+                0x000002fe                __vector_36
+                0x000002fe                __vector_29
+                0x000002fe                __vector_40
+                0x000002fe                __vector_8
+                0x000002fe                __vector_26
+                0x000002fe                __vector_48
+                0x000002fe                __vector_14
+                0x000002fe                __vector_53
+                0x000002fe                __vector_10
+                0x000002fe                __vector_50
+                0x000002fe                __vector_16
+                0x000002fe                __vector_18
+                0x000002fe                __vector_20
+                0x000002fe                __vector_42
+ .text          0x00000302        0x0 byteordering.o
+ .text          0x00000302     0x1fe2 fat.o
+                0x00000302                fat_close
+                0x00000650                fat_close_file
+                0x0000065c                fat_read_file
+                0x000008f0                fat_close_dir
+                0x000008fc                fat_reset_dir
+                0x00000916                fat_delete_file
+                0x00000a1a                fat_get_fs_size
+                0x00000a58                fat_get_fs_free
+                0x00000c74                fat_read_dir
+                0x0000108c                fat_open
+                0x000018a2                fat_create_dir
+                0x00001a20                fat_create_file
+                0x00001ae8                fat_resize_file
+                0x00001d2a                fat_seek_file
+                0x00001de2                fat_write_file
+                0x000020dc                fat_open_dir
+                0x00002156                fat_open_file
+                0x000021c2                fat_get_dir_entry_of_path
+ .text          0x000022e4      0x704 main.o
+                0x00002538                main
+ .text          0x000029e8      0x1c8 partition.o
+                0x000029e8                partition_close
+                0x000029f8                partition_open
+ .text          0x00002bb0      0x966 sd_raw.o
+                0x00002bb0                sd_raw_available
+                0x00002bbc                sd_raw_locked
+                0x00002c90                sd_raw_sync
+                0x00002c94                unselect_card
+                0x00002c9e                select_card
+                0x00002ca8                sd_raw_get_info
+                0x00002efc                sd_raw_read
+                0x00003080                sd_raw_read_interval
+                0x00003160                sd_raw_write
+                0x00003308                sd_raw_write_interval
+                0x000033be                configure_pin_ss
+                0x000033c4                sd_raw_init
+ .text          0x00003516      0x258 uart.o
+                0x00003516                uart_init
+                0x0000352e                uart_putc
+                0x0000354c                uart_putc_hex
+                0x00003584                uart_putw_hex
+                0x00003598                uart_putdw_hex
+                0x000035be                uart_putw_dec
+                0x0000363a                uart_putdw_dec
+                0x0000370c                uart_puts
+                0x00003726                uart_puts_p
+                0x00003742                uart_getc
+                0x0000376c                __vector_25
+ .text          0x0000376e       0x68 /tmp/cc65kqTq.o
+                0x0000376e                CSSelectDevice
+                0x000037c8                initSelect
+ .text          0x000037d6      0x192 /tmp/ccHuFLOw.o
+                0x000037d6                muxSetEnabled
+                0x000037e6                muxSelect
+                0x000038b6                initDemux
+                0x00003906                testDemux
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_mulsi3.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodhi4.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_divmodhi4.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodsi4.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
+ .text          0x00003968        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
+                0x00003968                . = ALIGN (0x2)
  *(.text.*)
- .text.libgcc   0x00003836       0x3e /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_mulsi3.o)
-                0x00003836                __mulsi3
- .text.libgcc   0x00003874       0x28 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodhi4.o)
-                0x00003874                __udivmodhi4
- .text.libgcc   0x0000389c       0x26 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_divmodhi4.o)
-                0x0000389c                __divmodhi4
-                0x0000389c                _div
- .text.libgcc   0x000038c2       0x44 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodsi4.o)
-                0x000038c2                __udivmodsi4
- .text.libgcc   0x00003906        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
- .text.libgcc   0x00003906        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
+ .text.libgcc   0x00003968       0x3e /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_mulsi3.o)
+                0x00003968                __mulsi3
+ .text.libgcc   0x000039a6       0x28 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodhi4.o)
+                0x000039a6                __udivmodhi4
+ .text.libgcc   0x000039ce       0x26 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_divmodhi4.o)
+                0x000039ce                __divmodhi4
+                0x000039ce                _div
+ .text.libgcc   0x000039f4       0x44 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodsi4.o)
+                0x000039f4                __udivmodsi4
+ .text.libgcc   0x00003a38        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
+ .text.libgcc   0x00003a38        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
  .text.avr-libc
-                0x00003906       0x12 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
-                0x00003906                strcmp_P
+                0x00003a38       0x12 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
+                0x00003a38                strcmp_P
  .text.avr-libc
-                0x00003918       0x1c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
-                0x00003918                strncmp_P
+                0x00003a4a       0x1c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
+                0x00003a4a                strncmp_P
  .text.avr-libc
-                0x00003934       0x12 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
-                0x00003934                memcpy
+                0x00003a66       0x12 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
+                0x00003a66                memcpy
  .text.avr-libc
-                0x00003946        0xe /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
-                0x00003946                memset
+                0x00003a78        0xe /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
+                0x00003a78                memset
  .text.avr-libc
-                0x00003954       0x16 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
-                0x00003954                strchr
+                0x00003a86       0x16 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
+                0x00003a86                strchr
  .text.avr-libc
-                0x0000396a       0x12 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
-                0x0000396a                strcmp
+                0x00003a9c       0x12 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
+                0x00003a9c                strcmp
  .text.avr-libc
-                0x0000397c       0x1c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
-                0x0000397c                strncmp
+                0x00003aae       0x1c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
+                0x00003aae                strncmp
  .text.avr-libc
-                0x00003998       0x1e /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
-                0x00003998                strncpy
+                0x00003aca       0x1e /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
+                0x00003aca                strncpy
  .text.avr-libc
-                0x000039b6       0x16 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
-                0x000039b6                strrchr
-                0x000039cc                . = ALIGN (0x2)
+                0x00003ae8       0x16 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
+                0x00003ae8                strrchr
+                0x00003afe                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x000039cc        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
-                0x000039cc                exit
-                0x000039cc                _exit
+ .fini9         0x00003afe        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
+                0x00003afe                exit
+                0x00003afe                _exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -386,82 +398,85 @@ LOAD /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x000039cc        0x4 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
+ .fini0         0x00003afe        0x4 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
  *(.fini0)
-                0x000039d0                _etext = .
+                0x00003b02                _etext = .
 
-.data           0x00800200       0xb8 load address 0x000039d0
+.data           0x00800200       0x10 load address 0x00003b02
                 0x00800200                PROVIDE (__data_start, .)
  *(.data)
  .data          0x00800200        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
  .data          0x00800200        0x0 byteordering.o
- .data          0x00800200       0x37 fat.o
-                0x00800200                muxMap
- .data          0x00800237       0x2c main.o
- .data          0x00800263       0x2a partition.o
- .data          0x0080028d       0x2a sd_raw.o
- .data          0x008002b7        0x0 uart.o
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_mulsi3.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodhi4.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_divmodhi4.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodsi4.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
- .data          0x008002b7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
+ .data          0x00800200        0xd fat.o
+ .data          0x0080020d        0x2 main.o
+ .data          0x0080020f        0x0 partition.o
+ .data          0x0080020f        0x0 sd_raw.o
+ .data          0x0080020f        0x0 uart.o
+ .data          0x0080020f        0x0 /tmp/cc65kqTq.o
+ .data          0x0080020f        0x0 /tmp/ccHuFLOw.o
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_mulsi3.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodhi4.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_divmodhi4.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodsi4.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
+ .data          0x0080020f        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
  *(.data*)
  *(.rodata)
  *(.rodata*)
  *(.gnu.linkonce.d*)
-                0x008002b8                . = ALIGN (0x2)
- *fill*         0x008002b7        0x1 00
-                0x008002b8                _edata = .
-                0x008002b8                PROVIDE (__data_end, .)
+                0x00800210                . = ALIGN (0x2)
+ *fill*         0x0080020f        0x1 00
+                0x00800210                _edata = .
+                0x00800210                PROVIDE (__data_end, .)
 
-.bss            0x008002b8      0x2c8
-                0x008002b8                PROVIDE (__bss_start, .)
+.bss            0x00800210      0x2c7
+                0x00800210                PROVIDE (__bss_start, .)
  *(.bss)
- .bss           0x008002b8        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
- .bss           0x008002b8        0x0 byteordering.o
- .bss           0x008002b8       0xb1 fat.o
- .bss           0x00800369        0x0 main.o
- .bss           0x00800369       0x11 partition.o
- .bss           0x0080037a      0x206 sd_raw.o
- .bss           0x00800580        0x0 uart.o
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_mulsi3.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodhi4.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_divmodhi4.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodsi4.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
- .bss           0x00800580        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
+ .bss           0x00800210        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
+ .bss           0x00800210        0x0 byteordering.o
+ .bss           0x00800210       0xb1 fat.o
+ .bss           0x008002c1        0x0 main.o
+ .bss           0x008002c1       0x11 partition.o
+ .bss           0x008002d2      0x205 sd_raw.o
+ .bss           0x008004d7        0x0 uart.o
+ .bss           0x008004d7        0x0 /tmp/cc65kqTq.o
+ .bss           0x008004d7        0x0 /tmp/ccHuFLOw.o
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_mulsi3.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodhi4.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_divmodhi4.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_udivmodsi4.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_exit.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a(_clear_bss.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
+ .bss           0x008004d7        0x0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
  *(.bss*)
  *(COMMON)
-                0x00800580                PROVIDE (__bss_end, .)
-                0x000039d0                __data_load_start = LOADADDR (.data)
-                0x00003a88                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x008004d7                PROVIDE (__bss_end, .)
+                0x00003b02                __data_load_start = LOADADDR (.data)
+                0x00003b12                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x00800580        0x0
-                0x00800580                PROVIDE (__noinit_start, .)
+.noinit         0x008004d7        0x0
+                0x008004d7                PROVIDE (__noinit_start, .)
  *(.noinit*)
-                0x00800580                PROVIDE (__noinit_end, .)
-                0x00800580                _end = .
-                0x00800580                PROVIDE (__heap_start, .)
+                0x008004d7                PROVIDE (__noinit_end, .)
+                0x008004d7                _end = .
+                0x008004d7                PROVIDE (__heap_start, .)
 
 .eeprom         0x00810000        0x0
  *(.eeprom*)
@@ -479,43 +494,47 @@ LOAD /usr/lib/gcc/avr/4.3.5/avr51/libgcc.a
 .signature
  *(.signature*)
 
-.stab           0x00000000     0x6fcc
+.stab           0x00000000     0x7284
  *(.stab)
  .stab          0x00000000      0x750 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
  .stab          0x00000750      0x264 byteordering.o
                                 0x270 (size before relaxing)
- .stab          0x000009b4     0x2ea4 fat.o
-                               0x3018 (size before relaxing)
- .stab          0x00003858      0xfcc main.o
-                               0x12cc (size before relaxing)
- .stab          0x00004824      0x3f0 partition.o
-                                0x6e4 (size before relaxing)
- .stab          0x00004c14     0x1614 sd_raw.o
-                               0x1890 (size before relaxing)
- .stab          0x00006228      0x828 uart.o
+ .stab          0x000009b4     0x2cc4 fat.o
+                               0x2e38 (size before relaxing)
+ .stab          0x00003678      0xfa8 main.o
+                               0x11dc (size before relaxing)
+ .stab          0x00004620      0x300 partition.o
+                                0x504 (size before relaxing)
+ .stab          0x00004920     0x1494 sd_raw.o
+                               0x1704 (size before relaxing)
+ .stab          0x00005db4      0x828 uart.o
                                 0xa80 (size before relaxing)
- .stab          0x00006a50       0x84 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
+ .stab          0x000065dc      0x294 /tmp/cc65kqTq.o
+                                0x4b0 (size before relaxing)
+ .stab          0x00006870      0x498 /tmp/ccHuFLOw.o
+                                0x6d8 (size before relaxing)
+ .stab          0x00006d08       0x84 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp_P.o)
                                  0x90 (size before relaxing)
- .stab          0x00006ad4       0xc0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
+ .stab          0x00006d8c       0xc0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp_P.o)
                                  0xcc (size before relaxing)
- .stab          0x00006b94       0x84 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
+ .stab          0x00006e4c       0x84 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memcpy.o)
                                  0x90 (size before relaxing)
- .stab          0x00006c18       0x6c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
+ .stab          0x00006ed0       0x6c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(memset.o)
                                  0x78 (size before relaxing)
- .stab          0x00006c84       0x9c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
+ .stab          0x00006f3c       0x9c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strchr.o)
                                  0xa8 (size before relaxing)
- .stab          0x00006d20       0x84 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
+ .stab          0x00006fd8       0x84 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strcmp.o)
                                  0x90 (size before relaxing)
- .stab          0x00006da4       0xc0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
+ .stab          0x0000705c       0xc0 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncmp.o)
                                  0xcc (size before relaxing)
- .stab          0x00006e64       0xcc /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
+ .stab          0x0000711c       0xcc /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strncpy.o)
                                  0xd8 (size before relaxing)
- .stab          0x00006f30       0x9c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
+ .stab          0x000071e8       0x9c /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/libc.a(strrchr.o)
                                  0xa8 (size before relaxing)
 
-.stabstr        0x00000000     0x2e4b
+.stabstr        0x00000000     0x2dd1
  *(.stabstr)
- .stabstr       0x00000000     0x2e4b /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
+ .stabstr       0x00000000     0x2dd1 /usr/lib/gcc/avr/4.3.5/../../../avr/lib/avr51/crtm1280.o
 
 .stab.excl
  *(.stab.excl)
