@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2006-2010 by Roland Riegel <feedback@roland-riegel.de>
+ * Copyright (c) 2006-2007 by Roland Riegel <feedback@roland-riegel.de>
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
@@ -13,15 +13,6 @@
 
 #include <stdint.h>
 #include "sd_raw_config.h"
-<<<<<<< HEAD
-#include "Select/select.h"
-=======
->>>>>>> ArduinoHead
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 /**
  * \addtogroup sd_raw
@@ -30,7 +21,7 @@ extern "C"
  */
 /**
  * \file
- * MMC/SD/SDHC raw access header (license: GPLv2 or LGPLv2.1)
+ * MMC/SD raw access header (license: GPLv2 or LGPLv2.1)
  *
  * \author Roland Riegel
  */
@@ -53,14 +44,6 @@ extern "C"
  */
 #define SD_RAW_FORMAT_UNKNOWN 3
 
-<<<<<<< HEAD
-void configure_pin_ss();
-void select_card();
-void unselect_card();
-
-
-=======
->>>>>>> ArduinoHead
 /**
  * This struct is used by sd_raw_get_info() to return
  * manufacturing and status information of the card.
@@ -102,7 +85,7 @@ struct sd_raw_info
     /**
      * The card's total capacity in bytes.
      */
-    offset_t capacity;
+    uint32_t capacity;
     /**
      * Defines wether the card's content is original or copied.
      *
@@ -133,17 +116,17 @@ struct sd_raw_info
     uint8_t format;
 };
 
-typedef uint8_t (*sd_raw_read_interval_handler_t)(uint8_t* buffer, offset_t offset, void* p);
-typedef uintptr_t (*sd_raw_write_interval_handler_t)(uint8_t* buffer, offset_t offset, void* p);
+typedef uint8_t (*sd_raw_read_interval_handler_t)(uint8_t* buffer, uint32_t offset, void* p);
+typedef uint16_t (*sd_raw_write_interval_handler_t)(uint8_t* buffer, uint32_t offset, void* p);
 
 uint8_t sd_raw_init();
 uint8_t sd_raw_available();
 uint8_t sd_raw_locked();
 
-uint8_t sd_raw_read(offset_t offset, uint8_t* buffer, uintptr_t length);
-uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interval, uintptr_t length, sd_raw_read_interval_handler_t callback, void* p);
-uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length);
-uint8_t sd_raw_write_interval(offset_t offset, uint8_t* buffer, uintptr_t length, sd_raw_write_interval_handler_t callback, void* p);
+uint8_t sd_raw_read(uint32_t offset, uint8_t* buffer, uint16_t length);
+uint8_t sd_raw_read_interval(uint32_t offset, uint8_t* buffer, uint16_t interval, uint16_t length, sd_raw_read_interval_handler_t callback, void* p);
+uint8_t sd_raw_write(uint32_t offset, const uint8_t* buffer, uint16_t length);
+uint8_t sd_raw_write_interval(uint32_t offset, uint8_t* buffer, uint16_t length, sd_raw_write_interval_handler_t callback, void* p);
 uint8_t sd_raw_sync();
 
 uint8_t sd_raw_get_info(struct sd_raw_info* info);
@@ -151,10 +134,6 @@ uint8_t sd_raw_get_info(struct sd_raw_info* info);
 /**
  * @}
  */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 

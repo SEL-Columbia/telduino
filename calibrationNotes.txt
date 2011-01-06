@@ -1,0 +1,33 @@
+Line frequency 60hz
+
+voltage
+========
+
+volts	counts
+240 	1123000
+120 	560000
+
+VRMSOS = (120*1123000 - 240*560000)/(240 - 120) = 3000 
+
+slope = (1123000-560000)/(240-120) = 4691.66666666666666666666
+
+
+
+current
+==========
+
+Amps	Counts
+.77 	126000
+.11 	017600
+
+IRMSOS = 1/32768*(.11^2*126000^2 - .77^2*17600^2)/(.77^2-.11^2) = 444
+
+slope = (126000-17600)/(.77-.11) = 164
+
+power
+======
+
+We only need a slope presumably
+
+actual: 12V .24A  5.76 Joules observed: 13V .232A 27counts(Energy) or 6.032Joules
+actual: 39.7V .77amps 61.138Joules observed 40V .769A 302counts(Energy) or 61.52Joules

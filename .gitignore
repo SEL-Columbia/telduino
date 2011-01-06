@@ -3,3 +3,4 @@ cruft
 *.o
 *.elf
 *.hex
+*.swp

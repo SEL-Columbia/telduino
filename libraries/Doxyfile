@@ -1,0 +1,3 @@
+RECURSIVE = yes
+GENERATE_LATEX = no 
+
