@@ -1,10 +1,7 @@
 OVERALL TODO:
 - Must send byte to SD Card after raising CS according to: http://elm-chan.org/docs/mmc/mmc_e.html
-- Standarize on success = 0
-- Fix build environment
+- Standarize on success = 0 still need to fix demux.h
 - make initialization naming conventions sane
-- fix the shift register naming conventions
-- Write generic code for switches
 - Write code to lighup mount light
 - Verify microsecond timing for SPI
 
@@ -12,6 +9,7 @@ BUILD
 - There is a strange linking problem with prescaler.h that occurs if the default ADERegs are not consts. This also occurs with other modules as well.
 
 SD
+- Make use of the available and write protect functionality in the RR library
 - For reliabilty the SD card should be run at a lower speed in the Khz range.
 - The raw library seems to assume availability of the SD card. It is imperative that we make sure that the Ronald Reigel library doesn't cache writes and try to write when we are communicating with the ADE.
 - Pins must be changed in sd_raw_config.h PL2 is used for the SD card SS. Therefor SS must be changed and the select/unselect functions.
@@ -19,15 +17,12 @@ SD
 - The lock (WP) and available(Card detect) pins must also be set to: 48/49 PL1,PL0 and the must also be configured nicely.
 - When the switch is flipped the AtMega should synchronize the data and make sure that the card is ready to be unmounted.
 - Should wrap Riegel's calls so that no accidents happen. Perhaps select/unselect should be rewritten to use CSselectDevice in select file.
-- The biggest problem in getting the Reigel Library working is getting it linked
 - Forgot to call the init routine!
 
 ADE
-- How does the ADE handle gettin an 8-bit 2s complement number for a 6 bit register?
-- Need to convert 2s complement into signed magnitude numbers 
+- How does the ADE handle getting an 8-bit 2s complement number for a 6 bit register?
 - Need to error check input ranges before sending to ADE
 - Need to make sure that x bits are being used for numerical data.
-- CHKSUMs
 - Write handlers for calibration
 
 Docs
@@ -58,7 +53,7 @@ ARCHITECTURE
 (TODO pull data out of Rajesh's code)
 
 ADE7753
-SHiftRegister
+ShiftRegister
 Demux
 SDRAW -> SDFAT32
 Debug
@@ -85,7 +80,3 @@ QueryEngine
 	- Aggregates data from Logger, Circuits, and Accounts
 	- Formats for GSM or logging
 	- Sends to GSM, logger
-
-
-
-

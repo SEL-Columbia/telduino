@@ -31,7 +31,7 @@ OBJECT_FILES = gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o \
 	DbgTel.o select.o switches.o returncode.o\
     byteordering.o fat.o partition.o sd_raw.o $(PROJECT).o 
 
-all : hex program
+all : hex program clean
 
 hex : $(OBJECT_FILES)
 	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(OBJECT_FILES) -Llibraries -lm
