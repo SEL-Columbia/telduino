@@ -1,5 +1,7 @@
 #include "gsmbase.h"
 
+//TODO use statically allocated buffer instead of dynamic memory
+
 //with debug
 GSMbase::GSMbase(Serial& _telit ,
 uint32_t(*_millis)(),Serial* _debug) 
@@ -81,7 +83,7 @@ const char* const GSMbase::catchTelitData(uint32_t _timeout,
 	//best I can do.
 	free(fullData);
 	fullData=NULL;
-	if (quickCheck) dataSize=20; //If it is just a quick check max size is "/n/nERROR/n/n/0"
+	if (quickCheck) dataSize=256; //If it is just a quick check max size is "/n/nERROR/n/n/0"
 	
 	char* storeData = (char*) 
 	malloc(sizeof(char) * (dataSize));

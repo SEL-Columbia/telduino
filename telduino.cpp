@@ -134,10 +134,43 @@ void loop()
 			GSMb.sendRecATCommand("AT+CSQ");
 		} else if (incoming == 'R') {
 			wdt_enable((WDTO_4S));			//Do a soft reset
+			Serial1.println("resetting in 4s.");
+		} else if (incoming == 'F') {
+			//Forward a command to the modem
+			const int buffSize = 256;
+			char command[buffSize] = {0};
+			int8_t i = 0;
+			dbg.println("Enter command:");
+			do {
+				while (dbg.available() < 1);
+				command[i] = dbg.read();
+				if (command[i] == '\x7F' && i>=1) {
+					command[i] = '\0';
+					dbg.print('\b');
+					dbg.print(' ');
+					dbg.print('\b');
+					i -= 1;
+				} else {
+					dbg.print(command[i]);
+					i++;
+				}
+			} while (command[i-1] != '\r' && \
+					i < (buffSize-2));
+			if (i == buffSize-2 && command[i] != '\r') {
+				dbg.println("ERROR:INPUT_BUFFER_OVERFLOW");
+			} else {
+				command[i] = '\0'; //\r is added by sendRecATCommand
+				wdt_enable(WDTO_8S);
+				GSMb.sendRecQuickATCommand(command);
+				wdt_disable();
+			}
 		}
 		else {
 			//Indicate received character
-			dbg.print("\n\rNot_Recognized: \'");
+			dbg.print("\n\rNot_Recognized:");
+			dbg.print(incoming,BIN);
+			dbg.print(":");
+			dbg.print("'");
 			dbg.print(incoming);
 			dbg.println("\'");
 		}
