@@ -1,6 +1,7 @@
 #ifndef DEMUX_H
 #define DEMUX_H
 #include "arduino/wiring.h"
+#include "ReturnCode/returncode.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -25,7 +26,7 @@ void muxSetEnabled(boolean enabled);
 /*
  * set line
  */
-boolean muxSelect( int8_t line );
+int8_t muxSelect( int8_t line );
 
 void testDemux();
 

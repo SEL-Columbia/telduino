@@ -30,7 +30,7 @@
 #include "arduino/WProgram.h"
 //#include "serial.h"
 // fixme : why do i have to hardcode this link to hardware serial?
-#include "../arduino/HardwareSerial.h"
+#include "arduino/HardwareSerial.h"
 #include "ioHelper.h"
 
 

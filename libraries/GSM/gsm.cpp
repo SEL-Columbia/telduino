@@ -248,8 +248,8 @@ bool GSMbase::turnOn(){
 		while ((millis() - startTime) < 10000);		// block 10 seconds
 		if(sendRecQuickATCommand("AT")) return 1;	//set no echo if you get a OK we are ON!
 		DebugPort->write("stuck in ON");
-		}
-return 1;							//should never get here
+	}
+	return 1;							//should never get here
 }
 
 

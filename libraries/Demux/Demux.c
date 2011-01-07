@@ -23,7 +23,7 @@ void muxSetEnabled(boolean enabled){
 	
 //Lines are numbered from 0 to 20
 //The last circuit line 20 is physcially the mains circuit
-boolean muxSelect( int8_t line ){
+int8_t muxSelect( int8_t line ){
 	//The hex pair X,Y corresponding to number 0-20 (00 - A5) defines the physcial circuit being activated.
 	//for line 20, the last/main line, DCBA=1111 HGFE=0101
         muxSetEnabled(false);
@@ -54,10 +54,10 @@ boolean muxSelect( int8_t line ){
 	} else {
 		//TODO: This is more an error than anything else.
         muxSetEnabled(false);
-		return false;
+		return ARGVALUEERR;
 	}
         muxSetEnabled(true);
-	return true;
+	return SUCCESS;
 }
 
 void testDemux() {

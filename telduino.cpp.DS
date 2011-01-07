@@ -1,38 +1,62 @@
 #include "arduino/WProgram.h"
 
 //JR-Cal
-#include "SDRaw/sd_raw.h"
+#include "sd-reader/sd_raw.h"
 #include "ADE7753/ADE7753.h"
 #include "DbgTel/DbgTel.h"
 #include "Select/select.h"
 #include "prescaler.h"
+#include "ShiftRegister/shiftregister.h"
+#include "Demux/Demux.h"
 
 
-const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <string.h>
 
-char ctrlz = 26;
+#include "GSM/ioHelper.h"
+#include "GSM/gsmbase.h"
+#include "GSM/gsmSMS.h"
+#include "GSM/gsmGPRS.h"
+#include "GSM/gsmMaster.h"
+
+uint32_t millisWrapper();
+uint32_t (*milP)() = &millisWrapper;	//used, so with arduino you can pass &millis() straight in.
+uint32_t millisWrapper(){return millis();}
+
+GSMbase GSMb(Serial3,milP,&Serial2);	//GSMbase TELIT BASE FUNCTIONALITY
+gsmMASTER GsmMASTER(Serial3,milP,&Serial2);//combine base SMS and GPRS
+
+gsmSMS  GsmSMS(Serial3,milP,&Serial2);	//gsmSMS TELIT SMS
+gsmGPRS GsmGPRS(Serial3,milP,&Serial2); //gsmGPRS TELIT GPRS
 
 void setup();
 void loop();
 
-//JR needed to make compiler happy
-extern "C" {
-#include "ShiftRegister/ShiftRegister.h"
-#include "Demux/Demux.h"
-	void __cxa_pure_virtual(void) {
-		while(1) {
-			setDbgLeds(RPAT);
-			delay(332);
-			setDbgLeds(YPAT);
-			delay(332);
-			setDbgLeds(GPAT);
-			delay(332);
-		}
-	}
-} 
 
 void setup()
 {
+	
+	Serial3.begin(9600); 	//Telit serial
+	Serial2.begin(9600); 	//debug serial
+	Serial2.write("\r\n\r\ntelduino power up\r\n");
+	Serial2.write("last compilation\r\n");
+	Serial2.write(__DATE__);
+	Serial2.write("\r\n");
+	Serial2.write(__TIME__);
+	Serial2.write("\r\n");
+	
+	GSMb.turnOn();
+	Serial2.write("telit power up\r\n");
+
+	int init = GsmMASTER.init(3); // init Telit derived class calls base init()
+	
+    if (init==1) {
+        Serial2.write("GsmMaster.init successful\r\n");
+    } else {
+        Serial2.write("GsmMaster.init failed\r\n");
+    }
+	
 	//Get rid of prescaler.
 	setClockPrescaler(CLOCK_PRESCALER_1);
 	
@@ -41,13 +65,13 @@ void setup()
 	digitalWrite(37,HIGH);
 
 	//Serial port
-	Serial2.begin(9600);
+	//Serial2.begin(9600);
 
 	//Blink leds
 	initDbgTel();
 
 	//Shift registers
-	initShiftRegister();
+	SRinit();
 
 	//Muxers
 	initDemux();
@@ -70,16 +94,13 @@ void setup()
 	uint32_t ch1osVal = 0x00000000;
 	ch1osVal |= (1 << 7);
 	ch1osVal = ch1osVal << 24;
-	writeData(regist,&ch1osVal);
+	ADEwriteData(regist,&ch1osVal);
 	CSSelectDevice(DEVDISABLE);
 	
 	uint32_t data = 0;
 	CSSelectDevice(20);
-	byte out = readData(CH1OS,&data);
+	ADEreadData(CH1OS,&data);
 	CSSelectDevice(DEVDISABLE);
-
-	Serial2.print("out:");
-	Serial2.println(out,BIN);
 
 	//Serial2.print("int data CH1OS:");
 	//Serial2.println(data);
@@ -87,11 +108,8 @@ void setup()
 	Serial2.println(data,BIN);
 
 	CSSelectDevice(20);
-	out = readData(GAIN,&data);
+	ADEreadData(GAIN,&data);
 	CSSelectDevice(DEVDISABLE);
-
-	Serial2.print("out:");
-	Serial2.println(out,BIN);
 
 	//Serial2.print("int data:");
 	//Serial2.println(data);
@@ -102,6 +120,10 @@ void setup()
 
 void loop()
 {
+	
+	GSMb.sendRecATCommand("AT+CCLK?"); 
+	GSMb.sendRecATCommand("AT+CSQ");
+	
 	setDbgLeds(GYRPAT);
 	delay(500);
 	Serial2.println("START");
@@ -172,11 +194,9 @@ void loop()
 	
 	uint32_t data = 0;
 	CSSelectDevice(20);
-	byte out = readData(IRMS,&data);
+	ADEreadData(IRMS,&data);
 	CSSelectDevice(DEVDISABLE);
 
-	Serial2.print("out:");
-	Serial2.println(out,BIN);
 	data = data >> 8;
 
 	Serial2.print("int data IRMS:");
@@ -186,11 +206,9 @@ void loop()
 	
 	data = 0;
 	CSSelectDevice(20);
-	out = readData(VRMS,&data);
+	ADEreadData(VRMS,&data);
 	CSSelectDevice(DEVDISABLE);
 
-	Serial2.print("out:");
-	Serial2.println(out,BIN);
 	data = data >> 8;
 
 	Serial2.print("int data VRMS:");
@@ -237,7 +255,21 @@ void loop()
 	Serial2.println();
 	Serial2.flush();
 
-	delay(1000);
+	delay(10000);
 
 	setDbgLeds(0);delay(500);
+}
+
+//JR needed to make compiler happy
+extern "C" {
+void __cxa_pure_virtual(void) {
+	while(1) {
+		setDbgLeds(RPAT);
+		delay(332);
+		setDbgLeds(YPAT);
+		delay(332);
+		setDbgLeds(GPAT);
+		delay(332);
+	}
+}
 }

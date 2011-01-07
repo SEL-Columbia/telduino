@@ -12,6 +12,8 @@
 enum {UNSIGN=0,SIGNMAG=1,TWOS=2};
 //NOTE: We can recover memory (3*41= 124 bytes) by just using a single, data buffer
 
+
+
 typedef struct {
 	const char* name;
 	const uint8_t addr;
@@ -129,10 +131,10 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems);
 int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit);
 
 
+static const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
 
 //Sample circuit functions
 //Get stuff
-//Block for crossing
 //Check for sags
 //Other maintenance code?
 
