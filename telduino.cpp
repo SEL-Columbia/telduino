@@ -5,6 +5,7 @@
 #include <avr/interrupt.h>
 
 #include <string.h>
+#include <stdint.h>
 
 //Metering Hardware
 #include "arduino/WProgram.h"
