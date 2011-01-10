@@ -1,8 +1,12 @@
-#include "ADE7753.h"
-#include <limits.h>
 #include "arduino/WProgram.h"
+#include "arduino/wiring.h"
+#include "SPI/SPI.h"
+#include "ReturnCode/returncode.h"
+
+#include "ADE7753.h"
+
 //TODO Add range checks for all safe functions
-//TODO writeData shouldn't use pointer neither should readData
+//TODO writeData shouldn't use a pointer to data, neither should readData.
 
 /**
 * returns BYTES from the ADE in a uint32_t value
@@ -207,7 +211,7 @@ uint8_t ADEsetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val)
 	return retCode;
 }
 
-/** TODO fix rollover with timeout code, the code can exit early or wait 30 days
+/** 
   * @return 0,1 value of interrupt. Returns a negative error code if a failure occurs. 
   */
 int8_t ADEreadInterrupt(uint16_t regMask)

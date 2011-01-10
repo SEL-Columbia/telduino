@@ -1,11 +1,6 @@
 #ifndef DEMUX_H
 #define DEMUX_H
-#include "arduino/wiring.h"
-#include "ReturnCode/returncode.h"
-
-#ifdef __cplusplus
-extern "C"{
-#endif
+#include <stdint.h>
 
 // demux pins
 #define NENABLED 53 //This is also the main SS for SPI on the atmega 1280
@@ -18,15 +13,19 @@ extern "C"{
 #define G	36  //Note only 21 circuits are actually active
 
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 void initDemux();
 /* set enabled/disabled
  * The caller should make sure that the SD card is not enabled!
  */
-void muxSetEnabled(boolean enabled);
+void muxSetEnabled(uint8_t enabled);
 /*
  * set line
  */
-int8_t muxSelect( int8_t line );
+int8_t muxSelect(int8_t line);
 
 void testDemux();
 

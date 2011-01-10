@@ -1,10 +1,7 @@
 #ifndef ADE7753_H
 #define ADE7753_H
 
-#include <inttypes.h> 
-#include "ReturnCode/returncode.h"
-#include "SPI/SPI.h"	
-#include "arduino/wiring.h"
+#include <stdint.h> 
 
 /**
 * The type of number retrieved from the ADE
@@ -111,9 +108,7 @@ static const uint8_t ZO=0b01;
 static const uint8_t OZ=0b10;
 static const uint8_t OO=0b11;
 
-///*
-//const ADEReg *aardvark[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
-//*/
+static const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
 
 /**
  * @warning SPI.begin() must have already been called before any of these commands are used
@@ -131,13 +126,9 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems);
 int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit);
 
 
-static const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
 
 //Sample circuit functions
 //Get stuff
-//Check for sags
-//Other maintenance code?
-
 
 #endif
 

@@ -9,6 +9,7 @@
 
 //Metering Hardware
 #include "arduino/WProgram.h"
+#include "SPI/SPI.h"
 #include "prescaler.h"
 #include "ReturnCode/returncode.h"
 #include "DbgTel/DbgTel.h"
@@ -25,6 +26,7 @@
 #include "GSM/gsmSMS.h"
 #include "GSM/gsmGPRS.h"
 #include "GSM/gsmMaster.h"
+
 
 #define dbg Serial1
 

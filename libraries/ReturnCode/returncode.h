@@ -6,8 +6,8 @@
 extern "C"{
 #endif
 
-#define success(X) (X) == SUCCESS
-#define nsuccess(X) (X) != SUCCESS
+#define success(X) ((X) == SUCCESS)
+#define nsuccess(X) ((X) != SUCCESS)
 #define ifsuccess(X) if ((X) == SUCCESS)
 #define ifnsuccess(X) if ((X) != SUCCESS)
 

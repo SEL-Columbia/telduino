@@ -1,4 +1,10 @@
+#include <stdint.h>
+
+#include "arduino/wiring.h"
+#include "ReturnCode/returncode.h"
+
 #include "Demux.h"
+
 
 /**
  * Mux starts off disabled and set to have output 0 LOW and all others HIGH.
@@ -17,7 +23,7 @@ void initDemux(){
         muxSelect(0);
 }
 
-void muxSetEnabled(boolean enabled){
+void muxSetEnabled(uint8_t enabled){
         digitalWrite(NENABLED, enabled?LOW:HIGH);
 }
 	
