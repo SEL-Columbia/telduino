@@ -121,6 +121,20 @@ void meter(String commandString) {
 		// actually do something here soon
 		// read circuit energy or something using icid
 	}
+	else if (job == 'A') {
+		softSetup();
+	}
+	else if (job == 'c') {
+		_testChannel = 20;
+		displayChannelInfo();
+	}
+	else if (job == 'T') {
+		testHardware();
+	}
+	else if (job == 'R') {
+		wdt_enable((WDTO_4S));
+		debugPort.println("resetting in 4s.");
+	}
 }
 
 void modem(String commandString) {
