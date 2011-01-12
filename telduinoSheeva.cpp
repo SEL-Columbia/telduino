@@ -60,6 +60,10 @@ void displayEnabled(const int8_t enabledC[WIDTH]);
 int8_t getChannelID();
 void testHardware();
 
+/**
+ *	given a String for the key value, this function returns the String corresponding
+ *	to the value for the key by reading until the next '&' or the end of the string.
+ */
 String getValueForKey(String key, String commandString) {
     int keyIndex = commandString.indexOf(key);
     int valIndex = keyIndex + key.length() + 1;
@@ -72,6 +76,10 @@ String getValueForKey(String key, String commandString) {
     return val;
 }
 
+/**
+ *	this function is called when a cmp=mdm string is sent to the telduino.  the text 
+ *	surrounded by quotes is returned.
+ */
 String getSMSText(String commandString) {
     int firstQuoteIndex = commandString.indexOf('"');
     int secondQuoteIndex = commandString.indexOf('"', firstQuoteIndex + 1);
@@ -79,6 +87,9 @@ String getSMSText(String commandString) {
     return smsText;
 }
 
+/**
+ *	this function takes care of parsing commands where cmp=mtr.
+ */
 void meter(String commandString) {
     String job = getValueForKey("job", commandString);
     String cid = getValueForKey("cid", commandString);
@@ -145,6 +156,9 @@ void meter(String commandString) {
 	}
 }
 
+/**
+ *	this function takes care of parsing commands where cmp=mdm.
+ */
 void modem(String commandString) {
     String smsText = getSMSText(commandString);
 	
@@ -162,6 +176,10 @@ void modem(String commandString) {
     
 }
 
+/**
+ *	this function reads the sheevaPort (Serial2) for incoming commands
+ *	and returns them as String objects.
+ */
 String readSheevaPort() {
     char incomingByte = ';';    
     String commandString = "";
@@ -182,6 +200,10 @@ String readSheevaPort() {
     return commandString;
 }
 
+/**
+ *	this function reads the telitPort (Serial3) for incoming commands
+ *	and returns them as String objects.
+ */
 String readTelitPort() {
     char incomingByte = '\n';
     String commandString = "";
@@ -194,6 +216,12 @@ String readTelitPort() {
     return commandString;
 }
 
+/**
+ *	based on the value for the cmp key, this calls the function
+ *	meter if cmp=mtr
+ *	and
+ *  modem if cmp=mdm
+ */
 void chooseDestination(String destination, String commandString) {
     if (destination == "mtr") {
         meter(commandString);
