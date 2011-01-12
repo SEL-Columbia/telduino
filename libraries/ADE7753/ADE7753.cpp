@@ -17,9 +17,9 @@ void ADEreadData(ADEReg reg, uint32_t *data)
 {
     uint8_t nBytes = (reg.nBits+7)/8;
 
-    //SPI speed is f_osc/128
-    //SPI.setClockDivider(SPI_CLOCK_DIV64);
 	SPI.setDataMode(SPI_MODE1);
+    //SPI speed is f_osc/128
+    SPI.setClockDivider(SPI_CLOCK_DIV64);
 
 	//now transfer the readInstuction/registerAddress: i.e. 00xxxxxx -AM
 	SPI.transfer(reg.addr);
@@ -37,7 +37,7 @@ void ADEwriteData(ADEReg reg, uint32_t *data)
 
     //SPI speed is f_osc/128
 	SPI.setDataMode(SPI_MODE1);
-    //SPI.setClockDivider(SPI_CLOCK_DIV64);
+    SPI.setClockDivider(SPI_CLOCK_DIV64);
 
 	//now transfer the write Instuction/registerAddress: i.e. 10xxxxxx -JR
 	SPI.transfer(reg.addr | 0x80);
@@ -54,6 +54,8 @@ void ADEwriteData(ADEReg reg, uint32_t *data)
 */
 uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 {
+	Serial1.print("GET ");
+	Serial1.println(reg.name);
 	//get raw data, MSB of data is MSB from ADE irrespective of byte length
 	uint8_t retCode = SUCCESS;
 	uint32_t rawData = 0;
@@ -64,6 +66,7 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 	ADEreadData(CHKSUM,&chksum);
 
 	if (ADEchksum(rawData) != ((uint8_t*)&chksum)[3]) {
+		//for some reason this is returning FALURE and not commerr
 		retCode = COMMERR;
 	}
 	/*
@@ -114,24 +117,36 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
   */
 uint8_t ADEsetRegister(ADEReg reg, int32_t *value)
 {
+	//Serial1.print("SET ");
+	//Serial1.println(reg.name);
 	uint8_t retCode = SUCCESS;
-	uint32_t rawData;
+	uint32_t writeData;
 	uint8_t nBytes = (reg.nBits+7)/8;
+	uint8_t shiftBits = nBytes*8-reg.nBits;
+	//Serial1.println(shiftBits,DEC);
 
 	if (reg.signType == TWOS || reg.signType == UNSIGN) {
-		rawData = *value;
+		writeData = *value;
 		//rawData <<= (nBytes*8-reg.nBits);
-		rawData <<= ((sizeof(rawData)-nBytes)*8);
-	} else { //Do nothing this shouldn't happen
+		writeData <<= ((sizeof(writeData)-nBytes)*8);
+	} else { 
+		//Do nothing this shouldn't happen
+		//Serial1.println("MAJOR PROBLEM");
 		retCode = FAILURE;
 	}
 	//write data
-	ADEwriteData(reg, &rawData);
+	//Serial1.println("writtenData: ");
+	//Serial1.println(writeData,HEX);
+	ADEwriteData(reg, &writeData);
+	//Serial1.println(writeData<<shiftBits,HEX);
 
 	//read data and verify
 	uint32_t readData;
 	ADEreadData(reg,&readData);
-	if (rawData != readData) {
+	//Serial1.println("readData   : ");
+	//Serial1.println(readData,HEX);
+	//Serial1.println(readData<<shiftBits,HEX);
+	if ((writeData<<shiftBits) != (readData<<shiftBits)) {
 		retCode = COMMERR;
 	}
 	
@@ -159,7 +174,7 @@ uint8_t ADEchksum(uint32_t data)
 
 	@return SUCCESS, ARGEVALUEERR or ADEgetRegister errors
 */
-uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val) 
+uint8_t ADEgetCHXOS(const uint8_t X,int8_t *enableInt,int8_t *val) 
 {
 	int retCode = SUCCESS;
 	int32_t data  = 0;
@@ -185,7 +200,7 @@ uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val)
 	return retCode;
 }
 
-uint8_t ADEsetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val) 
+uint8_t ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val) 
 {
 	int retCode = SUCCESS;
 	int32_t data  =*val;
@@ -197,7 +212,7 @@ uint8_t ADEsetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val)
 	}
 
 	data &= ~0x80;
-	if (enableInt) {
+	if (enableInt && X == 1) {
 		data |= 0x80;
 	}
 

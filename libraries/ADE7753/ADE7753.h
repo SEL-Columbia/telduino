@@ -2,7 +2,9 @@
 #define ADE7753_H
 
 #include <stdint.h> 
-
+#ifdef TWOS
+#error "TWOS is defined"
+#endif
 /**
 * The type of number retrieved from the ADE
 */
@@ -15,8 +17,8 @@ typedef struct {
 	const char* name;
 	const uint8_t addr;
 	const uint8_t nBits;
-	const bool signType;
-	byte data[3]; 
+	const uint8_t signType;
+	uint8_t data[3]; 
 } ADEReg;
 
 //register defines -AM
@@ -33,7 +35,7 @@ static const ADEReg MODE	= {"MODE",0x09,16,UNSIGN};
 static const ADEReg IRQEN	= {"IRQEN",0x0A,16,UNSIGN};
 static const ADEReg STATUS	= {"STATUS",0x0B,16,UNSIGN};
 static const ADEReg RSTSTATUS	= {"RSTSTATUS",0x0C,16,UNSIGN};
-static const ADEReg CH1OS	= {"CH1OS",0x0D,8,UNSIGN }; //* signed mag two's complement
+static const ADEReg CH1OS	= {"CH1OS",0x0D,8,UNSIGN}; //* signed mag two's complement
 static const ADEReg CH2OS	= {"CH2OS",0x0E,8,UNSIGN}; //* signed mag not two's complement
 static const ADEReg GAIN	= {"GAIN",0x0F,8,UNSIGN};
 static const ADEReg PHCAL	= {"PHCAL",0x10,6,TWOS};
@@ -119,8 +121,8 @@ void ADEwriteData(ADEReg, uint32_t*);
 uint8_t ADEgetRegister(ADEReg, int32_t*);
 uint8_t ADEsetRegister(ADEReg, int32_t*);
 uint8_t ADEchksum(uint32_t);
-uint8_t ADEgetCHXOS(uint8_t X,int8_t *enableBit,int8_t *val);
-uint8_t ADEsetCHXOS(uint8_t X,int8_t *enableInt,int8_t *val);
+uint8_t ADEgetCHXOS(const uint8_t X,int8_t *enableBit,int8_t *val);
+uint8_t ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val);
 int8_t ADEreadInterrupt(uint16_t regMask);
 int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems);
 int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit);

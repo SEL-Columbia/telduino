@@ -1,10 +1,10 @@
+#include <avr/eeprom.h>
+
 #include "ReturnCode/returncode.h"
 #include "ADE7753/ADE7753.h"
-
-#include "Circuit.h"
 #include "Select/select.h"
-
-static Circuit circuits[NCIRCUITS]; 
+#include "Switches/switches.h"
+#include "circuit.h"
 
 #define MAGIC 2014/10000
 
@@ -12,12 +12,13 @@ static Circuit circuits[NCIRCUITS];
   Updates circuit measured parameters
   @TODO Achintya what is this number: MAGIC?
   @TODO how to handle case were linecycle doesn't fire?
+  @TODO should we be using the inverse of the period to get the actual frequency or should we fix the frequency when doing energy calculations?
   @warning a communications error may leave Circuit *c in an inconsisent state.
   @return ARGVALUEERR if the circuitID is invalid
   @return COMMERR if there is a communications error or the ADE is not detected
   @return FAILURE if there is no zero crossing detected 
 */
-int8_t Cupdate(Circuit *c)
+int8_t Cmeasure(Circuit *c)
 {
 	int8_t retCode = SUCCESS;
 	int32_t regData;
@@ -28,7 +29,6 @@ int8_t Cupdate(Circuit *c)
 		return retCode;
 	} 
 	c->status &= ~COMM;
-	c->status &= ~FAULT;
 
 	//Check for pressence and clear the interrupt register
 	ifnsuccess(retCode = ADEgetRegister(RSTSTATUS,&regData)) {
@@ -36,7 +36,7 @@ int8_t Cupdate(Circuit *c)
 		CSSelectDevice(DEVDISABLE);
 		return retCode;
 	} 
-	c->status &= 0xFFFFFFFF00000000;
+	c->status &= 0xFFFF0000;
 	c->status |= regData;
 	//TODO Update SAG and safety status
 	//return FAILURE if no zero crossing detected.
@@ -47,7 +47,16 @@ int8_t Cupdate(Circuit *c)
 
 
 	//Start measuring
-	ifnsuccess(retCode = ADEwaitForInterrupt(LINCYC)){
+	ifnsuccess(retCode = ADEgetRegister(PERIOD,&regData)){
+		if (retCode == COMMERR) {
+			c->status |= COMM;
+			CSSelectDevice(DEVDISABLE);
+			return retCode;
+		}
+	}
+	c->frequency =(uint16_t)(10000000/(regData*22)); //2.2us/LSbit
+
+	ifnsuccess(retCode = ADEwaitForInterrupt(CYCEND,2*c->halfCyclesSample/c->frequency)){
 		if (retCode == COMMERR) {
 			c->status |= COMM;
 			CSSelectDevice(DEVDISABLE);
@@ -58,19 +67,11 @@ int8_t Cupdate(Circuit *c)
 			timeout = true;
 		}
 	}
-	ifnsuccess(retCode = ADEgetRegister(PERIOD,&regData)){
-		if (retCode == COMMERR) {
-			c->status |= COMM;
-			CSSelectDevice(DEVDISABLE);
-			return retCode;
-		}
-	}
-	c->frequency =(uint16_t)(10000000/(regData*22)); //2.2us/LSbit
 	//c->frequency = 1000000/(regData*2200/1000); //2.2us/LSbit
 
 	if (!timeout) {
 		//Apparent power or Volt Amps
-		ifnsuccess(retCode == ADEgetRegister(LVAENERGY,&regData)){
+		ifnsuccess(retCode = ADEgetRegister(LVAENERGY,&regData)){
 			if (retCode == COMMERR) c->status |= COMM;
 			CSSelectDevice(DEVDISABLE);
 			return retCode;
@@ -78,7 +79,7 @@ int8_t Cupdate(Circuit *c)
 		c->VA = regData*MAGIC/(c->halfCyclesSample/c->frequency);
 
 		//Apparent power or Volt Amps
-		ifnsuccess(retCode == ADEgetRegister(LAENERGY,&regData)){
+		ifnsuccess(retCode = ADEgetRegister(LAENERGY,&regData)){
 			if (retCode == COMMERR) c->status |= COMM;
 			CSSelectDevice(DEVDISABLE);
 			return retCode;
@@ -86,7 +87,7 @@ int8_t Cupdate(Circuit *c)
 		c->W = regData*MAGIC/(c->halfCyclesSample/c->frequency);
 
 		//Apparent energy accumulated since last query
-		ifnsuccess(retCode == ADEgetRegister(RVAENERGY,&regData)){
+		ifnsuccess(retCode = ADEgetRegister(RVAENERGY,&regData)){
 			if (retCode == COMMERR) c->status |= COMM;
 			CSSelectDevice(DEVDISABLE);
 			return retCode;
@@ -94,7 +95,7 @@ int8_t Cupdate(Circuit *c)
 		c->VAEnergy = regData*MAGIC;
 
 		//Actve energy accumulated since last query
-		ifnsuccess(retCode == ADEgetRegister(RAENERGY,&regData)){
+		ifnsuccess(retCode = ADEgetRegister(RAENERGY,&regData)){
 			if (retCode == COMMERR) c->status |= COMM;
 			CSSelectDevice(DEVDISABLE);
 			return retCode;
@@ -102,20 +103,20 @@ int8_t Cupdate(Circuit *c)
 		c->AEnergy = regData*MAGIC;
 
 		//IRMS
-		ifnsuccess(retCode == ADEgetRegister(IRMS,&regData)){
+		ifnsuccess(retCode = ADEgetRegister(IRMS,&regData)){
 			if (retCode == COMMERR) c->status |= COMM;
 			CSSelectDevice(DEVDISABLE);
 			return retCode;
 		}
-		c->IRMS = regData/IRMSlope;
+		c->IRMS = regData/c->IRMSSlope;
 
 		//VRMS
-		ifnsuccess(retCode == ADEgetRegister(VRMS,&regData)){
+		ifnsuccess(retCode = ADEgetRegister(VRMS,&regData)){
 			if (retCode == COMMERR) c->status |= COMM;
 			CSSelectDevice(DEVDISABLE);
 			return retCode;
 		}
-		c->VRMS= regData/VRMSlope;
+		c->VRMS= regData/c->VRMSSlope;
 
 		//PF
 		c->PF = (uint16_t)(((uint64_t)c->AEnergy<<16)/c->VAEnergy);
@@ -129,7 +130,7 @@ int8_t Cupdate(Circuit *c)
 	}
 }
 
-int8_t Cconfigure(const Circuit *c)
+int8_t Cprogram(const Circuit *c)
 {
 
 	int8_t retCode = SUCCESS;
@@ -144,23 +145,89 @@ int8_t Cconfigure(const Circuit *c)
 	} else {
 		ifnsuccess(retCode = ADEsetModeBit(DISSAG,false)) return retCode;
 	}
-	regData = c->chIos;
-	ifnsuccess(retCode = ADEsetCHXOS(c->chIint,&regData)) return retCode;
+	ifnsuccess(retCode = ADEsetCHXOS(1,&c->chIint,&c->chIos)) return retCode;
 	regData = c->chIgainExp;
 	ifnsuccess(retCode = ADEsetRegister(GAIN,&regData)) return retCode;
 	regData = c->IRMSOffset;
 	ifnsuccess(retCode = ADEsetRegister(IRMSOS, &regData)) return retCode;
-	regData = c->chVos;
-	ifnsuccess(retCode = ADEsetCHXOS(false,&regData)) return retCode;
-	regData = c->VRMSffset;
+	//since this is channel 2 c->chIint is ignored
+	ifnsuccess(retCode = ADEsetCHXOS(2,&c->chIint,&c->chVos)) return retCode;
+	regData = c->VRMSOffset;
 	ifnsuccess(retCode = ADEsetRegister(VRMSOS, &regData)) return retCode;
 	regData = c->halfCyclesSample;
 	if (regData > 0) {
 		ifnsuccess(retCode = ADEsetRegister(LINECYC,&regData)) return retCode;
-		ifnsuccess(retCode = ADEsetModeBit(CYCEND,true)) return retCode;
+		ifnsuccess(retCode = ADEsetModeBit(CYCMODE,true)) return retCode;
 	} else {
-		ifnsuccess(retCode = ADEsetModeBit(CYCEND,false)) return retCode;
+		ifnsuccess(retCode = ADEsetModeBit(CYCMODE,false)) return retCode;
 	}
+	CSSelectDevice(DEVDISABLE);
+	return retCode;
+}
+
+int8_t Cenable(Circuit *c, int8_t enabled) 
+{
+	int32_t dummy;
+	int8_t retCode;
+	retCode = ADEgetRegister(DIEREV,&dummy);
+	if (enabled && success(retCode)){ 
+		c->status |= ENABLED;
+	} else if (enabled) {
+		c->status |= COMM;
+		c->status &= ~ENABLED;
+		return retCode;
+	} else {
+		c->status &= ~ENABLED;
+	}
+	return SUCCESS;
+}
+
+int8_t CsetOn(Circuit *c, int8_t on) 
+{
+	int8_t retCode;
+	if (!(c->status & ENABLED)){
+		retCode = FAILURE;
+		return retCode;
+	}
+	retCode = SWset(c->circuitID,on);
+	ifsuccess(retCode) {
+		c->_onOff = on;
+	}
+	return retCode;
+}
+
+int8_t CisOn(Circuit *c) 
+{
+	return SWisOn(c->circuitID);
+}
+
+int8_t Cload(Circuit *c, uint8_t* addrEEPROM)
+{
+	eeprom_read_block(c,addrEEPROM,sizeof(Circuit));
+}
+int8_t Csave(Circuit *c, uint8_t* addrEEPROM) 
+{
+	eeprom_update_block(c,addrEEPROM,sizeof(Circuit));
+}
+
+void CsetDefaults(Circuit *c, int8_t circuitID) 
+{
+	c->circuitID = circuitID;
+	c->chIint = true;
+	c->chIos = 0;
+	c->linCycMode = true;
+	c->halfCyclesSample = 200;
+	c->chIgainExp = 1;
+	c->IRMSOffset = 0x01BC;
+	c->IRMSSlope = 164;
+	c->chVos = 0;
+	c->VRMSOffset = 0x07FF;
+	c->VRMSSlope = 4700;
+	c->VASlope = 2014/10000.0;
+	c->sagDurationCycles = 10;
+	c->minVSag = 100;
+
+	c->status |= ENABLED;
 }
 
 /*

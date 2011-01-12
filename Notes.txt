@@ -5,8 +5,11 @@ OVERALL TODO:
 - Write code to lighup mount light
 - Verify microsecond timing for SPI
 
-BUILD
-- There is a strange linking problem with prescaler.h that occurs if the default ADERegs are not consts. This also occurs with other modules as well.
+
+ReturnValues
+- refactor RC to be more like errno
+- refactor all classes which use RC to use the errno like behaviour
+- Change the Demux and gsm return codes.
 
 SD
 - Make use of the available and write protect functionality in the RR library
@@ -24,8 +27,10 @@ ADE
 - Need to error check input ranges before sending to ADE
 - Need to make sure that x bits are being used for numerical data.
 - Write handlers for calibration
+- refactor get/set register to not use pointer.
 
 Docs
+- add reference in doxygen
 - Use Doxygen to automatically generate documentation
 - Create patches for Ronald Reigel Libraries which specify used ports for select, available, and locked.
 

@@ -482,7 +482,10 @@ void displayEnabled(const int8_t enabledC[WIDTH])
 
 
 
-//JR needed to make compiler happy
+/** 
+  This function is only called if a pure virtual function call is made.
+  Needed to make compiler happy. 
+  */
 extern "C" {
 void __cxa_pure_virtual(void) 
 {

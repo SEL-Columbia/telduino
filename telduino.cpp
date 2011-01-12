@@ -20,6 +20,10 @@
 #include "sd-reader/sd_raw.h"
 #include "Switches/switches.h"
 
+//Metering logic
+#include "Circuit/circuit.h"
+#include "Circuit/calibration.h"
+
 //GSM Modem
 #include "GSM/ioHelper.h"
 #include "GSM/gsmbase.h"
@@ -29,6 +33,8 @@
 
 
 #define dbg Serial1
+
+Circuit ckts[NCIRCUITS];
 
 //JR
 #include <avr/wdt.h>
@@ -79,7 +85,6 @@ void setup()
     dbg.write(__TIME__);
     dbg.write("\r\n");
 
-	
 	pinMode(37, OUTPUT);	//Level shifters
 	digitalWrite(37,HIGH);	//Level shifters
 	initDbgTel();			//Blink leds
@@ -140,32 +145,61 @@ void loop()
 			Serial1.println("resetting in 4s.");
 		} else if (incoming == 'F') {
 			//Forward a command to the modem
-			const int buffSize = 256;
-			char command[buffSize] = {0};
-			int8_t i = 0;
+			char command[256];
 			dbg.println("Enter command:");
-			do {
-				while (dbg.available() < 1);
-				command[i] = dbg.read();
-				if (command[i] == '\x7F' && i>=1) {
-					command[i] = '\0';
-					dbg.print('\b');
-					dbg.print(' ');
-					dbg.print('\b');
-					i -= 1;
-				} else {
-					dbg.print(command[i]);
-					i++;
-				}
-			} while (command[i-1] != '\r' && \
-					i < (buffSize-2));
-			if (i == buffSize-2 && command[i] != '\r') {
-				dbg.println("ERROR:INPUT_BUFFER_OVERFLOW");
-			} else {
-				command[i] = '\0'; //\r is added by sendRecATCommand
+			int i;
+			ifsuccess(CLgetString(&dbg,command,sizeof(command))) {  
 				wdt_enable(WDTO_8S);
 				GSMb.sendRecQuickATCommand(command);
 				wdt_disable();
+			} else {
+				dbg.println("Buffer overflow: command too long.");
+			}
+		} else if (incoming == 'a') {
+			dbg.println("Enter name of register to read:");
+			char buff[64] = {0};
+			CLgetString(&dbg,buff,sizeof(buff));
+			dbg.println();
+			/*
+			char c = buff[0];
+			int i =0;
+			dbg.println("***");
+			while (c != '\0') {
+				c = buff[i];
+				dbg.print("'");
+				dbg.print(c,HEX);
+				dbg.println("'");
+				i++;
+			}
+			dbg.println("***");
+			*/
+
+			int32_t regData = 0;
+			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
+				//dbg.println(regList[i]->name);
+				//dbg.println(strcmp(regList[i]->name,buff));
+				if (strcmp(regList[i]->name,buff) == 0){
+					CSSelectDevice(_testChannel);
+					dbg.print("regData:");
+					dbg.print(RCstr(ADEgetRegister(*regList[i],&regData)));
+					dbg.print(":");
+					dbg.println(regData,HEX);
+					CSSelectDevice(DEVDISABLE);
+					break;
+				} 
+			}
+		} else if (incoming == 'P') {
+			//Initialize all circuits to have the same parameters
+			//using the new circuits code
+			for (int i = 0; i < NCIRCUITS; i++) {
+				Circuit *c = &(ckts[i]);
+				CsetDefaults(c,i);
+				int8_t retCode = Cprogram(c);
+				dbg.println(RCstr(retCode));
+				dbg.println("*****");
+				ifnsuccess(retCode) {
+					break;
+				}
 			}
 		}
 		else {
@@ -343,16 +377,8 @@ int8_t getChannelID()
 	int ID = -1;
 	while (ID == -1) {
 		dbg.print("Waiting for ID (0-20):");		
-		char in[3] = {'\0'};
-		while (dbg.available() == 0);
-		in[0] = dbg.read();
-		dbg.print(in[0]);
-		while (dbg.available() == 0);
-		in[1] = dbg.read();
-		dbg.print(in[1]);
-		ID = atoi(in);
-		dbg.print(":");
-		if (ID < 0 || 20 < ID || errno != 0) {
+		ifnsuccess(CLgetInt(&dbg,&ID)) ID = -1;
+		if (ID < 0 || 20 < ID ) {
 			dbg.print("Incorrect ID:");
 			dbg.println(ID,DEC);
 			ID = -1;
@@ -419,17 +445,6 @@ void displayEnabled(const int8_t enabledC[WIDTH])
 	}
 	dbg.println();
 }
-	/* Select*/
-	/*
-	CSSelectDevice(SDCARD);
-	delay(1000);
-	for(int i =0; i < 21; i++){
-		CSSelectDevice(i);
-		delay(500);
-	}
-	*/
-	
-	//SD Card
 	/*
 	SPI.setDataMode(SPI_MODE0);
 	CSSelectDevice(SDCARD);
@@ -438,9 +453,9 @@ void displayEnabled(const int8_t enabledC[WIDTH])
 	if(info.manufacturer || info.revision) {
 		setDbgLeds(GPAT);
 		dbg.println("manufacturer");
-		dbg.println(info.manufacturer,BIN);
+		dbg.println(info.manufacturer,DEC);
 		dbg.println("revision");
-		dbg.println(info.revision,BIN);
+		dbg.println(info.revision,DEC);
 	} else { 
 		dbg.println("Nothing From SD Card Received");
 	}

@@ -2,20 +2,18 @@
 #define CIRCUIT_H
 #include <stdint.h>
 
-static const uint32_t ENABLED = 0x000100000000;
-static const uint32_t ON      = 0x000200000000;
-static const uint32_t COMM	  = 0x000400000000;
+static const uint32_t ENABLED = 0x00010000;
+static const uint32_t COMM	  = 0x00020000;
 
 typedef struct {
 
 	/**
-	  The SPI channel associated with this particular circuit.
-	  For best results halfCyclesSample/frequency should be an integer.
+	  circuitID is the SPI channel and switch associated with this particular circuit.
+	  onOff implies the circuit is on when this variable is set.
+	  @warning For best results halfCyclesSample/frequency should be an integer.
 	  */
 	int8_t circuitID;
-	uint8_t frequency; 
-	//This is a configuration parameter as the ADE doesn't have a frequency
-	//register.
+	int8_t _onOff;
 
 	/**
 	  Measured variables
@@ -28,14 +26,13 @@ typedef struct {
 	int16_t PF;			
 	int32_t VAEnergy;	//Apparent energy since last read
 	int32_t AEnergy;	//Active energy since last read
+	uint8_t frequency; 
 	/**
 	  Status indicates if a safety fault was detected
 	  The first 16bits are directly from the ADE.
 	  bit name
 	  16 Enabled
-	  17 On/Off
-	  18 Fault
-	  19 CommErr
+	  17 CommErr
 	*/
 	uint32_t status;
 
@@ -61,13 +58,12 @@ typedef struct {
 	*/
 	int8_t chVos;
 	int16_t VRMSOffset;
-	
 	int32_t VRMSSlope;	//Converts measured units into Volts
 
 	/**
 	  Power parameters
 	*/
-	int32_t VASlope;	//Why isn't this a slope?
+	float VASlope;	//Why isn't this a slope?
 
 	/**
 	  Software Safety parameters
@@ -85,5 +81,12 @@ typedef struct {
 */
 int8_t Cupdate(Circuit c);
 int8_t Cconfigure(Circuit c);
+int8_t Cenable(Circuit *c, int8_t enabled);
+int8_t CsetOn(Circuit *c, int8_t on);
+int8_t CisOn(Circuit *c);
+int8_t Cload(Circuit *c, uint8_t* addrEEPROM);
+int8_t Csave(Circuit *c, uint8_t* addrEEPROM);
+void CsetDefaults(Circuit *c, int8_t circuitID);
+int8_t Cprogram(const Circuit *c);
 
 #endif

@@ -3,7 +3,7 @@
 /**
 	Requires a return code otherwise returns "RCERR".
 */
-const char* RCstr(int8_t retCode)
+const char* _RCstr(int8_t retCode)
 {
 	if (retCode < 0) {
 		retCode = -retCode;
@@ -16,3 +16,7 @@ const char* RCstr(int8_t retCode)
 }
 
 
+const char* RCstr(int8_t retCode)
+{
+	return _RCstr(retCode);
+}
