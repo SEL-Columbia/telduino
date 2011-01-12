@@ -6,6 +6,7 @@
 
 //Metering Hardware
 #include "arduino/WProgram.h"
+#include "SPI/SPI.h"
 #include "prescaler.h"
 #include "ReturnCode/returncode.h"
 #include "DbgTel/DbgTel.h"
@@ -15,6 +16,10 @@
 #include "Select/select.h"
 #include "sd-reader/sd_raw.h"
 #include "Switches/switches.h"
+
+//Metering logic
+#include "Circuit/circuit.h"
+#include "Circuit/calibration.h"
 
 //GSM Modem
 #include "GSM/ioHelper.h"
@@ -29,6 +34,8 @@
 #define sheevaPort Serial2
 #define debugPort Serial1
 #define verbose 1
+
+Circuit ckts[NCIRCUITS];
 
 //JR
 #include <avr/wdt.h>
@@ -122,11 +129,12 @@ void meter(String commandString) {
 		// read circuit energy or something using icid
 	}
 	else if (job == 'A') {
+		_testChannel = 20;
 		softSetup();
 	}
 	else if (job == 'c') {
 		_testChannel = 20;
-		displayChannelInfo();
+		displayChannelInfo();		
 	}
 	else if (job == 'T') {
 		testHardware();
@@ -417,16 +425,8 @@ int8_t getChannelID()
 	int ID = -1;
 	while (ID == -1) {
 		dbg.print("Waiting for ID (0-20):");		
-		char in[3] = {'\0'};
-		while (dbg.available() == 0);
-		in[0] = dbg.read();
-		dbg.print(in[0]);
-		while (dbg.available() == 0);
-		in[1] = dbg.read();
-		dbg.print(in[1]);
-		ID = atoi(in);
-		dbg.print(":");
-		if (ID < 0 || 20 < ID || errno != 0) {
+		ifnsuccess(CLgetInt(&dbg,&ID)) ID = -1;
+		if (ID < 0 || 20 < ID ) {
 			dbg.print("Incorrect ID:");
 			dbg.println(ID,DEC);
 			ID = -1;
