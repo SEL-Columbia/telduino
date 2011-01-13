@@ -31,8 +31,17 @@
 #include "GSM/gsmGPRS.h"
 #include "GSM/gsmMaster.h"
 
-
+//definition of serial ports for debug, sheeva communication, and telit communication
 #define dbg Serial1
+#define debugPort Serial1
+#define sheevaPort Serial2
+#define telitPort Serial3
+
+#define DEBUG_BAUD_RATE 9600
+#define SHEEVA_BAUD_RATE 9600
+#define TELIT_BAUD_RATE 115200
+#define verbose 1
+
 
 Circuit ckts[NCIRCUITS];
 
@@ -69,6 +78,15 @@ void displayChannelInfo();
 void displayEnabled(const int8_t enabledC[WIDTH]);
 int8_t getChannelID();
 void testHardware();
+void parseBerkeley();
+void parseColumbia();
+String getValueForKey(String key, String commandString);
+String getSMSText(String commandString);
+void meter(String commandString);
+void modem(String commandString);
+String readSheevaPort();
+String readTelitPort();
+void chooseDestination(String destination, String commandString);
 
 
 void setup()
@@ -95,7 +113,7 @@ void setup()
 	SPI.begin();			//SPI
 
 
-	Serial3.begin(9600);	//Telit serial
+	telitPort.begin(TELIT_BAUD_RATE);	//Telit serial
 	GSMb.turnOn();
 	dbg.write("telit power up\r\n");
 	int init = GsmMASTER.init(3); //Telit derived class calls base init()
@@ -105,7 +123,8 @@ void setup()
 	} else {
 		dbg.write("GsmMaster.init failed\r\n");
 	}
-
+	
+	sheevaPort.begin(SHEEVA_BAUD_RATE);
 
 	SWallOff();
 	_testChannel = 20;
@@ -115,7 +134,8 @@ void setup()
 
 void loop()
 {	
-	parseBerkeley();
+	//parseBerkeley();
+	parseColumbia();
 } //end of main loop
 
 /**
@@ -219,6 +239,36 @@ void parseBerkeley()
 		}
 	}
 	setDbgLeds(0);
+}
+
+void parseColumbia()
+{
+    if (verbose > 1) {
+        debugPort.println("top of loop()");
+        debugPort.println(millis());
+    }
+    
+    String commandString;
+    String destination;
+	
+    commandString = readSheevaPort();
+    destination = getValueForKey("cmp", commandString);
+    chooseDestination(destination, commandString);    
+	
+    String modemString = "";
+    modemString = readTelitPort();
+    modemString = modemString.trim();
+    if (modemString.length() != 0) {
+        String responseString = "";
+        responseString += "cmp=mdm&text=";
+        responseString += '"';
+        responseString += modemString;
+        responseString += '"';
+        sheevaPort.println(responseString);
+        
+        debugPort.println("string received from telit");
+        debugPort.println(modemString);
+    }
 }
 
 void softSetup() 
@@ -481,5 +531,176 @@ void __cxa_pure_virtual(void)
 		delay(332);
 	}
 }
+}
+
+/**
+ *	given a String for the key value, this function returns the String corresponding
+ *	to the value for the key by reading until the next '&' or the end of the string.
+ */
+String getValueForKey(String key, String commandString) {
+    int keyIndex = commandString.indexOf(key);
+    int valIndex = keyIndex + key.length() + 1;
+    int ampersandIndex = commandString.indexOf("&",valIndex);
+    // if ampersand not found, go until end of string
+    if (ampersandIndex == -1) {
+        ampersandIndex = commandString.length();
+    }
+    String val = commandString.substring(valIndex, ampersandIndex);
+    return val;
+}
+
+/**
+ *	this function is called when a cmp=mdm string is sent to the telduino.  the text 
+ *	surrounded by quotes is returned.
+ */
+String getSMSText(String commandString) {
+    int firstQuoteIndex = commandString.indexOf('"');
+    int secondQuoteIndex = commandString.indexOf('"', firstQuoteIndex + 1);
+    String smsText = commandString.substring(firstQuoteIndex + 1, secondQuoteIndex);
+    return smsText;
+}
+
+/**
+ *	this function takes care of parsing commands where cmp=mtr.
+ */
+void meter(String commandString) {
+    String job = getValueForKey("job", commandString);
+    String cid = getValueForKey("cid", commandString);
+	
+	int32_t val = 0;
+	int32_t gainVal = 0x0F;
+	
+	// is there a better way to convert the cid string to int?
+	char cidChar[3];
+	cid.toCharArray(cidChar, 3);
+	int icid = atoi(cidChar);
+	
+    if (verbose > 0) {
+        debugPort.println();
+        debugPort.println("entered void meter()");
+        debugPort.print("executing job type - ");
+        debugPort.println(job);
+        debugPort.print("on circuit id - ");
+        debugPort.println(cid);
+        debugPort.println();
+    }
+    
+	if (job == "con") {
+		debugPort.println("execute con job");
+		SWset(icid,1);
+		debugPort.print("switch ");
+		debugPort.print(icid, DEC);
+		if (SWisOn(icid)) {
+			debugPort.println(" is on");
+		} else {
+			debugPort.println(" is off");
+		}
+	}
+	else if (job == "coff") {
+		debugPort.println("execute coff job");
+		SWset(icid,0);
+		debugPort.print("switch ");
+		debugPort.print(icid, DEC);
+		if (SWisOn(icid)) {
+			debugPort.println(" is on");
+		} else {
+			debugPort.println(" is off");
+		}
+	}
+	else if (job == "read") {
+		debugPort.println("reading circuit job");
+		// actually do something here soon
+		// read circuit energy or something using icid
+	}
+	else if (job == 'A') {
+		_testChannel = 20;
+		softSetup();
+	}
+	else if (job == 'c') {
+		_testChannel = 20;
+		displayChannelInfo();		
+	}
+	else if (job == 'T') {
+		testHardware();
+	}
+	else if (job == 'R') {
+		wdt_enable((WDTO_4S));
+		debugPort.println("resetting in 4s.");
+	}
+}
+
+/**
+ *	this function takes care of parsing commands where cmp=mdm.
+ */
+void modem(String commandString) {
+    String smsText = getSMSText(commandString);
+	
+    if (verbose > 0) {
+        debugPort.println();
+        debugPort.println("entered void modem()");
+        debugPort.print("sms text - ");
+        debugPort.println(smsText);
+        debugPort.println();
+    }
+	
+	// send string to telit
+    telitPort.print(smsText);
+    telitPort.print("\r\n");
+    
+}
+
+/**
+ *	this function reads the sheevaPort (Serial2) for incoming commands
+ *	and returns them as String objects.
+ */
+String readSheevaPort() {
+    char incomingByte = ';';    
+    String commandString = "";
+    while ((sheevaPort.available() > 0) || ((incomingByte != ';') && (incomingByte != '\n'))) {
+        incomingByte = sheevaPort.read();
+        if (incomingByte != -1) {      
+            if (verbose > 1) {
+                debugPort.print(incomingByte);
+            }
+            commandString += incomingByte;
+        }
+        if (incomingByte == ';') {
+            commandString = commandString.substring(0, commandString.length() - 1);
+            break;
+        }
+    }   
+    commandString = commandString.trim();
+    return commandString;
+}
+
+/**
+ *	this function reads the telitPort (Serial3) for incoming commands
+ *	and returns them as String objects.
+ */
+String readTelitPort() {
+    char incomingByte = '\n';
+    String commandString = "";
+    while ((telitPort.available() > 0) || (incomingByte != '\n')) {
+        incomingByte = telitPort.read();
+        if (incomingByte != -1) {      
+            commandString += incomingByte;
+        }
+    }
+    return commandString;
+}
+
+/**
+ *	based on the value for the cmp key, this calls the function
+ *	meter if cmp=mtr
+ *	and
+ *  modem if cmp=mdm
+ */
+void chooseDestination(String destination, String commandString) {
+    if (destination == "mtr") {
+        meter(commandString);
+    }
+    else if (destination == "mdm") {
+        modem(commandString);
+    }
 }
 
