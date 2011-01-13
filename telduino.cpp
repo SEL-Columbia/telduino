@@ -114,9 +114,15 @@ void setup()
 
 
 void loop()
-
 {	
+	parseBerkeley();
+} //end of main loop
 
+/**
+ *	single character serial interface for interaction with telduino
+ */
+void parseBerkeley() 
+{
 	setDbgLeds(GYRPAT);
 	// Look for incoming single character command on dbg line
 	if (dbg.available() > 0) {
@@ -129,9 +135,9 @@ void loop()
 			displayChannelInfo();
 		} else if (incoming == 'S') {
 			int8_t ID = getChannelID();		//Toggle channel circuit
-			//dbg.print("!SWisOn:");
-			//dbg.print(!SWisOn(ID),DEC);
-			//dbg.println(RCstr());
+											//dbg.print("!SWisOn:");
+											//dbg.print(!SWisOn(ID),DEC);
+											//dbg.println(RCstr());
 			SWset(ID,!SWisOn(ID));
 		} else if (incoming == 's') {
 			displayEnabled(SWgetSwitchState());	
@@ -161,19 +167,19 @@ void loop()
 			CLgetString(&dbg,buff,sizeof(buff));
 			dbg.println();
 			/*
-			char c = buff[0];
-			int i =0;
-			dbg.println("***");
-			while (c != '\0') {
-				c = buff[i];
-				dbg.print("'");
-				dbg.print(c,HEX);
-				dbg.println("'");
-				i++;
-			}
-			dbg.println("***");
-			*/
-
+			 char c = buff[0];
+			 int i =0;
+			 dbg.println("***");
+			 while (c != '\0') {
+			 c = buff[i];
+			 dbg.print("'");
+			 dbg.print(c,HEX);
+			 dbg.println("'");
+			 i++;
+			 }
+			 dbg.println("***");
+			 */
+			
 			int32_t regData = 0;
 			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
 				//dbg.println(regList[i]->name);
@@ -213,8 +219,7 @@ void loop()
 		}
 	}
 	setDbgLeds(0);
-} //end of main loop
-
+}
 
 void softSetup() 
 {
