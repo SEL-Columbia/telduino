@@ -59,6 +59,7 @@ void wdt_init(void)
 
 int _testChannel = 1;
 
+/*
 //GSM functions 
 uint32_t millisWrapper();
 uint32_t (*milP)() = &millisWrapper;	//used, so with arduino you can pass &millis() straight in.
@@ -69,6 +70,8 @@ gsmMASTER GsmMASTER(Serial3,milP,&dbg);	//combine base SMS and GPRS
 
 gsmSMS  GsmSMS(Serial3,milP,&dbg);		//gsmSMS TELIT SMS
 gsmGPRS GsmGPRS(Serial3,milP,&dbg);		//gsmGPRS TELIT GPRS
+*/
+
 
 
 void setup();
@@ -87,7 +90,7 @@ void modem(String commandString);
 String readSheevaPort();
 String readTelitPort();
 void chooseDestination(String destination, String commandString);
-
+void turnOnTelit();
 
 void setup()
 {
@@ -114,6 +117,7 @@ void setup()
 
 
 	telitPort.begin(TELIT_BAUD_RATE);	//Telit serial
+	/*
 	GSMb.turnOn();
 	dbg.write("telit power up\r\n");
 	int init = GsmMASTER.init(3); //Telit derived class calls base init()
@@ -123,7 +127,8 @@ void setup()
 	} else {
 		dbg.write("GsmMaster.init failed\r\n");
 	}
-	
+	*/
+	 
 	sheevaPort.begin(SHEEVA_BAUD_RATE);
 
 	SWallOff();
@@ -164,8 +169,10 @@ void parseBerkeley()
 		} else if (incoming == 'T'){
 			testHardware();
 		} else if (incoming == 'm') {
+			/*
 			GSMb.sendRecATCommand("AT+CCLK?");
 			GSMb.sendRecATCommand("AT+CSQ");
+			 */
 		} else if (incoming == 'R') {
 			wdt_enable((WDTO_4S));			//Do a soft reset
 			Serial1.println("resetting in 4s.");
@@ -176,7 +183,9 @@ void parseBerkeley()
 			int i;
 			ifsuccess(CLgetString(&dbg,command,sizeof(command))) {  
 				wdt_enable(WDTO_8S);
+				/*
 				GSMb.sendRecQuickATCommand(command);
+				 */
 				wdt_disable();
 			} else {
 				dbg.println("Buffer overflow: command too long.");
@@ -704,3 +713,12 @@ void chooseDestination(String destination, String commandString) {
     }
 }
 
+/**
+ *	Pull telit on/off pin high for 3 seconds to start up telit modem
+ */
+void turnOnTelit() {
+	pinMode(22, OUTPUT);
+	digitalWrite(22, HIGH);
+	delay(3000);
+	digitalWrite(22, LOW);
+}
