@@ -652,7 +652,8 @@ void modem(String commandString) {
         debugPort.println();
     }
 	
-	// send string to telit
+	// send string to telit with a \r\n character appended to the string
+	// todo - is it safer to send the char values for carriage return and linefeed?
     telitPort.print(smsText);
     telitPort.print("\r\n");
     
