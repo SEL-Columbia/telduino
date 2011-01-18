@@ -560,12 +560,13 @@ String getValueForKey(String key, String commandString) {
 
 /**
  *	this function is called when a cmp=mdm string is sent to the telduino.  the text 
- *	surrounded by quotes is returned.
+ *	surrounded by parenthesis is returned.  this message will be sent to the modem as
+ *	a raw string command.  
  */
 String getSMSText(String commandString) {
-    int firstQuoteIndex = commandString.indexOf('"');
-    int secondQuoteIndex = commandString.indexOf('"', firstQuoteIndex + 1);
-    String smsText = commandString.substring(firstQuoteIndex + 1, secondQuoteIndex);
+    int firstDelimiterIndex = commandString.indexOf('(');
+    int secondDelimiterIndex = commandString.indexOf(')', firstDelimiterIndex + 1);
+    String smsText = commandString.substring(firstDelimiterIndex + 1, secondDelimiterIndex);
     return smsText;
 }
 
