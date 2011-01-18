@@ -19,19 +19,20 @@ G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ili
 
 #GCCFLAGS = -c -g -Os -w -std=c99 -Ilibraries
 #G++FLAGS = -c -g -Os -w -fno-exceptions -Ilibraries
-VPATH = libraries/GSM libraries/arduino libraries/Demux libraries/ShiftRegister\
+VPATH = libraries/arduino libraries/Demux libraries/ShiftRegister\
     libraries/SPI libraries/DbgTel libraries/Select \
     libraries/ADE7753 libraries/Switches \
 	libraries/ReturnCode \
 	libraries/Circuit libraries/sd-reader
-# libraries/SDRaw 
+#libraries/SDRaw 
+#libraries/GSM 
 
-OBJECT_FILES = gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o \
-	pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_digital.o \
+OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_digital.o \
 	wiring_pulse.o wiring_shift.o Demux.o shiftregister.o main.o \
 	HardwareSerial.o Print.o WMath.o WString.o SPI.o ADE7753.o \
 	DbgTel.o select.o switches.o returncode.o circuit.o calibration.o\
     byteordering.o fat.o partition.o sd_raw.o $(PROJECT).o 
+#gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o
 
 all : hex program #clean
 
