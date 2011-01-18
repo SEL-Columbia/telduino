@@ -20,7 +20,6 @@
 #define DEBUG 1
 
 /**
- * \mainpage MMC/SD/SDHC card library
  *
  * This project provides a general purpose library which implements read and write
  * support for MMC, SD and SDHC memory cards.
