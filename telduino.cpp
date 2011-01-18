@@ -639,6 +639,7 @@ String readSheevaPort() {
  *	and returns them as String objects.
  */
 String readTelitPort() {
+	uint32_t startTime = millis();
     char incomingByte = '\n';
     String commandString = "";
     while ((telitPort.available() > 0) || (incomingByte != '\n')) {
@@ -646,6 +647,12 @@ String readTelitPort() {
         if (incomingByte != -1) {      
             commandString += incomingByte;
         }
+		if (commandString.indexOf(">") != -1) {
+			return commandString;
+		}
+		if (millis() - startTime > 1000) {
+			return commandString;
+		}
     }
     return commandString;
 }
