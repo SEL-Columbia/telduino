@@ -573,11 +573,11 @@ void meter(String commandString) {
 		// read circuit energy or something using icid
 	}
 	else if (job == 'A') {
-		_testChannel = 20;
+		_testChannel = icid;
 		softSetup();
 	}
 	else if (job == 'c') {
-		_testChannel = 20;
+		_testChannel = icid;
 		displayChannelInfo();		
 	}
 	else if (job == 'T') {
