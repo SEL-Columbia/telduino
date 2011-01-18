@@ -24,13 +24,6 @@
 #include "Circuit/circuit.h"
 #include "Circuit/calibration.h"
 
-//GSM Modem
-#include "GSM/ioHelper.h"
-#include "GSM/gsmbase.h"
-#include "GSM/gsmSMS.h"
-#include "GSM/gsmGPRS.h"
-#include "GSM/gsmMaster.h"
-
 //definition of serial ports for debug, sheeva communication, and telit communication
 #define dbg Serial1
 #define debugPort Serial1
@@ -58,21 +51,6 @@ void wdt_init(void)
 
 
 int _testChannel = 1;
-
-/*
-//GSM functions 
-uint32_t millisWrapper();
-uint32_t (*milP)() = &millisWrapper;	//used, so with arduino you can pass &millis() straight in.
-uint32_t millisWrapper(){return millis();}
-
-GSMbase GSMb(Serial3,milP,&dbg);		//GSMbase TELIT BASE FUNCTIONALITY
-gsmMASTER GsmMASTER(Serial3,milP,&dbg);	//combine base SMS and GPRS
-
-gsmSMS  GsmSMS(Serial3,milP,&dbg);		//gsmSMS TELIT SMS
-gsmGPRS GsmGPRS(Serial3,milP,&dbg);		//gsmGPRS TELIT GPRS
-*/
-
-
 
 void setup();
 void loop();
@@ -117,17 +95,6 @@ void setup()
 
 
 	telitPort.begin(TELIT_BAUD_RATE);	//Telit serial
-	/*
-	GSMb.turnOn();
-	dbg.write("telit power up\r\n");
-	int init = GsmMASTER.init(3); //Telit derived class calls base init()
-
-	if (init==1) {
-		dbg.write("GsmMaster.init successful\r\n");
-	} else {
-		dbg.write("GsmMaster.init failed\r\n");
-	}
-	*/
 	 
 	sheevaPort.begin(SHEEVA_BAUD_RATE);
 
@@ -509,23 +476,6 @@ void displayEnabled(const int8_t enabledC[WIDTH])
 	}
 	dbg.println();
 }
-	/*
-	SPI.setDataMode(SPI_MODE0);
-	CSSelectDevice(SDCARD);
-	struct sd_raw_info info = {0}; 
-	sd_raw_get_info(&info);
-	if(info.manufacturer || info.revision) {
-		setDbgLeds(GPAT);
-		dbg.println("manufacturer");
-		dbg.println(info.manufacturer,DEC);
-		dbg.println("revision");
-		dbg.println(info.revision,DEC);
-	} else { 
-		dbg.println("Nothing From SD Card Received");
-	}
-	delay(1000);
-	*/
-
 
 //JR needed to make compiler happy
 extern "C" {
