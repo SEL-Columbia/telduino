@@ -594,7 +594,13 @@ void meter(String commandString) {
  */
 void modem(String commandString) {
     String smsText = getSMSText(commandString);
+    String job = getValueForKey("job", commandString);
 	
+	if (job == "ctrlz") {
+		telitPort.print(26, BYTE);
+		return;
+	}
+
     if (verbose > 0) {
         debugPort.println();
         debugPort.println("entered void modem()");
