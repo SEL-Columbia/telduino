@@ -72,11 +72,14 @@ void turnOnTelit();
 
 void setup()
 {
+	setClockPrescaler(CLOCK_PRESCALER_1);	//Disable prescaler.
 
-	setClockPrescaler(CLOCK_PRESCALER_1);//Disable prescaler.
+	// start up serial ports
+	dbg.begin(9600);						//Debug serial
+	telitPort.begin(TELIT_BAUD_RATE);		//Telit serial
+	sheevaPort.begin(SHEEVA_BAUD_RATE);
 
-
-	dbg.begin(9600);		//Debug serial
+	// write startup message to debug port
 	dbg.write("\r\n\r\ntelduino power up\r\n");
     dbg.write("last compilation\r\n");
     dbg.write(__DATE__);
@@ -84,23 +87,19 @@ void setup()
     dbg.write(__TIME__);
     dbg.write("\r\n");
 
-	pinMode(37, OUTPUT);	//Level shifters
-	digitalWrite(37,HIGH);	//Level shifters
-	initDbgTel();			//Blink leds
-	SRinit();				//Shift registers
-	initDemux();			//Muxers
-	initSelect();			//Select Circuit
-	sd_raw_init();			//SDCard
-	SPI.begin();			//SPI
+	turnOnTelit();				// set telit pin high
 
-
-	telitPort.begin(TELIT_BAUD_RATE);	//Telit serial
-	 
-	sheevaPort.begin(SHEEVA_BAUD_RATE);
+	pinMode(37, OUTPUT);		//Level shifters
+	digitalWrite(37,HIGH);		//Level shifters
+	initDbgTel();				//Blink leds
+	SRinit();					//Shift registers
+	initDemux();				//Muxers
+	initSelect();				//Select Circuit
+	sd_raw_init();				//SDCard
+	SPI.begin();				//SPI
 
 	SWallOff();
 	_testChannel = 20;
-	dbg.print("\r\nstart loop()\r\n");
 } //end of setup section
 
 
