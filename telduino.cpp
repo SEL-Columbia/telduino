@@ -1,3 +1,14 @@
+/**
+ *  \mainpage Telduino
+ *
+ *	\section Purpose
+ *	This code runs on a custom avr board with hardware to control 20 relays and measurement circuits.
+ *
+ *	\section Implementation
+ *  The code is a client to an embedded linux system that sends string commands over the serial port.
+ *  These serial commands are executed by the telduino code and sent back to the linux box.
+ */
+ 
 #include <stdlib.h>
 #include <errno.h>
 
