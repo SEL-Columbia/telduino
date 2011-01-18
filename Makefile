@@ -12,7 +12,7 @@
 # $@ first name of target of rule
 # $*
 
-CLOCK = 8000000L
+CLOCK = 16000000L
 PROJECT = telduino
 GCCFLAGS = -c -g -Os -w -std=c99 -ffunction-sections -fdata-sections -Ilibraries
 G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
