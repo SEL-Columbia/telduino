@@ -49,7 +49,9 @@
 
 Circuit ckts[NCIRCUITS];
 
-//JR
+/*  Disables the watchdog timer the first chance the AtMega gets as recommended
+	by Atmel.
+ */
 #include <avr/wdt.h>
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 
