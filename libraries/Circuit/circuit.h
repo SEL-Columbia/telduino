@@ -24,22 +24,24 @@ typedef struct {
 	int8_t chIint;
 	int8_t chIos;
 	int8_t chIgainExp;
-	int16_t IRMSOffset;
-	int32_t IRMSSlope;	//Converts measured units into Amps
+	int16_t IRMSoffset;
+	float IRMSslope;	//Converts measured units into Amps
 
 	/** 
 	  Voltage parameters
 	  See ADE documentation for valid ranges.
 	*/
 	int8_t chVos;
-	int16_t VRMSOffset;
-	int32_t VRMSSlope;	//Converts measured units into Volts
+	int16_t VRMSoffset;
+	float VRMSslope;	//Converts measured units into Volts
 
 	/**
 	  Power parameters
 	*/
-	float VASlope;	//Why isn't this a slope?
-	float VAOffset;	//Why isn't this a slope?
+	int32_t VAslope;	
+	int32_t VAoffset;	
+	int32_t Wslope;		
+	int32_t Woffset;
 
 	/**
 	  Software Safety parameters
@@ -51,9 +53,9 @@ typedef struct {
 	/**
 	  Measured variables
 	*/
-	int32_t IRMS;
-	int32_t VRMS;
-	int32_t periodus;
+	int32_t IRMS;		//in mA
+	int32_t VRMS;		//in mV
+	int32_t periodus;	
 	int32_t VA;			//Volt Amps. i.e. Apparent energy
 	int32_t W;
 	//Power factor is a number between 0 and 2**16, where 2**16 is a PF of 1.0.

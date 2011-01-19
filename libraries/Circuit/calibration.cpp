@@ -4,16 +4,22 @@
 #include "circuit.h"
 #include "calibration.h"
 #include "ReturnCode/returncode.h"
+#include "ADE7753/ADE7753.h"
 
 #define dbg Serial1
 /**
-    Calibrate circuit interactively using serial port.
+    Calibrate circuit interactively using serial port. 
+	@warning need to finish VAslope/offset and WSlope/offset
 	@warning this assumes that there is a gain of 1 on CH2OS
   */
 int8_t calibrateCircuit(Circuit *c)
 {
+	c->chIos = c->chVos = c->IRMSoffset = c->VRMSoffset = 0;
+	c->VAoffset = c->Woffset = 0;
+	c->IRMSslope = c->VRMSslope = c->VAslope = c->Wslope = 1;
+
 	int32_t regData;
-	//The *Meas values are in mV or mA when read form the user
+	//The *Meas values are in mV or mA when read from the user
 	int32_t VlowCkt,VlowMeas;
 	int32_t VhighCkt,VhighMeas;
 	int32_t IlowCkt,IlowMeas;
@@ -28,7 +34,7 @@ int8_t calibrateCircuit(Circuit *c)
 		return retCode;
 	}
 
-	//Calibrate offsets
+	//Calibrate low level channel offsets
 	CsetOn(c,false);
 	dbg.print("Ground both lines on circuit\'");
 	dbg.print(c->circuitID,DEC);
@@ -37,7 +43,7 @@ int8_t calibrateCircuit(Circuit *c)
 	CsetOn(c,true);
 
 	//Set waveform mode to read voltage
-	dbg.println("Configuring to read voltage.");
+	dbg.println("Configuring to read raw voltage.");
 	ifnsuccess(retCode = ADEsetModeBit(WAVESEL_0,true)) return retCode;
 	ifnsuccess(retCode = ADEsetModeBit(WAVESEL1_,true)) return retCode;
 	
@@ -46,22 +52,37 @@ int8_t calibrateCircuit(Circuit *c)
 	ifnsuccess(retCode = ADEgetRegister(WAVEFORM,&regData)) return retCode;
 	regData = regData*500*100/10322/161; //(1.61mV/LSB in CH2OS)
 	//The CHXOS maxes out at 2^4 as it is a 5 bit signed magnitude number
-	if (regData > 16){
-		regData = 16;
-	} else if (regData < -16){
-		regData= -16;
+	if (regData > 15){
+		regData = 15;
+	} else if (regData < -15){
+		regData= -15;
 	}
-	ifnsuccess(retCode = ADEsetCHXOS(2,&c->chIint,&regData)) return retCode;
-
-	//Turn off circuit
+	int8_t offset = (int8_t)regData;
+	ifnsuccess(retCode = ADEsetCHXOS(2,&c->chIint,&offset)) return retCode;
 	CsetOn(c,false);
+
 	//Query user to place load for low V,high I measurement
 	dbg.println("Low-voltage (120VAC 50Hz), high-current (.8A):");
 	dbg.print("Attach a low-voltage source and a 150 Ohm load to circuit \'");
 	dbg.print(c->circuitID,DEC);
 	dbg.print("\' and press ENTER (\'\r\') when done.");
 	while (dbg.read() != '\r');
+
 	CsetOn(c,true);
+	dbg.println("Enter measured mV. Press ENTER when done:");
+	if (CLgetInt(&dbg,&VlowMeas) == CANCELED) {
+		dbg.println("CANCELED");
+		return CANCELED;
+	}
+	dbg.print("Reported by user:");
+	dbg.println(VlowMeas,DEC);
+	dbg.println("Enter measured mA. Press ENTER when done:");
+	if (CLgetInt(&dbg,&IhighMeas) == CANCELED) {
+		dbg.println("CANCELED");
+		return CANCELED;
+	}
+	dbg.print("Reported by user:");
+	dbg.println(IhighMeas,DEC);
 
 	//get VRMS from Ckt
 	retCode = ADEwaitForInterrupt(CYCEND,4000);
@@ -78,21 +99,6 @@ int8_t calibrateCircuit(Circuit *c)
 		return retCode;
 	}
 	ifnsuccess(retCode = ADEgetRegister(IRMS,&IhighCkt)) return retCode;
-
-	dbg.println("Enter measured mV. Press ENTER when done:");
-	if (CLgetInt(&dbg,&VlowMeas) == CANCELED) {
-		dbg.println("CANCELED");
-		return CANCELED;
-	}
-	dbg.print("Reported by user:");
-	dbg.println(VlowMeas,DEC);
-	dbg.println("Enter measured mA. Press ENTER when done:");
-	if (CLgetInt(&dbg,&IhighMeas) == CANCELED) {
-		dbg.println("CANCELED");
-		return CANCELED;
-	}
-	dbg.print("Reported by user:");
-	dbg.println(IhighMeas,DEC);
 	CsetOn(c,false);
 
 	//Query user to place load for high V,low I measurement
@@ -102,8 +108,8 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.print(c->circuitID,DEC);
 	dbg.print("\' and press ENTER when done.");
 	while (dbg.read() != '\r');
-	CsetOn(c,true);
 
+	CsetOn(c,true);
 	dbg.println("Enter measured mV:");
 	if (CLgetInt(&dbg,&VhighMeas) == CANCELED) {
 		dbg.println("CANCELED");
@@ -119,7 +125,46 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.print("Reported by user:");
 	dbg.println(IlowMeas,DEC);
 
+	//get VRMS from Ckt
+	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	ifnsuccess(retCode){
+		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
+		return retCode;
+	}
+	ifnsuccess(retCode = ADEgetRegister(VRMS,&VhighCkt)) return retCode;
+
+	//get IRMS from Ckt
+	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	ifnsuccess(retCode){
+		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
+		return retCode;
+	}
+	ifnsuccess(retCode = ADEgetRegister(IRMS,&IlowCkt)) return retCode;
+	CsetOn(c,false);
 	
+	dbg.println("Computing offsets and slopes for VRMS and IRMS.");
+	//From page 46 in the ADE data sheet
+	c->VRMSoffset = (VhighMeas*VlowCkt-VlowMeas*VhighCkt)/(VlowMeas-VhighMeas);
+	if (c->VRMSoffset > 0x7FF) {
+		c->VRMSoffset = 0x7FF;
+	} else if (c->VRMSoffset < -2048) {
+		c->VRMSoffset = -2048;
+	}
+
+	//Square everything and pray that IlowMeas is less than 2^15
+	int64_t I1Msq = IhighMeas*IhighMeas;
+	int64_t I2Msq = IlowMeas*IlowMeas;
+	int64_t I1Csq = IlowCkt*IlowCkt;
+	int64_t I2Csq = IhighCkt*IhighCkt;
+	c->IRMSoffset = (int32_t)(I1Msq*I2Csq-I2Msq*I1Csq)/(I2Msq - I1Msq);
+	if (c->IRMSoffset > 0x7FF) {	//12 bit twos complement limits
+		c->IRMSoffset = 0x7FF;
+	} else if (c->IRMSoffset < -0x800) {
+		c->IRMSoffset = -0x800;
+	}
+	
+	c->IRMSslope = ((float)(IlowMeas-IhighMeas))/(IlowCkt-IhighCkt);
+	c->VRMSslope = ((float)(VlowMeas-VhighMeas))/(VlowCkt-VhighCkt);
 	/* pts are 
 	Need to derive:
 	IRMSoffset the IRMS offset register is 2^15 times one bit in IRMS so
@@ -135,7 +180,8 @@ int8_t calibrateCircuit(Circuit *c)
 	chIos
 	VASlope
 	*/
-	CSSelectDevice(DEVDISABLE);
+	ifnsuccess(retCode = Cprogram(c)) return retCode;
+	ifnsuccess(retCode = CSSelectDevice(DEVDISABLE)) return retCode;
 }
 
 /**
@@ -189,14 +235,14 @@ int8_t CLgetFloat(HardwareSerial *ser,float *f)
 		}
 	} while(true);
 }
-int8_t CLgetInt(HardwareSerial *ser,int *d)
+int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
 {
 	char buff[64] = {'\0'};
 	do {
 		while(nsuccess(CLgetString(ser,buff,sizeof(buff)))) {
 			ser->println("Buffer overflow: command too long.");
 		}
-		if (sscanf(buff,"%d",d)) {
+		if (sscanf(buff,"%dl",d)) {
 			return SUCCESS;
 		}
 		if (!strcmp(buff,"cancel")) {
