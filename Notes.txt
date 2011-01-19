@@ -1,6 +1,4 @@
 OVERALL TODO:
-- Must send byte to SD Card after raising CS according to: http://elm-chan.org/docs/mmc/mmc_e.html
-- Standarize on success = 0 still need to fix demux.h
 - make initialization naming conventions sane
 - Write code to lighup mount light
 - Verify microsecond timing for SPI

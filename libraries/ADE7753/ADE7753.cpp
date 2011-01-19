@@ -302,3 +302,25 @@ int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit)
 	return ADEsetRegister(MODE, &mode);
 }
 
+/**
+    The ADE returns a period value with a resolution of 2.2us/LSbit.
+	  This function returns that value.
+	    */
+int8_t ADEperToFreq(int32_t period)
+{
+    return (uint8_t)(10000000/(period*22)); 
+}
+
+/**
+	Perform a software reset of the ADE. It must be reprogrammed afterwards.
+	@warning This assumes that at most a 16mhz clock is being used.
+  */
+void ADEreset()
+{
+	//Writes the defaults+the software reset bit
+	uint32_t regData = 0x004c0000;
+	ADEwriteData(MODE,&regData);
+	for (int i=0; i<500; i++);//Wait at least 32us assuming a 16mhz clock
+}
+
+

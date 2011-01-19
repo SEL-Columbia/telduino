@@ -8,78 +8,133 @@
 #define dbg Serial1
 /**
     Calibrate circuit interactively using serial port.
+	@warning this assumes that there is a gain of 1 on CH2OS
   */
 int8_t calibrateCircuit(Circuit *c)
 {
-	float VlowCkt,VlowMeas;
-	float VhighCkt,VhighMeas;
-	float IlowCkt,IlowMeas;
-	float IhighCkt,IhighMeas;
+	int32_t regData;
+	//The *Meas values are in mV or mA when read form the user
+	int32_t VlowCkt,VlowMeas;
+	int32_t VhighCkt,VhighMeas;
+	int32_t IlowCkt,IlowMeas;
+	int32_t IhighCkt,IhighMeas;
 	CSSelectDevice(c->circuitID);
+	
 	//Check to see if the circuit can be enabled.
 	int8_t retCode; 
 	ifnsuccess(retCode = Cenable(c,true)) {
 		dbg.print("Circuit could not be enabled:");
 		dbg.println(RCstr(retCode));
+		return retCode;
 	}
+
+	//Calibrate offsets
+	CsetOn(c,false);
+	dbg.print("Ground both lines on circuit\'");
+	dbg.print(c->circuitID,DEC);
+	dbg.print("\' and press ENTER (\'\r\') when done.");
+	while (dbg.read() != '\r');
+	CsetOn(c,true);
+
+	//Set waveform mode to read voltage
+	dbg.println("Configuring to read voltage.");
+	ifnsuccess(retCode = ADEsetModeBit(WAVESEL_0,true)) return retCode;
+	ifnsuccess(retCode = ADEsetModeBit(WAVESEL1_,true)) return retCode;
+	
+	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
+	dbg.println("Setting voltage offset.");
+	ifnsuccess(retCode = ADEgetRegister(WAVEFORM,&regData)) return retCode;
+	regData = regData*500*100/10322/161; //(1.61mV/LSB in CH2OS)
+	//The CHXOS maxes out at 2^4 as it is a 5 bit signed magnitude number
+	if (regData > 16){
+		regData = 16;
+	} else if (regData < -16){
+		regData= -16;
+	}
+	ifnsuccess(retCode = ADEsetCHXOS(2,&c->chIint,&regData)) return retCode;
+
+	//Turn off circuit
 	CsetOn(c,false);
 	//Query user to place load for low V,high I measurement
-	dbg.println("Calibrating low-voltage and high-current (.8A).");
-	dbg.print("Please attach a low-voltage source (120VAC 50Hz) ");
-	dbg.print("and a low resistance load (e.g. 150 Ohm) to circuit \'");
+	dbg.println("Low-voltage (120VAC 50Hz), high-current (.8A):");
+	dbg.print("Attach a low-voltage source and a 150 Ohm load to circuit \'");
 	dbg.print(c->circuitID,DEC);
-	dbg.print("\' and transmit a \'\r\' (ENTER) when done.");
+	dbg.print("\' and press ENTER (\'\r\') when done.");
 	while (dbg.read() != '\r');
 	CsetOn(c,true);
 
-	dbg.println("Enter measured voltage. Transmit a \'\r\' (ENTER) when done:");
-	if (CLgetFloat(&dbg,&VlowCkt) == CANCELED) {
-		dbg.println("CANCELED");
-		return CANCELED;
+	//get VRMS from Ckt
+	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	ifnsuccess(retCode){
+		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
+		return retCode;
 	}
-	dbg.print("Reported:");
-	dbg.println(VlowCkt,DEC);
-	dbg.println("Enter measured current. Transmit a \'\r\' (ENTER) when done:");
-	if (CLgetFloat(&dbg,&IhighCkt) == CANCELED) {
-		dbg.println("CANCELED");
-		return CANCELED;
-	}
-	dbg.print("Reported:");
-	dbg.println(IhighCkt,DEC);
+	ifnsuccess(retCode = ADEgetRegister(VRMS,&VlowCkt)) return retCode;
 
+	//get IRMS from Ckt
+	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	ifnsuccess(retCode){
+		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
+		return retCode;
+	}
+	ifnsuccess(retCode = ADEgetRegister(IRMS,&IhighCkt)) return retCode;
+
+	dbg.println("Enter measured mV. Press ENTER when done:");
+	if (CLgetInt(&dbg,&VlowMeas) == CANCELED) {
+		dbg.println("CANCELED");
+		return CANCELED;
+	}
+	dbg.print("Reported by user:");
+	dbg.println(VlowMeas,DEC);
+	dbg.println("Enter measured mA. Press ENTER when done:");
+	if (CLgetInt(&dbg,&IhighMeas) == CANCELED) {
+		dbg.println("CANCELED");
+		return CANCELED;
+	}
+	dbg.print("Reported by user:");
+	dbg.println(IhighMeas,DEC);
 	CsetOn(c,false);
+
 	//Query user to place load for high V,low I measurement
-	dbg.println("Calibrating high-voltage and low-current (.8A).");
-	dbg.print("Please attach a low-voltage source (240VAC 50Hz) ");
-	dbg.print("and a low resistance load (e.g. 2.4 KOhm) to circuit \'");
+	dbg.println("High-voltage and low-current (.1A).");
+	dbg.print("Please attach a low-voltage source (240VAC 50Hz) "); 
+	dbg.print("and a 2.4 KOhm load to circuit \'");
 	dbg.print(c->circuitID,DEC);
-	dbg.print("\' and transmit a \'\r\' (ENTER) when done.");
+	dbg.print("\' and press ENTER when done.");
 	while (dbg.read() != '\r');
 	CsetOn(c,true);
 
-	dbg.println("Enter measured voltage. Transmit a \'\r\' (ENTER) when done:");
-	if (CLgetFloat(&dbg,&VhighCkt) == CANCELED) {
+	dbg.println("Enter measured mV:");
+	if (CLgetInt(&dbg,&VhighMeas) == CANCELED) {
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
-	dbg.print("Reported:");
-	dbg.println(VhighCkt,DEC);
-	dbg.println("Enter measured current. Transmit a \'\r\' (ENTER) when done:");
-	if (CLgetFloat(&dbg,&IlowCkt) == CANCELED) {
+	dbg.print("Reported by user:");
+	dbg.println(VhighMeas,DEC);
+	dbg.println("Enter measured mA:");
+	if (CLgetInt(&dbg,&IlowMeas) == CANCELED) {
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
-	dbg.print("Reported:");
-	dbg.println(IlowCkt,DEC);
+	dbg.print("Reported by user:");
+	dbg.println(IlowMeas,DEC);
 
-	/*Need to derive:
-	IRMSoffset
-	IRMSSlope
+	
+	/* pts are 
+	Need to derive:
+	IRMSoffset the IRMS offset register is 2^15 times one bit in IRMS so
+		so the offset must be divided by 2^15
+	IRMSSlope  this converts to engineering units
+	Assuming no corrections are needed to chXos 
+		we want to find the inverse of r(m) = (r1-r0)/(m0-m1)*m + 
+			offsetIRMS*2^15, where m is the measured value and r 
+			is the reported value
 	VRMSoffset
 	VRMSSlope
 	chVos
+	chIos
 	VASlope
-	  */
+	*/
 	CSSelectDevice(DEVDISABLE);
 }
 
