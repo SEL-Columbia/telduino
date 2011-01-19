@@ -1,6 +1,4 @@
 OVERALL TODO:
-- Must send byte to SD Card after raising CS according to: http://elm-chan.org/docs/mmc/mmc_e.html
-- Standarize on success = 0 still need to fix demux.h
 - make initialization naming conventions sane
 - Write code to lighup mount light
 - Verify microsecond timing for SPI
@@ -28,6 +26,7 @@ ADE
 - Need to make sure that x bits are being used for numerical data.
 - Write handlers for calibration
 - refactor get/set register to not use pointer.
+- VAslope and Wslope should be fixed parameters and then Wgain and VAgain should be set during calibration.
 
 Docs
 - add reference in doxygen

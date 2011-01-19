@@ -86,7 +86,7 @@ static const uint16_t PNEG		= 0x4000; //bit 14 E
 
 
 /**
-	Mode Register MASKS
+	Mode (MODE) Register MASKS
 */
 static const uint16_t DISHPF	= 0x0001; //bit 0
 static const uint16_t DISHPF2 	= 0x0002; //bit 1
@@ -99,8 +99,10 @@ static const uint16_t CYCMODE	= 0x0080; //bit 7
 static const uint16_t DISCH1	= 0x0100; //bit 8
 static const uint16_t DISCH2	= 0x0200; //bit 9 
 static const uint16_t SWAP	= 0x0400; //bit 10 A
-static const uint16_t DTRT10	= 0x1800; //bit 11,12 B,C
-static const uint16_t WAVESEL10= 0x6000; //bit 13,14 D,E
+static const uint16_t DTRT_0	= 0x0800; //bit 11 B
+static const uint16_t DTRT1_	= 0x1000; //bit 12 C
+static const uint16_t WAVESEL_0= 0x2000; //bit 13 D
+static const uint16_t WAVESEL1_= 0x4000; //bit 14 E
 
 /**
 	Binary two-tuple constants
@@ -126,8 +128,8 @@ uint8_t ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val);
 int8_t ADEreadInterrupt(uint16_t regMask);
 int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems);
 int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit);
-
-
+int8_t ADEperToFreq(int32_t period);
+void ADEreset();
 
 //Sample circuit functions
 //Get stuff
