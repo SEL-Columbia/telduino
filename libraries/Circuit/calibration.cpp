@@ -40,7 +40,7 @@ int8_t calibrateCircuit(Circuit *c)
 	CsetOn(c,false);
 	dbg.print("Ground both lines on circuit\'");
 	dbg.print(c->circuitID,DEC);
-	dbg.print("\' and press ENTER (\'\r\') when done.");
+	dbg.print("\' and press ENTER (\'\\r\') when done.");
 	while (dbg.read() != '\r');
 	CsetOn(c,true);
 
@@ -61,6 +61,7 @@ int8_t calibrateCircuit(Circuit *c)
 	}
 	int8_t offset = (int8_t)regData;
 	ifnsuccess(retCode = ADEsetCHXOS(2,&c->chIint,&offset)) return retCode;
+	dbg.print("CHVoffset:"); dbg.println(offset);
 	CsetOn(c,false);
 
 	//Query user to place load for low V,high I measurement
@@ -89,7 +90,7 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.println(IhighMeas,DEC);
 
 	//get VRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	retCode = ADEwaitForInterrupt(CYCEND,8000);
 	ifnsuccess(retCode){
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
 		return retCode;
@@ -106,9 +107,8 @@ int8_t calibrateCircuit(Circuit *c)
 	CsetOn(c,false);
 
 	//Query user to place load for high V,low I measurement
-	dbg.println("High-voltage and low-current (.1A).");
-	dbg.print("Please attach a low-voltage source (240VAC 50Hz) "); 
-	dbg.print("and a 2.4 KOhm load to circuit \'");
+	dbg.print("Please attach a high-voltage source (240VAC 50Hz) "); 
+	dbg.print("and a 2.4 KOhm load to circuit (.1A) \'");
 	dbg.print(c->circuitID,DEC);
 	dbg.print("\' and press ENTER when done.");
 	while (dbg.read() != '\r');
