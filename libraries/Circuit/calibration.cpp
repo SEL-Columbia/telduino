@@ -14,9 +14,11 @@
   */
 int8_t calibrateCircuit(Circuit *c)
 {
+	//Clear values which need to be calibrated
 	c->chIos = c->chVos = c->IRMSoffset = c->VRMSoffset = 0;
 	c->VAoffset = c->Woffset = 0;
 	c->IRMSslope = c->VRMSslope = c->VAslope = c->Wslope = 1;
+	ifnsuccess(Cprogram(c)) dbg.println("Clearing failed in calibrateCircuit");
 
 	int32_t regData;
 	//The *Meas values are in mV or mA when read from the user
@@ -74,13 +76,15 @@ int8_t calibrateCircuit(Circuit *c)
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
+	dbg.println();
 	dbg.print("Reported by user:");
 	dbg.println(VlowMeas,DEC);
-	dbg.println("Enter measured mA. Press ENTER when done:");
+	dbg.print("Enter measured mA. Press ENTER when done:");
 	if (CLgetInt(&dbg,&IhighMeas) == CANCELED) {
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
+	dbg.println();
 	dbg.print("Reported by user:");
 	dbg.println(IhighMeas,DEC);
 
@@ -115,6 +119,7 @@ int8_t calibrateCircuit(Circuit *c)
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
+	dbg.println();
 	dbg.print("Reported by user:");
 	dbg.println(VhighMeas,DEC);
 	dbg.println("Enter measured mA:");
@@ -122,6 +127,7 @@ int8_t calibrateCircuit(Circuit *c)
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
+	dbg.println();
 	dbg.print("Reported by user:");
 	dbg.println(IlowMeas,DEC);
 
@@ -182,14 +188,7 @@ int8_t calibrateCircuit(Circuit *c)
 	*/
 	ifnsuccess(retCode = Cprogram(c)) return retCode;
 	ifnsuccess(retCode = CSSelectDevice(DEVDISABLE)) return retCode;
-}
-
-/**
-    Calibrate circuit using another circuit as the reference.
-	  */
-void autoCalibrateCircuit(Circuit *c,const Circuit *reference)
-{
-
+	dbg.println("Calibration Complete.");
 }
 
 int8_t CLgetString(HardwareSerial *ser,char *buff, size_t bSize)
@@ -222,7 +221,7 @@ int8_t CLgetString(HardwareSerial *ser,char *buff, size_t bSize)
 }
 int8_t CLgetFloat(HardwareSerial *ser,float *f)
 {
-	char buff[64] = {'\0'};
+	char buff[32] = {'\0'};
 	do {
 		while(nsuccess(CLgetString(ser,buff,sizeof(buff)))) {
 			ser->println("Buffer overflow: command too long.");
@@ -237,12 +236,12 @@ int8_t CLgetFloat(HardwareSerial *ser,float *f)
 }
 int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
 {
-	char buff[64] = {'\0'};
+	char buff[32] = {'\0'};
 	do {
 		while(nsuccess(CLgetString(ser,buff,sizeof(buff)))) {
 			ser->println("Buffer overflow: command too long.");
 		}
-		if (sscanf(buff,"%dl",d)) {
+		if (sscanf(buff,"%ld",d)) {
 			return SUCCESS;
 		}
 		if (!strcmp(buff,"cancel")) {

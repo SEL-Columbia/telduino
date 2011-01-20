@@ -2,6 +2,8 @@
 #define CIRCUIT_H
 #include <stdint.h>
 
+#include "arduino/HardwareSerial.h"
+
 static const uint32_t ENABLED = 0x00010000;
 static const uint32_t COMM	  = 0x00020000;
 
@@ -38,9 +40,9 @@ typedef struct {
 	/**
 	  Power parameters
 	*/
-	int32_t VAslope;	
+	float VAslope;	
 	int32_t VAoffset;	
-	int32_t Wslope;		
+	float Wslope;		
 	int32_t Woffset;
 
 	/**
@@ -58,10 +60,10 @@ typedef struct {
 	int32_t periodus;	
 	int32_t VA;			//Volt Amps. i.e. Apparent energy
 	int32_t W;
-	//Power factor is a number between 0 and 2**16, where 2**16 is a PF of 1.0.
+	//Power factor is a number between 0 and 2**16-1, where 2**16-1 is a PF of 1.0.
 	int16_t PF;			
 	int32_t VAEnergy;	//Apparent energy since last read
-	int32_t AEnergy;	//Active energy since last read
+	int32_t WEnergy;	//Active energy since last read
 	/**
 	  Status indicates if a safety fault was detected
 	  The first 16bits are directly from the ADE.
@@ -77,17 +79,16 @@ typedef struct {
 
 /** 
   Updates circuit measured parameters
-  @warning The ADE SS line should be set before calling Cupdate.
   @returns a return code
 */
-int8_t Cupdate(Circuit c);
-int8_t Cconfigure(Circuit c);
 int8_t Cenable(Circuit *c, int8_t enabled);
 int8_t CsetOn(Circuit *c, int8_t on);
 int8_t CisOn(Circuit *c);
-uint8_t* Cload(Circuit *c, uint8_t* addrEEPROM);
-uint8_t* Csave(Circuit *c, uint8_t* addrEEPROM);
+void Cload(Circuit *c, uint8_t* addrEEPROM);
+void Csave(Circuit *c, uint8_t* addrEEPROM);
 void CsetDefaults(Circuit *c, int8_t circuitID);
+int8_t Cmeasure(Circuit *c);
 int8_t Cprogram(const Circuit *c);
+void CprintMeas(HardwareSerial *ser, Circuit *c);
 
 #endif

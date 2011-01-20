@@ -5,26 +5,27 @@
 #include "Select/select.h"
 #include "Switches/switches.h"
 #include "circuit.h"
+#include "arduino/HardwareSerial.h"
 
+
+#define dbg Serial1
 #define MAGIC 2014/10000
 #define max(X,Y) ((X)>=(Y))?(X):(Y)
 
 /** 
   Updates circuit measured parameters
   @TODO Achintya what is this number: MAGIC?
-  @TODO how to handle case were linecycle doesn't fire?
   @warning a communications error may leave Circuit *c in an inconsisent state.
   @warning The completion time of this function is dependent on the frequency of the line as well as halfCyclesSample. At worst the function will take one minute to return if halfCyclesSample is 1400 and the frequency drops below 40hz.
   @return ARGVALUEERR if the circuitID is invalid
   @return COMMERR if there is a communications error or the ADE is not detected
-  @return FAILURE if there is no zero crossing detected 
 */
 int8_t Cmeasure(Circuit *c)
 {
 	int8_t retCode = SUCCESS;
 	int32_t regData;
 	int8_t timeout = false;
-	ifnsuccess(retCode = CSSelectDevice(c->circuitID)){
+	ifnsuccess(retCode=CSSelectDevice(c->circuitID)){
 		c->status |= COMM;
 		CSSelectDevice(DEVDISABLE);
 		return retCode;
@@ -38,12 +39,7 @@ int8_t Cmeasure(Circuit *c)
 		return retCode;
 	} 
 	c->status &= 0xFFFF0000;
-	c->status |= regData;
-	//return FAILURE if no zero crossing detected.
-	if (regData & ZXTO) {
-		CSSelectDevice(DEVDISABLE);
-		return FAILURE;
-	}
+	c->status |= (0x0000FFFF&regData);
 
 	//Start measuring
 	ifnsuccess(retCode = ADEgetRegister(PERIOD,&regData)){
@@ -54,9 +50,11 @@ int8_t Cmeasure(Circuit *c)
 		}
 	}
 	c->periodus = regData*22/10;
+	dbg.print("Peruiodus:");dbg.println(c->periodus,DEC);
 
 	uint16_t waitTime = (uint16_t)((regData*22/100)*(c->halfCyclesSample/100));
 	waitTime = waitTime + waitTime/2;//Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur
+	dbg.print("waitTime:");dbg.println(waitTime,DEC);
 	//uint16_t waitTime = 2*1000*c->halfCyclesSample/max(c->frequency,40);
 
 	ifnsuccess(retCode = ADEwaitForInterrupt(CYCEND,waitTime)){
@@ -102,7 +100,7 @@ int8_t Cmeasure(Circuit *c)
 			CSSelectDevice(DEVDISABLE);
 			return retCode;
 		}
-		c->AEnergy = regData*MAGIC;
+		c->WEnergy = regData*MAGIC;
 
 		//IRMS
 		ifnsuccess(retCode = ADEgetRegister(IRMS,&regData)){
@@ -110,7 +108,7 @@ int8_t Cmeasure(Circuit *c)
 			CSSelectDevice(DEVDISABLE);
 			return retCode;
 		}
-		c->IRMS = regData/c->IRMSSlope;
+		c->IRMS = regData/c->IRMSslope;
 
 		//VRMS
 		ifnsuccess(retCode = ADEgetRegister(VRMS,&regData)){
@@ -118,12 +116,15 @@ int8_t Cmeasure(Circuit *c)
 			CSSelectDevice(DEVDISABLE);
 			return retCode;
 		}
-		c->VRMS= regData/c->VRMSSlope;
+		c->VRMS= regData/c->VRMSslope;
 
-		//PF
-		c->PF = (uint16_t)(((uint64_t)c->AEnergy<<16)/c->VAEnergy);
-	}
-
+		//Power Factor PF
+		if (c->VAEnergy != 0){ 
+			c->PF = (uint16_t)(((((uint64_t)c->WEnergy<<16)-c->WEnergy)-c->WEnergy)/c->VAEnergy);
+		} else {
+			c->PF = 65535;
+		}
+	}//end if (!timeout)
 
 	CSSelectDevice(DEVDISABLE);
 
@@ -152,11 +153,11 @@ int8_t Cprogram(const Circuit *c)
 	ifnsuccess(retCode = ADEsetCHXOS(1,&c->chIint,&c->chIos)) return retCode;
 	regData = c->chIgainExp;
 	ifnsuccess(retCode = ADEsetRegister(GAIN,&regData)) return retCode;
-	regData = c->IRMSOffset;
+	regData = c->IRMSoffset;
 	ifnsuccess(retCode = ADEsetRegister(IRMSOS, &regData)) return retCode;
 	//since this is channel 2 c->chIint is ignored
 	ifnsuccess(retCode = ADEsetCHXOS(2,&c->chIint,&c->chVos)) return retCode;
-	regData = c->VRMSOffset;
+	regData = c->VRMSoffset;
 	ifnsuccess(retCode = ADEsetRegister(VRMSOS, &regData)) return retCode;
 	regData = c->halfCyclesSample;
 	if (regData > 0) {
@@ -203,37 +204,50 @@ int8_t CisOn(Circuit *c)
 	return SWisOn(c->circuitID);
 }
 
-uint8_t* Cload(Circuit *c, uint8_t* addrEEPROM)
+void Cload(Circuit *c, uint8_t* addrEEPROM)
 {
 	eeprom_read_block(c,addrEEPROM,sizeof(Circuit));
-	return addrEEPROM + sizeof(Circuit);
 }
-uint8_t* Csave(Circuit *c, uint8_t* addrEEPROM) 
+void Csave(Circuit *c, uint8_t* addrEEPROM) 
 {
 	eeprom_update_block(c,addrEEPROM,sizeof(Circuit));
-	return addrEEPROM + sizeof(Circuit);
 }
 
 void CsetDefaults(Circuit *c, int8_t circuitID) 
 {
 	c->circuitID = circuitID;
+	c->halfCyclesSample = 200;
 	c->chIint = true;
 	c->chIos = 0;
-	c->halfCyclesSample = 200;
 	c->chIgainExp = 1;
-	c->IRMSOffset = 0x01BC;
-	c->IRMSSlope = 164;
+	c->IRMSoffset = 0x01BC;
+	c->IRMSslope = 164;
 	c->chVos = 0;
-	c->VRMSOffset = 0x07FF;
-	c->VRMSSlope = 4700;
-	c->VASlope = 2014/10000.0;
-	c->VAOffset = 0;
+	c->VRMSoffset = 0x07FF;
+	c->VRMSslope = 4700;
+	c->VAslope = 2014/10000.0;
+	c->VAoffset = 0;
 	c->sagDurationCycles = 10;
 	c->minVSag = 100;
 
 	c->status |= ENABLED;
+
+
+	//Meausured
+	c->IRMS = 0;
+	c->VRMS = 0;
+	c->VAEnergy = 0;
+	c->WEnergy = 0;
 }
 
+void CprintMeas(HardwareSerial *ser, Circuit *c)
+{
+	ser->print("IRMS&");
+	ser->print(c->IRMS);
+	ser->print(" ");
+	ser->print("VRMS&");
+	ser->println(c->VRMS);
+}
 
 /*
    To Achintya?
@@ -244,10 +258,6 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 //Set gain on current channel to be 2^1 as GAIN is an exponent GAIN is 1.
 //Enable linecycle and lincyccount
 
-// A circuit is On/Off
-// A circuit has an internal ID used for switching
-// A circuit is the interface to the ADE and switches
-// A circuit has all of the parameters used to initialize it
 // The LINCYC value determines the frequency of power value reads 
 
 /* Measured Parameters of interest are:
@@ -255,7 +265,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
  IRMS
  Apparent Power
  Active Power
- Frequency
+ Period
  
  Derived or set parameters:
  Switch Status
