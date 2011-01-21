@@ -138,9 +138,30 @@ void parseBerkeley()
 	if (debugPort.available() > 0) {
 		char incoming = debugPort.read(); 
 		if (incoming == 'A') {
-			softSetup();					//Set calibration values for ADE
-		} else if (incoming == 'a'){
-			ADEreset();	
+			char buff[16] = {0};
+			debugPort.print("Enter name of register to write:");
+			CLgetString(&debugPort,buff,sizeof(buff));
+			debugPort.println();
+			
+			int32_t regData = 0;
+			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
+				if (strcmp(regList[i]->name,buff) == 0){
+					CSSelectDevice(_testChannel);
+					debugPort.print("regData:");
+					debugPort.print(RCstr(ADEgetRegister(*regList[i],&regData)));
+					debugPort.print(":");
+					debugPort.println(regData,HEX);
+					debugPort.print("Enter new regData:");
+					if( CLgetInt(&debugPort,&regData) == CANCELED) {
+						break;	
+					}
+					debugPort.print(RCstr(ADEsetRegister(*regList[i],&regData)));
+					debugPort.print(":");
+					debugPort.println(regData,HEX);
+					CSSelectDevice(DEVDISABLE);
+					break;
+				} 
+			}
 		} else if (incoming == 'C') {
 			_testChannel = getChannelID();	
 		} else if (incoming == 'c') {
@@ -155,9 +176,11 @@ void parseBerkeley()
 		} else if (incoming == 'R') {
 			wdt_enable((WDTO_4S));			//Do a soft reset
 			Serial1.println("resetting in 4s.");
+		} else if (incoming == 'r') {
+			softSetup();					//Set calibration values for ADE
 		} else if (incoming == 'a') {
-			debugPort.println("Enter name of register to read:");
 			char buff[16] = {0};
+			debugPort.print("Enter name of register to read:");
 			CLgetString(&debugPort,buff,sizeof(buff));
 			debugPort.println();
 			

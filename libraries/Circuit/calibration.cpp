@@ -9,6 +9,7 @@
 #define dbg Serial1
 /**
     Calibrate circuit interactively using serial port. 
+	This function leaves the circuit off after completion.
 	@warning need to finish VAslope/offset and WSlope/offset
 	@warning this assumes that there is a gain of 1 on CH2OS
   */
@@ -46,8 +47,14 @@ int8_t calibrateCircuit(Circuit *c)
 
 	//Set waveform mode to read voltage
 	dbg.println("Configuring to read raw voltage.");
-	ifnsuccess(retCode = ADEsetModeBit(WAVESEL_0,true)) return retCode;
-	ifnsuccess(retCode = ADEsetModeBit(WAVESEL1_,true)) return retCode;
+	ifnsuccess(retCode = ADEsetModeBit(WAVESEL_0,true)) {
+		CsetOn(c,false);
+		return retCode;
+	}
+	ifnsuccess(retCode = ADEsetModeBit(WAVESEL1_,true)) {
+		CsetOn(c,false);
+		return retCode;
+	}
 	
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
@@ -74,6 +81,7 @@ int8_t calibrateCircuit(Circuit *c)
 	CsetOn(c,true);
 	dbg.println("Enter measured mV. Press ENTER when done:");
 	if (CLgetInt(&dbg,&VlowMeas) == CANCELED) {
+		CsetOn(c,false);
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
@@ -82,6 +90,7 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.println(VlowMeas,DEC);
 	dbg.print("Enter measured mA. Press ENTER when done:");
 	if (CLgetInt(&dbg,&IhighMeas) == CANCELED) {
+		CsetOn(c,false);
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
@@ -92,6 +101,7 @@ int8_t calibrateCircuit(Circuit *c)
 	//get VRMS from Ckt
 	retCode = ADEwaitForInterrupt(CYCEND,8000);
 	ifnsuccess(retCode){
+		CsetOn(c,false);
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
 		return retCode;
 	}
@@ -100,6 +110,7 @@ int8_t calibrateCircuit(Circuit *c)
 	//get IRMS from Ckt
 	retCode = ADEwaitForInterrupt(CYCEND,4000);
 	ifnsuccess(retCode){
+		CsetOn(c,false);
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
 		return retCode;
 	}
@@ -116,6 +127,7 @@ int8_t calibrateCircuit(Circuit *c)
 	CsetOn(c,true);
 	dbg.println("Enter measured mV:");
 	if (CLgetInt(&dbg,&VhighMeas) == CANCELED) {
+		CsetOn(c,false);
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
@@ -124,6 +136,7 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.println(VhighMeas,DEC);
 	dbg.println("Enter measured mA:");
 	if (CLgetInt(&dbg,&IlowMeas) == CANCELED) {
+		CsetOn(c,false);
 		dbg.println("CANCELED");
 		return CANCELED;
 	}
@@ -134,6 +147,7 @@ int8_t calibrateCircuit(Circuit *c)
 	//get VRMS from Ckt
 	retCode = ADEwaitForInterrupt(CYCEND,4000);
 	ifnsuccess(retCode){
+		CsetOn(c,false);
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
 		return retCode;
 	}
@@ -142,10 +156,14 @@ int8_t calibrateCircuit(Circuit *c)
 	//get IRMS from Ckt
 	retCode = ADEwaitForInterrupt(CYCEND,4000);
 	ifnsuccess(retCode){
+		CsetOn(c,false);
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
 		return retCode;
 	}
-	ifnsuccess(retCode = ADEgetRegister(IRMS,&IlowCkt)) return retCode;
+	ifnsuccess(retCode = ADEgetRegister(IRMS,&IlowCkt)) {
+		CsetOn(c,false);
+		return retCode;
+	}
 	CsetOn(c,false);
 	
 	dbg.println("Computing offsets and slopes for VRMS and IRMS.");
@@ -189,6 +207,7 @@ int8_t calibrateCircuit(Circuit *c)
 	ifnsuccess(retCode = Cprogram(c)) return retCode;
 	ifnsuccess(retCode = CSSelectDevice(DEVDISABLE)) return retCode;
 	dbg.println("Calibration Complete.");
+	return retCode;
 }
 
 int8_t CLgetString(HardwareSerial *ser,char *buff, size_t bSize)
