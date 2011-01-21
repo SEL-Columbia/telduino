@@ -116,7 +116,7 @@ void setup()
 	//Load circuit data from EEPROM
 	uint8_t *addrEEPROM = 0;
 	for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
-		Cload(c,addrEEPROM);
+		//Cload(c,addrEEPROM);
 		addrEEPROM += sizeof(Circuit);
 	}
 } //end of setup section
@@ -240,7 +240,6 @@ void parseBerkeley()
 				addrEEPROM += sizeof(Circuit);
 			}
 			debugPort.println("Load Complete");
-
 		}
 		else {
 			//Indicate received character
