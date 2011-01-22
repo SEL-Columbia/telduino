@@ -137,7 +137,7 @@ void parseBerkeley()
 	// Look for incoming single character command on debugPort line
 	if (debugPort.available() > 0) {
 		char incoming = debugPort.read(); 
-		if (incoming == 'A') {
+		if (incoming == 'A') { //Write to Register
 			char buff[16] = {0};
 			debugPort.print("Enter name of register to write:");
 			CLgetString(&debugPort,buff,sizeof(buff));
@@ -162,28 +162,12 @@ void parseBerkeley()
 					break;
 				} 
 			}
-		} else if (incoming == 'C') {
-			_testChannel = getChannelID();	
-		} else if (incoming == 'c') {
-			displayChannelInfo();
-		} else if (incoming == 'S') {
-			int8_t ID = getChannelID();		//Toggle channel circuit
-			SWset(ID,!SWisOn(ID));
-		} else if (incoming == 's') {
-			displayEnabled(SWgetSwitchState());	
-		} else if (incoming == 'T'){
-			testHardware();
-		} else if (incoming == 'R') {
-			wdt_enable((WDTO_4S));			//Do a soft reset
-			Serial1.println("resetting in 4s.");
-		} else if (incoming == 'r') {
-			softSetup();					//Set calibration values for ADE
-		} else if (incoming == 'a') {
+		} else if (incoming == 'a') { //read from register
 			char buff[16] = {0};
 			debugPort.print("Enter name of register to read:");
 			CLgetString(&debugPort,buff,sizeof(buff));
 			debugPort.println();
-			
+
 			int32_t regData = 0;
 			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
 				if (strcmp(regList[i]->name,buff) == 0){
@@ -196,7 +180,23 @@ void parseBerkeley()
 					break;
 				} 
 			}
-		} else if (incoming == 'P') {
+		} else if (incoming == 'C') { //Set Channel Info
+			_testChannel = getChannelID();	
+		} else if (incoming == 'c') {
+			displayChannelInfo();
+		} else if (incoming == 'S') { //Set switch on 
+			int8_t ID = getChannelID();		//Toggle channel circuit
+			SWset(ID,!SWisOn(ID));
+		} else if (incoming == 's') { //Display switch state
+			displayEnabled(SWgetSwitchState());	
+		} else if (incoming == 'T'){ //?
+			testHardware();
+		} else if (incoming == 'R') { //Hard Reset using watchdog timer
+			wdt_enable((WDTO_4S));			//Do a soft reset
+			Serial1.println("resetting in 4s.");
+		} else if (incoming == 'r') { //soft Reset using the Setup routine
+			softSetup();					//Set calibration values for ADE
+		} else if (incoming == 'P') { 
 			//Initialize all circuits to have the same parameters
 			//using the new circuits code
 			for (int i = 0; i < NCIRCUITS; i++) {
