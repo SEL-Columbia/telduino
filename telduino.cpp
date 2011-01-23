@@ -135,9 +135,10 @@ void parseBerkeley()
 {
 	setDbgLeds(GYRPAT);
 	// Look for incoming single character command on debugPort line
+	// Capital letters denote write operations and lower case letters are reads
 	if (debugPort.available() > 0) {
 		char incoming = debugPort.read(); 
-		if (incoming == 'A') {
+		if (incoming == 'A') {				//Write ADE reg
 			char buff[16] = {0};
 			debugPort.print("Enter name of register to write:");
 			CLgetString(&debugPort,buff,sizeof(buff));
@@ -152,9 +153,10 @@ void parseBerkeley()
 					debugPort.print(":");
 					debugPort.println(regData,HEX);
 					debugPort.print("Enter new regData:");
-					if( CLgetInt(&debugPort,&regData) == CANCELED) {
+					if(CLgetInt(&debugPort,&regData) == CANCELED) {
 						break;	
 					}
+					debugPort.println();
 					debugPort.print(RCstr(ADEsetRegister(*regList[i],&regData)));
 					debugPort.print(":");
 					debugPort.println(regData,HEX);
@@ -162,23 +164,7 @@ void parseBerkeley()
 					break;
 				} 
 			}
-		} else if (incoming == 'C') {
-			_testChannel = getChannelID();	
-		} else if (incoming == 'c') {
-			displayChannelInfo();
-		} else if (incoming == 'S') {
-			int8_t ID = getChannelID();		//Toggle channel circuit
-			SWset(ID,!SWisOn(ID));
-		} else if (incoming == 's') {
-			displayEnabled(SWgetSwitchState());	
-		} else if (incoming == 'T'){
-			testHardware();
-		} else if (incoming == 'R') {
-			wdt_enable((WDTO_4S));			//Do a soft reset
-			Serial1.println("resetting in 4s.");
-		} else if (incoming == 'r') {
-			softSetup();					//Set calibration values for ADE
-		} else if (incoming == 'a') {
+		} else if (incoming == 'a') {		//Read ADE reg
 			char buff[16] = {0};
 			debugPort.print("Enter name of register to read:");
 			CLgetString(&debugPort,buff,sizeof(buff));
@@ -196,9 +182,23 @@ void parseBerkeley()
 					break;
 				} 
 			}
-		} else if (incoming == 'P') {
-			//Initialize all circuits to have the same parameters
-			//using the new circuits code
+		} else if (incoming == 'C') {		//Chance active channel
+			_testChannel = getChannelID();	
+		} else if (incoming == 'c') {		//Read channel using Achintya's code
+			displayChannelInfo();
+		} else if (incoming == 'S') {
+			int8_t ID = getChannelID();		//Toggle channel circuit
+			SWset(ID,!SWisOn(ID));
+		} else if (incoming == 's') {
+			displayEnabled(SWgetSwitchState());	
+		} else if (incoming == 'T'){		//Test basic functionality
+			testHardware();
+		} else if (incoming == 'R') {
+			wdt_enable((WDTO_4S));			//Do a soft reset
+			Serial1.println("resetting in 4s.");
+		} else if (incoming == 'r') {
+			softSetup();					//Set calibration values for ADE
+		} else if (incoming == 'P') {		//Program values in ckts[] to ADE
 			for (int i = 0; i < NCIRCUITS; i++) {
 				Circuit *c = &(ckts[i]);
 				int8_t retCode = Cprogram(c);
@@ -208,32 +208,28 @@ void parseBerkeley()
 					break;
 				}
 			}
-		} else if(incoming == 'p') {
+		} else if(incoming == 'p') {		//Measure circuit values and print
 			Circuit *c = &(ckts[_testChannel]);
 			Cmeasure(c);
 			CprintMeas(&debugPort,c);
 			debugPort.println();
-		} else if (incoming == 'L') {
+		} else if (incoming == 'L') {		//Run calibration routine on channel
 			Circuit *c = &(ckts[_testChannel]);
 			debugPort.println(RCstr(calibrateCircuit(c)));
-		} else if (incoming == 'D') {
-			//Initialize all circuits to have the same parameters
-			//using the new circuits code
+		} else if (incoming == 'D') {		//Initialize ckts[] to safe defaults
 			for (int i = 0; i < NCIRCUITS; i++) {
 				Circuit *c = &(ckts[i]);
 				CsetDefaults(c,i);
 			}
-			debugPort.println("Defaults set. Don't forget to program!");
-		} else if (incoming == 'E') {
-			//Save circuit data to EEPROM
+			debugPort.println("Defaults set. Don't forget to program! ('P')");
+		} else if (incoming == 'E') {		//Save data in ckts[] to EEPROM
 			uint8_t *addrEEPROM = 0;
 			for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
 				Csave(c,addrEEPROM);
 				addrEEPROM += sizeof(Circuit);
 			}
 			debugPort.println("Save Complete");
-		} else if (incoming=='e'){
-			//Load circuit data from EEPROM
+		} else if (incoming=='e'){			//Load circuit data from EEPROM
 			uint8_t *addrEEPROM = 0;
 			for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
 				Cload(c,addrEEPROM);
@@ -241,14 +237,13 @@ void parseBerkeley()
 			}
 			debugPort.println("Load Complete");
 		}
-		else {
-			//Indicate received character
+		else {								//Indicate received character
 			debugPort.print("\n\rNot_Recognized:");
 			debugPort.print(incoming,BIN);
 			debugPort.print(":");
 			debugPort.print("'");
 			debugPort.print(incoming);
-			debugPort.println("\'");
+			debugPort.println("'");
 		}
 	}
 	setDbgLeds(0);

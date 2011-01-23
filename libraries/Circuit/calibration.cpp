@@ -59,7 +59,7 @@ int8_t calibrateCircuit(Circuit *c)
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
 	ifnsuccess(retCode = ADEgetRegister(WAVEFORM,&regData)) return retCode;
-	dbg.print("CHVwaveform:");bg.println(regData);
+	dbg.print("CHVwaveform:");dbg.println(regData);
 	//regData = regData*500*100/10322/161; //(1.61mV/LSB in CH2OS) and 500/10322 in WAVEFORM
 	regData = (regData*31549)>>20; 
 	//The CHXOS maxes out at 2^4 as it is a 5 bit signed magnitude number
@@ -262,8 +262,10 @@ int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
 		while(nsuccess(CLgetString(ser,buff,sizeof(buff)))) {
 			ser->println("Buffer overflow: command too long.");
 		}
-		if (sscanf(buff,"%ld",d)) {
-			return SUCCESS;
+		if (buff[0] == '0' && (buff[1] == 'x' || buff[1] == 'X')){
+			if (sscanf(buff,"%lx",d)) return SUCCESS;
+		} else { 
+			if (sscanf(buff,"%ld",d)) return SUCCESS;
 		}
 		if (!strcmp(buff,"cancel")) {
 			return CANCELED;
