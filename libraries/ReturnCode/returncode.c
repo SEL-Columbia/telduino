@@ -1,7 +1,7 @@
 #include "returncode.h"
 
 /**
-	Requires a return code otherwise returns "RCERR".
+	Takes a return code and returns a short description and otherwise returns "RCERR".
 */
 const char* _RCstr(int8_t retCode)
 {
@@ -16,6 +16,9 @@ const char* _RCstr(int8_t retCode)
 }
 
 
+/**
+	Returns a short desciption of the error code.
+  */
 const char* RCstr(int8_t retCode)
 {
 	return _RCstr(retCode);
