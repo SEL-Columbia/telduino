@@ -138,7 +138,7 @@ void parseBerkeley()
 	// Capital letters denote write operations and lower case letters are reads
 	if (debugPort.available() > 0) {
 		char incoming = debugPort.read(); 
-		if (incoming == 'A') {				//Write ADE reg
+		if (incoming == 'A') {			//Write to ADE Register
 			char buff[16] = {0};
 			debugPort.print("Enter name of register to write:");
 			CLgetString(&debugPort,buff,sizeof(buff));
@@ -148,16 +148,15 @@ void parseBerkeley()
 			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
 				if (strcmp(regList[i]->name,buff) == 0){
 					CSSelectDevice(_testChannel);
-					debugPort.print("regData:");
+					debugPort.print("Current regData:");
 					debugPort.print(RCstr(ADEgetRegister(*regList[i],&regData)));
 					debugPort.print(":0x");
 					debugPort.print(regData,HEX);
 					debugPort.print(":");
 					debugPort.println(regData,BIN);
+
 					debugPort.print("Enter new regData:");
-					if(CLgetInt(&debugPort,&regData) == CANCELED) {
-						break;	
-					}
+					if(CLgetInt(&debugPort,&regData) == CANCELED) break;	
 					debugPort.println();
 					debugPort.print(RCstr(ADEsetRegister(*regList[i],&regData)));
 					debugPort.print(":0x");
@@ -173,7 +172,7 @@ void parseBerkeley()
 			debugPort.print("Enter name of register to read:");
 			CLgetString(&debugPort,buff,sizeof(buff));
 			debugPort.println();
-			
+
 			int32_t regData = 0;
 			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
 				if (strcmp(regList[i]->name,buff) == 0){
@@ -192,17 +191,17 @@ void parseBerkeley()
 			_testChannel = getChannelID();	
 		} else if (incoming == 'c') {		//Read channel using Achintya's code
 			displayChannelInfo();
-		} else if (incoming == 'S') {
-			int8_t ID = getChannelID();		//Toggle channel circuit
+		} else if (incoming == 'S') {		//Toggle channel circuit
+			int8_t ID = getChannelID();		
 			SWset(ID,!SWisOn(ID));
-		} else if (incoming == 's') {
+		} else if (incoming == 's') {		//Display switch state
 			displayEnabled(SWgetSwitchState());	
-		} else if (incoming == 'T'){		//Test basic functionality
+		} else if (incoming == 'T') {		//Test basic functionality
 			testHardware();
-		} else if (incoming == 'R') {
-			wdt_enable((WDTO_4S));			//Do a soft reset
+		} else if (incoming == 'R') {		//Hard Reset using watchdog timer
+			wdt_enable((WDTO_4S));			
 			Serial1.println("resetting in 4s.");
-		} else if (incoming == 'r') {
+		} else if (incoming == 'r') {		//soft Reset using the Setup routine
 			softSetup();					//Set calibration values for ADE
 		} else if (incoming == 'P') {		//Program values in ckts[] to ADE
 			for (int i = 0; i < NCIRCUITS; i++) {
