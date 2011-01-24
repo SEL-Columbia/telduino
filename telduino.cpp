@@ -150,16 +150,20 @@ void parseBerkeley()
 					CSSelectDevice(_testChannel);
 					debugPort.print("regData:");
 					debugPort.print(RCstr(ADEgetRegister(*regList[i],&regData)));
+					debugPort.print(":0x");
+					debugPort.print(regData,HEX);
 					debugPort.print(":");
-					debugPort.println(regData,HEX);
+					debugPort.println(regData,BIN);
 					debugPort.print("Enter new regData:");
 					if(CLgetInt(&debugPort,&regData) == CANCELED) {
 						break;	
 					}
 					debugPort.println();
 					debugPort.print(RCstr(ADEsetRegister(*regList[i],&regData)));
+					debugPort.print(":0x");
+					debugPort.print(regData,HEX);
 					debugPort.print(":");
-					debugPort.println(regData,HEX);
+					debugPort.println(regData,DEC);
 					CSSelectDevice(DEVDISABLE);
 					break;
 				} 
@@ -176,8 +180,10 @@ void parseBerkeley()
 					CSSelectDevice(_testChannel);
 					debugPort.print("regData:");
 					debugPort.print(RCstr(ADEgetRegister(*regList[i],&regData)));
+					debugPort.print(":0x");
+					debugPort.print(regData,HEX);
 					debugPort.print(":");
-					debugPort.println(regData,HEX);
+					debugPort.println(regData,DEC);
 					CSSelectDevice(DEVDISABLE);
 					break;
 				} 

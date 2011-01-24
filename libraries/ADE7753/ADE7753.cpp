@@ -19,7 +19,7 @@ void ADEreadData(ADEReg reg, uint32_t *data)
 
 	SPI.setDataMode(SPI_MODE1);
     //SPI speed is f_osc/128
-    SPI.setClockDivider(SPI_CLOCK_DIV64);
+    SPI.setClockDivider(SPI_CLOCK_DIV128);
 
 	//now transfer the readInstuction/registerAddress: i.e. 00xxxxxx -AM
 	SPI.transfer(reg.addr);
@@ -37,7 +37,7 @@ void ADEwriteData(ADEReg reg, uint32_t *data)
 
     //SPI speed is f_osc/128
 	SPI.setDataMode(SPI_MODE1);
-    SPI.setClockDivider(SPI_CLOCK_DIV64);
+    SPI.setClockDivider(SPI_CLOCK_DIV128);
 
 	//now transfer the write Instuction/registerAddress: i.e. 10xxxxxx -JR
 	SPI.transfer(reg.addr | 0x80);
@@ -54,8 +54,8 @@ void ADEwriteData(ADEReg reg, uint32_t *data)
 */
 uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 {
-	Serial1.print("GET ");
-	Serial1.println(reg.name);
+	//Serial1.print("GET ");
+	//Serial1.println(reg.name);
 	//get raw data, MSB of data is MSB from ADE irrespective of byte length
 	uint8_t retCode = SUCCESS;
 	uint32_t rawData = 0;
@@ -256,7 +256,10 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 			retCode = ADEgetRegister(RSTSTATUS,&status);
 			if (retCode == SUCCESS && (status & regMask)) {
 				return SUCCESS;
-			} 
+			}
+			//Wait between reads
+			for (int i=0; i<10; i++); 
+
 		} while (millis() > endTime);
 	}
 	//now time=millis() should be less than endTime unless time 

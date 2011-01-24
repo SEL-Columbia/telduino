@@ -46,7 +46,7 @@ int8_t calibrateCircuit(Circuit *c)
 
 	//Calibrate low level channel offsets
 	CsetOn(&cCal,false);
-	dbg.print("Ground both lines on circuit\'");
+	dbg.print("Ground both lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC);
 	dbg.println("\' and press ENTER (\'\\r\') when done.");
 	while (dbg.read() != '\r');
@@ -59,6 +59,7 @@ int8_t calibrateCircuit(Circuit *c)
 		CsetOn(&cCal,false);
 		return retCode;
 	}
+	dbg.println("Modebit 0 set.");
 	retCode = ADEsetModeBit(WAVESEL1_,true);
 	ifnsuccess(retCode) {
 		CsetOn(&cCal,false);
@@ -121,10 +122,10 @@ int8_t calibrateCircuit(Circuit *c)
 	ifnsuccess(retCode = ADEgetRegister(VRMS,&VlowCkt)) return retCode;
 
 	//get IRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	retCode = ADEwaitForInterrupt(CYCEND,8000);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
-		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
+		dbg.println("Failed to sense cycles. Is a 240VAC 50Hz source connected?");
 		return retCode;
 	}
 	ifnsuccess(retCode = ADEgetRegister(IRMS,&IhighCkt)) return retCode;
@@ -134,7 +135,7 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.print("Please attach a high-voltage source (240VAC 50Hz) "); 
 	dbg.print("and a 2.4 KOhm load to circuit (.1A) \'");
 	dbg.print(cCal.circuitID,DEC);
-	dbg.print("\' and press ENTER when done.");
+	dbg.println("\' and press ENTER when done. ");
 	while (dbg.read() != '\r');
 
 	CsetOn(&cCal,true);
@@ -158,7 +159,7 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.println(IlowMeas,DEC);
 
 	//get VRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	retCode = ADEwaitForInterrupt(CYCEND,8000);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
@@ -167,7 +168,7 @@ int8_t calibrateCircuit(Circuit *c)
 	ifnsuccess(retCode = ADEgetRegister(VRMS,&VhighCkt)) return retCode;
 
 	//get IRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	retCode = ADEwaitForInterrupt(CYCEND,8000);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
@@ -193,7 +194,7 @@ int8_t calibrateCircuit(Circuit *c)
 	int64_t I2Msq = IlowMeas*IlowMeas;
 	int64_t I1Csq = IlowCkt*IlowCkt;
 	int64_t I2Csq = IhighCkt*IhighCkt;
-	cCal.IRMSoffset = (int32_t)(I1Msq*I2Csq-I2Msq*I1Csq)/(I2Msq - I1Msq);
+	cCal.IRMSoffset = (int32_t)(((I1Msq*I2Csq-I2Msq*I1Csq)/(I2Msq - I1Msq))>>15);
 	if (cCal.IRMSoffset > 0x7FF) {	//12 bit twos complement limits
 		cCal.IRMSoffset = 0x7FF;
 	} else if (cCal.IRMSoffset < -0x800) {
@@ -267,6 +268,10 @@ int8_t CLgetFloat(HardwareSerial *ser,float *f)
 		}
 	} while(true);
 }
+/** 
+	Gets a long int from the user.
+	@returns retCode CANCELED if user cancels input.
+  */
 int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
 {
 	char buff[32] = {'\0'};
