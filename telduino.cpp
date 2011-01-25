@@ -254,36 +254,6 @@ void parseBerkeley()
 	setDbgLeds(0);
 }
 
-void parseColumbia()
-{
-    if (verbose > 1) {
-        debugPort.println("top of loop()");
-        debugPort.println(millis());
-    }
-    
-    String commandString;
-    String destination;
-	
-    commandString = readSheevaPort();
-    destination = getValueForKey("cmp", commandString);
-    chooseDestination(destination, commandString);    
-	
-    String modemString = "";
-    modemString = readTelitPort();
-    modemString = modemString.trim();
-    if (modemString.length() != 0) {
-        String responseString = "";
-        responseString += "cmp=mdm&text=";
-        responseString += '"';
-        responseString += modemString;
-        responseString += '"';
-        sheevaPort.println(responseString);
-        
-        debugPort.println("string received from telit");
-        debugPort.println(modemString);
-    }
-}
-
 void softSetup() 
 {
 	int32_t data = 0;
@@ -531,6 +501,37 @@ void __cxa_pure_virtual(void)
 		delay(332);
 	}
 }
+}
+
+void parseColumbia() {
+	/**
+	 *	key-value parsing interface for telduino-sheeva communications
+	 */
+    if (verbose > 1) {
+        debugPort.println("top of loop()");
+        debugPort.println(millis());
+    }
+    String commandString;
+    String destination;
+	
+    commandString = readSheevaPort();
+	destination = getValueForKey("cmp", commandString);
+    chooseDestination(destination, commandString);    
+	
+    String modemString = "";
+    modemString = readTelitPort();
+    modemString = modemString.trim();
+    if (modemString.length() != 0) {
+        String responseString = "";
+        responseString += "cmp=mdm&text=";
+        responseString += '"';
+        responseString += modemString;
+        responseString += '"';
+        sheevaPort.println(responseString);
+        
+        debugPort.println("string received from telit");
+        debugPort.println(modemString);
+    }
 }
 
 String getValueForKey(String key, String commandString) {
