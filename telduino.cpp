@@ -533,11 +533,11 @@ void __cxa_pure_virtual(void)
 }
 }
 
-/**
- *	given a String for the key value, this function returns the String corresponding
- *	to the value for the key by reading until the next '&' or the end of the string.
- */
 String getValueForKey(String key, String commandString) {
+	/**
+	 *	given a String for the key value, this function returns the String corresponding
+	 *	to the value for the key by reading until the next '&' or the end of the string.
+	 */
     int keyIndex = commandString.indexOf(key);
     int valIndex = keyIndex + key.length() + 1;
     int ampersandIndex = commandString.indexOf("&",valIndex);
@@ -549,22 +549,22 @@ String getValueForKey(String key, String commandString) {
     return val;
 }
 
-/**
- *	this function is called when a cmp=mdm string is sent to the telduino.  the text 
- *	surrounded by parenthesis is returned.  this message will be sent to the modem as
- *	a raw string command.  
- */
 String getSMSText(String commandString) {
+	/**
+	 *	this function is called when a cmp=mdm string is sent to the telduino.  the text 
+	 *	surrounded by parenthesis is returned.  this message will be sent to the modem as
+	 *	a raw string command.  
+	 */
     int firstDelimiterIndex = commandString.indexOf('(');
     int secondDelimiterIndex = commandString.indexOf(')', firstDelimiterIndex + 1);
     String smsText = commandString.substring(firstDelimiterIndex + 1, secondDelimiterIndex);
     return smsText;
 }
 
-/**
- *	this function takes care of parsing commands where cmp=mtr.
- */
 void meter(String commandString) {
+	/**
+	 *	this function takes care of parsing commands where cmp=mtr.
+	 */
     String job = getValueForKey("job", commandString);
     String cid = getValueForKey("cid", commandString);
 	
@@ -630,10 +630,10 @@ void meter(String commandString) {
 	}
 }
 
-/**
- *	this function takes care of parsing commands where cmp=mdm.
- */
 void modem(String commandString) {
+	/**
+	 *	this function takes care of parsing commands where cmp=mdm.
+	 */
     String smsText = getSMSText(commandString);
     String job = getValueForKey("job", commandString);
 	
@@ -657,11 +657,11 @@ void modem(String commandString) {
     
 }
 
-/**
- *	this function reads the sheevaPort (Serial2) for incoming commands
- *	and returns them as String objects.
- */
 String readSheevaPort() {
+	/**
+	 *	this function reads the sheevaPort (Serial2) for incoming commands
+	 *	and returns them as String objects.
+	 */
     char incomingByte = ';';    
     String commandString = "";
     while ((sheevaPort.available() > 0) || ((incomingByte != ';') && (incomingByte != '\n'))) {
@@ -681,11 +681,11 @@ String readSheevaPort() {
     return commandString;
 }
 
-/**
- *	this function reads the telitPort (Serial3) for incoming commands
- *	and returns them as String objects.
- */
 String readTelitPort() {
+	/**
+	 *	this function reads the telitPort (Serial3) for incoming commands
+	 *	and returns them as String objects.
+	 */
 	uint32_t startTime = millis();
     char incomingByte = '\n';
     String commandString = "";
@@ -704,13 +704,13 @@ String readTelitPort() {
     return commandString;
 }
 
-/**
- *	based on the value for the cmp key, this calls the function
- *	meter if cmp=mtr
- *	and
- *  modem if cmp=mdm
- */
 void chooseDestination(String destination, String commandString) {
+	/**
+	 *	based on the value for the cmp key, this calls the function
+	 *	meter if cmp=mtr
+	 *	and
+	 *  modem if cmp=mdm
+	 */
     if (destination == "mtr") {
         meter(commandString);
     }
@@ -719,10 +719,10 @@ void chooseDestination(String destination, String commandString) {
     }
 }
 
-/**
- *	Pull telit on/off pin high for 3 seconds to start up telit modem
- */
 void turnOnTelit() {
+	/**
+	 *	Pull telit on/off pin high for 3 seconds to start up telit modem
+	 */
 	pinMode(22, OUTPUT);
 	digitalWrite(22, HIGH);
 	delay(3000);
