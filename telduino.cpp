@@ -617,14 +617,14 @@ void meter(String commandString) {
 		_testChannel = icid;
 		softSetup();
 	}
-	else if (job == 'c') {
+	else if (job == "c") {
 		_testChannel = icid;
 		displayChannelInfo();		
 	}
-	else if (job == 'T') {
+	else if (job == "T") {
 		testHardware();
 	}
-	else if (job == 'R') {
+	else if (job == "R") {
 		wdt_enable((WDTO_4S));
 		debugPort.println("resetting in 4s.");
 	}
