@@ -67,6 +67,10 @@ int _testChannel = 1;
 void setup();
 void loop();
 void softSetup();
+void setupLVAMode(int icid, int32_t linecycVal);
+void setupRVAMode(int icid);
+void jobReadLVA(int icid);
+void jobReadRVA(int icid);
 void displayChannelInfo(); 
 void displayEnabled(const int8_t enabledC[WIDTH]);
 int8_t getChannelID();
@@ -534,6 +538,280 @@ void parseColumbia() {
     }
 }
 
+void setupLVAMode(int icid, int32_t linecycVal) {
+	/**
+	 *	this function will setup the registers correctly for the LINECYC
+	 *	mode reading of the LVAENERGY register.
+	 *	The value for LINECYC is passed in to the function.
+	 */
+	
+	int32_t data = 0;
+	
+	debugPort.print("Setting Channel for LVA Mode:");
+	debugPort.println(icid, DEC);
+	
+	CSSelectDevice(icid); //start SPI comm with the test device channel
+								  //Enable Digital Integrator for _testChannel
+	int8_t ch1os=0,enableBit=1;
+	
+	debugPort.print("set CH1OS:");
+	debugPort.println(RCstr(ADEsetCHXOS(1,&enableBit,&ch1os)));
+	debugPort.print("get CH1OS:");
+	debugPort.println(RCstr(ADEgetCHXOS(1,&enableBit,&ch1os)));
+	debugPort.print("enabled: ");
+	debugPort.println(enableBit,BIN);
+	debugPort.print("offset: ");
+	debugPort.println(ch1os);
+	
+	//set the gain to 2 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
+	int32_t gainVal = 1;
+	
+	debugPort.print("BIN GAIN (set,get):");
+	debugPort.print(RCstr(ADEsetRegister(GAIN,&gainVal)));
+	debugPort.print(",");
+	debugPort.print(RCstr(ADEgetRegister(GAIN,&gainVal)));
+	debugPort.print(":");
+	debugPort.println(gainVal,BIN);
+	
+	int32_t iRmsOsVal = 0x0000;
+	ADEsetRegister(IRMSOS,&iRmsOsVal);
+	ADEgetRegister(IRMSOS,&iRmsOsVal);
+	debugPort.print("hex IRMSOS:");
+	debugPort.println(iRmsOsVal, HEX);
+	
+	int32_t vRmsOsVal = 0x0000;
+	ADEsetRegister(VRMSOS,&vRmsOsVal);
+	ADEgetRegister(VRMSOS,&vRmsOsVal);
+	debugPort.print("hex VRMSOS read from register:");
+	debugPort.println(vRmsOsVal, HEX);
+	
+	//set the number of cycles to wait before taking a reading
+	// int32_t linecycVal = 200;
+	ADEsetRegister(LINECYC,&linecycVal);
+	ADEgetRegister(LINECYC,&linecycVal);
+	debugPort.print("int linecycVal:");
+	debugPort.println(linecycVal);
+	
+	//read and set the CYCMODE bit on the MODE register
+	int32_t modeReg = 0;
+	ADEgetRegister(MODE,&modeReg);
+	debugPort.print("bin MODE register before setting CYCMODE:");
+	debugPort.println(modeReg, BIN);
+	modeReg |= CYCMODE;	 //set the line cycle accumulation mode bit
+	ADEsetRegister(MODE,&modeReg);
+	ADEgetRegister(MODE,&modeReg);
+	debugPort.print("bin MODE register after setting CYCMODE:");
+	debugPort.println(modeReg, BIN);
+	
+	//reset the Interrupt status register
+	ADEgetRegister(RSTSTATUS, &data);
+	debugPort.print("bin Interrupt Status Register:");
+	debugPort.println(data, BIN);
+	
+	CSSelectDevice(DEVDISABLE); //end SPI comm with the selected device	
+	
+}
+
+void setupRVAMode(int icid) {
+	/**
+	 *	this function aspires to setup the registers correctly for the accumulation
+	 *	mode reading of the RVAENERGY register.
+	 */
+	int32_t data = 0;
+	// debugging value
+	
+	debugPort.print("\n\n\rSetting Accumulation Mode for Channel:");
+	debugPort.println(icid, DEC);
+	
+	CSSelectDevice(icid); //start SPI comm with the test device channel
+								  //Enable Digital Integrator for _testChannel
+	int8_t ch1os=0,enableBit=1;
+	
+	debugPort.print("set CH1OS:");
+	debugPort.println(RCstr(ADEsetCHXOS(1,&enableBit,&ch1os)));
+	debugPort.print("get CH1OS:");
+	debugPort.println(RCstr(ADEgetCHXOS(1,&enableBit,&ch1os)));
+	debugPort.print("enabled: ");
+	debugPort.println(enableBit,BIN);
+	debugPort.print("offset: ");
+	debugPort.println(ch1os);
+	
+	//set the gain to 2 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
+	int32_t gainVal = 0;
+	
+	debugPort.print("BIN GAIN (set,get):");
+	debugPort.print(RCstr(ADEsetRegister(GAIN,&gainVal)));
+	debugPort.print(",");
+	debugPort.print(RCstr(ADEgetRegister(GAIN,&gainVal)));
+	debugPort.print(":");
+	debugPort.println(gainVal,BIN);
+	
+	int32_t iRmsOsVal = 0x0000;
+	ADEsetRegister(IRMSOS,&iRmsOsVal);
+	ADEgetRegister(IRMSOS,&iRmsOsVal);
+	debugPort.print("hex IRMSOS:");
+	debugPort.println(iRmsOsVal, HEX);
+	
+	int32_t vRmsOsVal = 0x0000;
+	ADEsetRegister(VRMSOS,&vRmsOsVal);
+	ADEgetRegister(VRMSOS,&vRmsOsVal);
+	debugPort.print("hex VRMSOS read from register:");
+	debugPort.println(vRmsOsVal, HEX);
+	
+	// set bits in interrupt register
+	int32_t modeReg = 0;
+	ADEgetRegister(IRQEN, &modeReg);
+	modeReg |= WSMP;
+	ADEsetRegister(IRQEN, &modeReg);
+	debugPort.println("register read IRQEN");
+	debugPort.println(modeReg, BIN);
+	
+	// set appropriate bits in MODE register
+	// clear CYCMODE, WAVESEL_0, and WAVESEL1_
+	modeReg = 0;
+	ADEgetRegister(MODE, &modeReg);
+	debugPort.print("register read MODE");
+	debugPort.println(modeReg, BIN);
+	debugPort.println("setting bits");
+	modeReg &= ~CYCMODE;			//clear the line cycle accumulation mode bit
+	modeReg &= ~WAVESEL_0;
+	modeReg &= ~WAVESEL1_;
+	ADEsetRegister(MODE, &modeReg);
+	ADEgetRegister(MODE, &modeReg);
+	debugPort.print("register read MODE");
+	debugPort.println(modeReg, BIN);
+	
+	CSSelectDevice(DEVDISABLE);		//end SPI comm with the selected device		
+}
+
+void jobReadLVA(int icid) {
+	/**	dispatch job readLVA function
+	 *  power should be returned in units of watt-hours
+	 *	time will be returned in units of milliseconds
+	 *	icid - circuit id
+	 *
+	 *	 input string: cmp=mtr&job=readLVA&cid=<cid>;
+	 *	output string: cmp=mtr&job=readLVA&cid=<cid>&power=<power>&time=<time>;
+	 */
+	
+	debugPort.println("reading circuit energy LVA");
+	// actually do something here soon
+	// read circuit energy or something using icid
+	int32_t regVal = 0;
+	
+	// select SPI circuit
+	CSSelectDevice(icid);
+	
+	// read current
+	ADEgetRegister(IRMS, &regVal);
+	debugPort.println("reg read IRMS");
+	debugPort.println(regVal, HEX);
+	
+	// read voltage
+	ADEgetRegister(VRMS, &regVal);
+	debugPort.println("reg read VRMS");
+	debugPort.println(regVal, HEX);
+		
+	// test read of interrupt register
+	ADEgetRegister(RSTSTATUS, &regVal);
+	debugPort.println("reg read RSTSTATUS");
+	debugPort.println(regVal, BIN);
+	
+	//if the CYCEND bit of the Interrupt Status Registers is flagged
+	int8_t retCode;
+	debugPort.print("Waiting for next cycle: ");
+	retCode = ADEwaitForInterrupt(CYCEND, 30000);
+	debugPort.println(RCstr(retCode));
+	
+	// read LVAENERGY value into power
+	int32_t power = 0;
+	ADEgetRegister(LVAENERGY, &power);
+	debugPort.println("reg read LVAENERGY");
+	debugPort.println(power, HEX);
+
+	// test read of interrupt register
+	ADEgetRegister(RSTSTATUS, &regVal);
+	debugPort.println("reg read RSTSTATUS");
+	debugPort.println(regVal, BIN);
+	
+	// deselect SPI circuit
+	CSSelectDevice(DEVDISABLE);
+	
+	// construct and send back response
+	String responseString = "";
+	responseString += "cmp=mtr&";
+	responseString += "job=readLVA&";
+	responseString += "cid=";
+	responseString += icid;
+	responseString += "&power=";
+	responseString += power;
+	responseString += "&time=";
+	responseString += millis();
+	responseString += ";";
+	sheevaPort.println(responseString);		
+}
+
+void jobReadRVA(int icid) {
+	/**	dispatch job read function
+	 *  power should be returned in units of watt-hours
+	 *	time will be returned in units of milliseconds
+	 *	icid - circuit id
+	 *
+	 *	 input string: cmp=mtr&job=read&cid=<cid>;
+	 *	output string: cmp=mtr&job=read&cid=<cid>&power=<power>&time=<time>;
+	 */
+	
+	debugPort.println("reading circuit energy");
+	// actually do something here soon
+	// read circuit energy or something using icid
+	int32_t regVal = 0;
+	
+	// select SPI circuit
+	CSSelectDevice(icid);
+	
+	// read current
+	ADEgetRegister(IRMS, &regVal);
+	debugPort.println("reg read IRMS");
+	debugPort.println(regVal, HEX);
+	
+	// read voltage
+	ADEgetRegister(VRMS, &regVal);
+	debugPort.println("reg read VRMS");
+	debugPort.println(regVal, HEX);
+	
+	//read AENERGY
+	ADEgetRegister(AENERGY, &regVal);
+	debugPort.println("reg read AENERGY");
+	debugPort.println(regVal, HEX);
+	
+	// read VAENERGY
+	ADEgetRegister(VAENERGY, &regVal);
+	debugPort.println("reg read VAENERGY");
+	debugPort.println(regVal, HEX);
+	
+	// read RVAENERGY value into power
+	int32_t power = 0;
+	ADEgetRegister(RVAENERGY, &power);
+	debugPort.println("reg read RVAENERGY");
+	debugPort.println(power, HEX);
+		
+	// deselect SPI circuit
+	CSSelectDevice(DEVDISABLE);
+	
+	// construct and send back response
+	String responseString = "";
+	responseString += "cmp=mtr&";
+	responseString += "job=readRVA&";
+	responseString += "cid=";
+	responseString += icid;
+	responseString += "&power=";
+	responseString += power;
+	responseString += "&time=";
+	responseString += millis();
+	responseString += ";";
+	sheevaPort.println(responseString);	
+}
+
 String getValueForKey(String key, String commandString) {
 	/**
 	 *	given a String for the key value, this function returns the String corresponding
@@ -609,15 +887,19 @@ void meter(String commandString) {
 			debugPort.println(" is off");
 		}
 	}
-	else if (job == "read") {
-		debugPort.println("reading circuit job");
-		// actually do something here soon
-		// read circuit energy or something using icid
+	else if (job == "readRVA") {
+		jobReadRVA(icid);
 	}
-	else if (job == 'A') {
-		_testChannel = icid;
-		softSetup();
+	else if (job == "readLVA") {
+		jobReadLVA(icid);
 	}
+	else if (job == "modeRVA") {
+		setupRVAMode(icid);
+	}
+	else if (job == "modeLVA") {
+		int32_t linecycVal = 1000;
+		setupLVAMode(icid, linecycVal);
+	}	
 	else if (job == "c") {
 		_testChannel = icid;
 		displayChannelInfo();		
