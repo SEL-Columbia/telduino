@@ -1,0 +1,28 @@
+Calibration Procedure
+======================
+
+Overview
+---------
+The goal of the calibration is to ensure that each of the sub-metering components of the circuit are accurate with respect to each other. The important aspect of the test setup is to have an easy and quick process by which we can calibrate many successive setups.
+
+The setup we are proposing will involve a rig that hooks all the inputs and outputs of the metering circuits in parallel. This way, it is possible to switch each circuit individually and measure the same load/source pair. There are 3 important parameters in the calibration process:
+
+1. VRMS (rms voltage)
+2. IRMS (rms current)
+3. Active Energy
+
+There are ADE register offsets that are associated with the above parameters. The other aspect that needs to be determined for each of the parameters is the slope. The slopes are not stored on the ADE. They have to be stored in the firmware on the uC. A two point calibration needs to be performed for each of the parameters in order to determine the slope and offset.
+
+The optimal test points are listed below:
+
+1. Voltage: 120 volts & 240 volts
+2. Current: .1 amps and .8 amps
+3. Power: 12 watts and 96 watts
+
+Test Setup
+----------
+
+1. Two AC sources: at 120V and 240V
+2. Two loads: 2.4k Ohm, 25W and 150 Ohm, 100W
+
+The last requirement is to either have an external calibrated meter that we would use for the test process, or to Calibrate each meter input board and calibrate the rest according to that one.
