@@ -53,3 +53,10 @@ clean:
 program: $(PROJECT).hex
 #	avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
 	avrdude -patmega1280 -c dragon_isp -P usb -Uflash:w:$(PROJECT).hex -B10
+
+programfuses:
+	avrdude -patmega1280 -c dragon_isp -P usb -U lfuse:w:0x7f:m -U hfuse:w:0x91:m -U efuse:w:0xf5:m -B10
+
+readfuses:
+	avrdude -patmega1280 -c dragon_isp -P usb -U hfuse:r:high.txt:r -U lfuse:r:low.txt:r -U efuse:r:ext.txt:r 
+
