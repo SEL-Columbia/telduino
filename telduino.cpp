@@ -91,7 +91,7 @@ void setup()
 	setClockPrescaler(CLOCK_PRESCALER_1);	//Disable prescaler.
 
 	// start up serial ports
-	debugPort.begin(9600);						//Debug serial
+	debugPort.begin(DEBUG_BAUD_RATE);		//Debug serial
 	telitPort.begin(TELIT_BAUD_RATE);		//Telit serial
 	sheevaPort.begin(SHEEVA_BAUD_RATE);
 
@@ -114,7 +114,7 @@ void setup()
 	sd_raw_init();				//SDCard
 	SPI.begin();				//SPI
 
-	SWallOff();
+	SWallOff(); //switch all off.
 	_testChannel = 20;
 
 	//Load circuit data from EEPROM
