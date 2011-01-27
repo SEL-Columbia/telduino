@@ -917,10 +917,7 @@ void meter(String commandString) {
 	 */
     String job = getValueForKey("job", commandString);
     String cid = getValueForKey("cid", commandString);
-	
-	int32_t val = 0;
-	int32_t gainVal = 0x0F;
-	
+		
 	// is there a better way to convert the cid string to int?
 	char cidChar[3];
 	cid.toCharArray(cidChar, 3);
