@@ -21,7 +21,7 @@ Steps to get the Current Metering Working on the Ade
 
 7. FOR CURRENT: .0215 V/A calculated based on calibration measurements.
 
-8. So we want to set the GAIN register to 2x actually.
+8. So we want to set the GAIN register to 2x actually for the Input Daughterboard and higher to either 4x or 8x for the Output daughterboards.
 
 9. With the GAIN set to 2x, the IRMSOS needs to be set to 99 or 0x63
 

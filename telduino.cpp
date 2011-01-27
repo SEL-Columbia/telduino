@@ -304,7 +304,7 @@ void softSetup()
 	debugPort.println(vRmsOsVal, HEX);
 	
 	//set the number of cycles to wait before taking a reading
-	int32_t linecycVal = 200;
+	int32_t linecycVal = 400;
 	ADEsetRegister(LINECYC,&linecycVal);
 	ADEgetRegister(LINECYC,&linecycVal);
 	debugPort.print("int linecycVal:");
@@ -356,7 +356,7 @@ void displayChannelInfo() {
 	
 	//if the CYCEND bit of the Interrupt Status Registers is flagged
 	debugPort.print("Waiting for next cycle: ");
-	retCode = ADEwaitForInterrupt(CYCEND,4000);
+	retCode = ADEwaitForInterrupt(CYCEND,10000);
 	debugPort.println(RCstr(retCode));
 
 	ifsuccess(retCode) {
@@ -370,7 +370,7 @@ void displayChannelInfo() {
 		
 		//IRMS SECTION
 		debugPort.print("mAmps IRMS:");
-		debugPort.println( RCstr(ADEgetRegister(IRMS,&val)) );
+		debugPort.println(RCstr(ADEgetRegister(IRMS,&val)) );
 		iRMS = val/iRMSSlope;//data*1000/40172/4;
 		debugPort.println(iRMS);
 		
@@ -393,8 +393,6 @@ void displayChannelInfo() {
 		debugPort.print("Calculated apparent power usage:");
 		debugPort.println(energyJoules/2);
 		
-		//THIS IS NOT WORKING FOR SOME REASON
-		//WE NEED TO FIX THE ACTIVE ENERGY REGISTER AT SOME POINT
 		//ACTIVE ENERGY SECTION
 		ifsuccess(ADEgetRegister(LAENERGY,&val)) {
 			debugPort.print("int Line Cycle Active Energy after 200 half-cycles:");
@@ -402,15 +400,8 @@ void displayChannelInfo() {
 		} else {
 			debugPort.println("Line Cycle Active Energy read failed.");
 		}
-		
-/*		iRMS = data/161;//data*1000/40172/4;
-		debugPort.print("mAmps IRMS:");
-		debugPort.println(iRMS);
-*/
-		
-		delay(500);
 	} //end of if statement
-
+	
 	CSSelectDevice(DEVDISABLE);
 }
 
