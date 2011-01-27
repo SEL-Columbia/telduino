@@ -969,6 +969,10 @@ void meter(String commandString) {
 	}
 	else if (job == "modeLVA") {
 		int32_t linecycVal = 1000;
+		String linecyc = getValueForKey("linecyc", commandString);
+		char linecycChar[8];
+		linecyc.toCharArray(linecycChar, 8);
+		linecycVal = atoi(linecycChar);
 		setupLVAMode(icid, linecycVal);
 	}
 	else if (job == "modeDefault") {
