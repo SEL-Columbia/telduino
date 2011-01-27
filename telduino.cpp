@@ -69,6 +69,7 @@ void loop();
 void softSetup();
 void setupLVAMode(int icid, int32_t linecycVal);
 void setupRVAMode(int icid);
+void setupDefaultMode(int icid);
 void jobReadLVA(int icid);
 void jobReadRVA(int icid);
 void displayChannelInfo(); 
@@ -635,6 +636,41 @@ void setupLVAMode(int icid, int32_t linecycVal) {
 	
 }
 
+void setupDefaultMode(int icid) {
+	int32_t modeReg = 0;
+	CSSelectDevice(icid); 
+	
+	// read bits before write
+	ADEgetRegister(MODE,&modeReg);
+	debugPort.print("MODE register before setting default:");
+	debugPort.println(modeReg, BIN);
+	
+	// set all MODE bits to default
+	modeReg &= ~DISHPF;
+	modeReg &= ~DISHPF2; 
+	modeReg |=  DISCF;
+	modeReg |=  DISSAG; 
+	modeReg &= ~ASUSPEND;
+	modeReg &= ~TEMPSEL;
+	modeReg &= ~SWRST;
+	modeReg &= ~CYCMODE;	
+	modeReg &= ~DISCH1;
+	modeReg &= ~DISCH2;	
+	modeReg &= ~SWAP;
+	modeReg &= ~DTRT_0;	
+	modeReg &= ~DTRT1_;	
+	modeReg &= ~WAVESEL_0;
+	modeReg &= ~WAVESEL1_;
+
+	// verify bits
+	ADEsetRegister(MODE,&modeReg);
+	ADEgetRegister(MODE,&modeReg);
+	debugPort.print("MODE register after setting default:");
+	debugPort.println(modeReg, BIN);
+	
+	CSSelectDevice(DEVDISABLE);
+}
+
 void setupRVAMode(int icid) {
 	/**
 	 *	this function aspires to setup the registers correctly for the accumulation
@@ -922,7 +958,10 @@ void meter(String commandString) {
 	else if (job == "modeLVA") {
 		int32_t linecycVal = 1000;
 		setupLVAMode(icid, linecycVal);
-	}	
+	}
+	else if (job == "modeDefault") {
+		setupDefaultMode(icid);
+	}
 	else if (job == "c") {
 		_testChannel = icid;
 		displayChannelInfo();		
