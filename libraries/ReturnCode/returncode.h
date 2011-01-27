@@ -11,6 +11,8 @@ extern "C"{
 #define RCreset() (_retCode = SUCCESS)
 #define ifnsuccess(X) if ((X) != SUCCESS)
 #define ifsuccess(X) if ((X) == SUCCESS)
+//later on retCode will be replaced with a local _retCode
+#define retCodeRetry(X,N) {int __retries = -1; while(__retries++ < (N) && (X) != SUCCESS); }
 
 static const int8_t SUCCESS =	0;
 static const int8_t FAILURE =	1;

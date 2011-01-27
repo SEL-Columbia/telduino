@@ -131,6 +131,7 @@ int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit);
 int8_t ADEperToFreq(int32_t period);
 void ADEreset();
 
+#define RETRIES 3
 //Sample circuit functions
 //Get stuff
 

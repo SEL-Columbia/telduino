@@ -61,13 +61,15 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 	uint32_t rawData = 0;
 	uint8_t nBytes = (reg.nBits+7)/8;
 	uint32_t chksum = 0;
+	int8_t retries = RETRIES;
 
 	ADEreadData(reg, &rawData);
 	ADEreadData(CHKSUM,&chksum);
-
 	if (ADEchksum(rawData) != ((uint8_t*)&chksum)[3]) {
 		//for some reason this is returning FALURE and not commerr
 		retCode = COMMERR;
+	} else {
+		retCode = SUCCESS;
 	}
 	/*
 	Serial1.print("ADEgetRegister rawData: ");
@@ -103,12 +105,12 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 		} else {
 			*regValue = rawData;
 		}*/
+		retCode = FAILURE;
 	}
 
 	/*Serial1.println("ADEgetRegister EXIT");*/
 	return retCode;
 }
-
 
 /**
 *	
@@ -257,6 +259,7 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 			if (retCode == SUCCESS && (status & regMask)) {
 				return SUCCESS;
 			}
+
 			//Wait between reads
 			for (int i=0; i<10; i++); 
 

@@ -134,6 +134,17 @@ void loop()
 void parseBerkeley() 
 {
 	setDbgLeds(GYRPAT);
+	debugPort.print(_testChannel,DEC);
+	debugPort.print(" $");
+	debugPort.println();
+	while (debugPort.available() == 0);
+	/**
+	if (_testChannel > 10) {
+		debugPort.print("\b");
+	}
+	debugPort.print("\b\b");
+	*/
+
 	// Look for incoming single character command on debugPort line
 	// Capital letters denote write operations and lower case letters are reads
 	if (debugPort.available() > 0) {
@@ -187,10 +198,8 @@ void parseBerkeley()
 					break;
 				} 
 			}
-		} else if (incoming == 'C') {		//Chance active channel
+		} else if (incoming == 'C') {		//Change active channel
 			_testChannel = getChannelID();	
-		} else if (incoming == 'c') {		//Read channel using Achintya's code
-			displayChannelInfo();
 		} else if (incoming == 'S') {		//Toggle channel circuit
 			int8_t ID = getChannelID();		
 			SWset(ID,!SWisOn(ID));
@@ -201,8 +210,10 @@ void parseBerkeley()
 		} else if (incoming == 'R') {		//Hard Reset using watchdog timer
 			wdt_enable((WDTO_4S));			
 			Serial1.println("resetting in 4s.");
-		} else if (incoming == 'r') {		//soft Reset using the Setup routine
+		} else if (incoming == 'O') {		//soft Reset using the Setup routine
 			softSetup();					//Set calibration values for ADE
+		} else if (incoming == 'o') {		//Read channel using Achintya's code
+			displayChannelInfo();
 		} else if (incoming == 'P') {		//Program values in ckts[] to ADE
 			for (int i = 0; i < NCIRCUITS; i++) {
 				Circuit *c = &(ckts[i]);
@@ -251,6 +262,8 @@ void parseBerkeley()
 			debugPort.println("'");
 		}
 	}
+
+
 	setDbgLeds(0);
 }
 

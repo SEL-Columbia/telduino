@@ -7,6 +7,8 @@
 #include "ADE7753/ADE7753.h"
 
 #define dbg Serial1
+#define waitTime 8000
+
 /**
     Calibrate circuit interactively using serial port. 
 	This function leaves the circuit off after completion.
@@ -68,6 +70,7 @@ int8_t calibrateCircuit(Circuit *c)
 	
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
+	ADEwaitForInterrupt(WSMP,waitTime);
 	retCode = ADEgetRegister(WAVEFORM,&regData);
 	ifnsuccess(retCode) return retCode;
 	dbg.print("CHVwaveform:");dbg.println(regData);
@@ -113,7 +116,7 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.println(IhighMeas,DEC);
 
 	//get VRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,8000);
+	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
@@ -122,7 +125,7 @@ int8_t calibrateCircuit(Circuit *c)
 	ifnsuccess(retCode = ADEgetRegister(VRMS,&VlowCkt)) return retCode;
 
 	//get IRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,8000);
+	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
 		dbg.println("Failed to sense cycles. Is a 240VAC 50Hz source connected?");
@@ -159,7 +162,7 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.println(IlowMeas,DEC);
 
 	//get VRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,8000);
+	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
@@ -168,7 +171,7 @@ int8_t calibrateCircuit(Circuit *c)
 	ifnsuccess(retCode = ADEgetRegister(VRMS,&VhighCkt)) return retCode;
 
 	//get IRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,8000);
+	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
 		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
