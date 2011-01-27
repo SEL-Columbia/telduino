@@ -140,8 +140,8 @@ void parseBerkeley()
 	setDbgLeds(GYRPAT);
 	debugPort.print(_testChannel,DEC);
 	debugPort.print(" $");
-	debugPort.println();
 	while (debugPort.available() == 0);
+	debugPort.println();
 	/**
 	if (_testChannel > 10) {
 		debugPort.print("\b");
@@ -258,12 +258,22 @@ void parseBerkeley()
 			debugPort.println("Load Complete");
 		}
 		else {								//Indicate received character
+			int waiting = 2048;				//Used to eat up junk that follows
 			debugPort.print("\n\rNot_Recognized:");
 			debugPort.print(incoming,BIN);
-			debugPort.print(":");
-			debugPort.print("'");
+			debugPort.print(":'");
 			debugPort.print(incoming);
 			debugPort.println("'");
+			while (debugPort.available() || waiting > 0) {
+				if (debugPort.available()) {
+					incoming = debugPort.read();
+					debugPort.print("\n\rNot_Recognized:");
+					debugPort.print(incoming,BIN);
+					debugPort.print(":'");
+					debugPort.print(incoming);
+					debugPort.println("'");
+				} else 	waiting--;
+			}
 		}
 	}
 
