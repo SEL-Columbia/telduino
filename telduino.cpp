@@ -762,25 +762,27 @@ void jobReadLVA(int icid) {
 	CSSelectDevice(icid);
 	
 	// read current
-	ADEgetRegister(IRMS, &regVal);
+	int32_t irms = 0;
+	ADEgetRegister(IRMS, &irms);
 	debugPort.println("reg read IRMS");
-	debugPort.println(regVal, HEX);
+	debugPort.println(irms, HEX);
 	
 	// read voltage
-	ADEgetRegister(VRMS, &regVal);
+	int32_t vrms = 0;
+	ADEgetRegister(VRMS, &vrms);
 	debugPort.println("reg read VRMS");
-	debugPort.println(regVal, HEX);
-		
-	// test read of interrupt register
-	ADEgetRegister(RSTSTATUS, &regVal);
-	debugPort.println("reg read RSTSTATUS");
-	debugPort.println(regVal, BIN);
+	debugPort.println(vrms, HEX);
 	
 	//if the CYCEND bit of the Interrupt Status Registers is flagged
 	int8_t retCode;
 	debugPort.print("Waiting for next cycle: ");
-	retCode = ADEwaitForInterrupt(CYCEND, 30000);
+	retCode = ADEwaitForInterrupt(CYCEND, 90000);
 	debugPort.println(RCstr(retCode));
+	
+	// test read of interrupt register
+	ADEgetRegister(RSTSTATUS, &regVal);
+	debugPort.println("reg read RSTSTATUS");
+	debugPort.println(regVal, BIN);
 	
 	// read LVAENERGY value into power
 	int32_t power = 0;
@@ -802,6 +804,10 @@ void jobReadLVA(int icid) {
 	responseString += "job=readLVA&";
 	responseString += "cid=";
 	responseString += icid;
+	responseString += "&irms=";
+	responseString += irms;
+	responseString += "&vrms=";
+	responseString += vrms;	
 	responseString += "&power=";
 	responseString += power;
 	responseString += "&time=";
@@ -829,14 +835,16 @@ void jobReadRVA(int icid) {
 	CSSelectDevice(icid);
 	
 	// read current
-	ADEgetRegister(IRMS, &regVal);
+	int32_t irms = 0;
+	ADEgetRegister(IRMS, &irms);
 	debugPort.println("reg read IRMS");
-	debugPort.println(regVal, HEX);
+	debugPort.println(irms, HEX);
 	
 	// read voltage
-	ADEgetRegister(VRMS, &regVal);
+	int32_t vrms = 0;
+	ADEgetRegister(VRMS, &vrms);
 	debugPort.println("reg read VRMS");
-	debugPort.println(regVal, HEX);
+	debugPort.println(vrms, HEX);
 	
 	//read AENERGY
 	ADEgetRegister(AENERGY, &regVal);
@@ -865,6 +873,10 @@ void jobReadRVA(int icid) {
 	responseString += icid;
 	responseString += "&power=";
 	responseString += power;
+	responseString += "&irms=";
+	responseString += irms;
+	responseString += "&vrms=";
+	responseString += vrms;
 	responseString += "&time=";
 	responseString += millis();
 	responseString += ";";
