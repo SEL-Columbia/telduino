@@ -59,5 +59,7 @@ programfuses:
 	avrdude -patmega1280 -c dragon_isp -P usb -U lfuse:w:0x5E:m -U hfuse:w:0x91:m -U efuse:w:0xf5:m -B10
 
 readfuses:
-	avrdude -patmega1280 -c dragon_isp -P usb -U hfuse:r:high.txt:r -U lfuse:r:low.txt:r -U efuse:r:ext.txt:r 
+	avrdude -patmega1280 -c dragon_isp -P usb -U hfuse:r:high.txt:r -U lfuse:r:low.txt:r -U efuse:r:ext.txt:r
+	hexdump high.txt low.txt ext.txt
+	rm -f high.txt low.txt ext.txt
 
