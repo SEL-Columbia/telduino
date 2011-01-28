@@ -1,4 +1,4 @@
-           /*AVR SOURCE FILES FOR GSM,SERIAL FUNCTIONALITY*\
+/*AVR SOURCE FILES FOR GSM,SERIAL FUNCTIONALITY
 *                                                                     1%*
 * Copyright (C) 2010  Justin Downs of GRounND LAB   			*
 * www.GroundLab.cc                                  			*
@@ -15,13 +15,13 @@
 *                                                                       *
 * You should have received a copy of the GNU General Public License     *
 * with this program.  If not, see <http://www.gnu.org/licenses/>.       *
-***************************************************/
++***********************************************************************/
 
 #ifndef GSMSMS
 #define GSMSMS
 #include "gsmbase.h"
 
-class gsmSMS : virtual protected GSMbase
+class gsmSMS : virtual public GSMbase
 {
 
 				//**FULL FUNC DESCRIPTION IN SOURCE**\\
@@ -33,6 +33,7 @@ class gsmSMS : virtual protected GSMbase
 	inline const char* const getMessageList(){return messageList;}
 	////////////////////////////INIT FUNC
 	virtual bool init(uint16_t);					//INITS, CALLS BASE INIT
+	bool smsInit();							//called in init, for derived class
 	////////////////////////////SEND FUNC
 	bool sendNoSaveCMGS(const char*,const char*);			//Send message no save
 	const char* const saveMessageCMGW(const char*,const char*);	//Send to memory

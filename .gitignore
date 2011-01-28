@@ -1,0 +1,6 @@
+build
+cruft
+*.o
+*.elf
+*.hex
+*.swp

@@ -1,0 +1,62 @@
+Steps to get the Current Metering Working on the Ade
+=====================================================
+
+1. Set the MSB of CH1OS register to 1. This enables the digital integrator on that channel and thus lets us use the di/dt sensor.
+	
+	After setting this value, CH1OS = 0x01
+
+2. Check the Gain Register. We want 1x gain and full range on both analog channels
+
+	Right now GAIN = 0x00
+
+3. Full range for the current wave form is (0xD7AE14 to 0 to 0x2851EC) in increasing order. This is 0x2851EC (+2,642,412d) and 0xD7AE14 (–2,642,412d).
+
+	So its a 24bit 2's complement number with some subtleties.
+
+4. The di/dt sensor + integrator adds noise component at 20db per decade so we need to make sure that there is a total filtering of 40 db per decade.
+
+5. To Correct the offset: To measure the offset of the rms measurement, two data points are needed from non-zero input values, for example, the base current, Ib, and Imax/100. The offset can be calculated from these measurements.
+
+6. FOR CURRENT: With the specified full-scale analog input signal of 0.5 V, the ADC produces an output code that is approximately ±2,642,412d—see the Channel 1 ADC section. The equivalent rms value of a full-scale ac signal are 1,868,467d (0x1C82B3).
+
+7. FOR CURRENT: .0215 V/A calculated based on calibration measurements.
+
+8. So we want to set the GAIN register to 2x actually.
+
+9. With the GAIN set to 2x, the IRMSOS needs to be set to 99 or 0x63
+
+Voltage Metering
+=================
+
+1. FOR VOLTAGE: With the specified full-scale ac analog input signal of 0.5 V, the output from the LPF1 swings between 0x2518 and 0xDAE8 at 60 Hz—see the Channel 2 ADC section. The equivalent rms value of this full-scale ac signal is approximately 1,561,400 (0x17D338) in the VRMS register.
+
+2. Right now the peak to peak on each channel of the input voltage appears to be 0.5V. This means that we need to be at a higher voltage divider ratio in order to measure 250V **rms**.
+
+3. The slope is 9168.4696 counts/Volt.
+
+4. To minimize the noise effect in the reading, synchronize the rms reading with the zero crossings of the voltage input.
+
+5. To calculate VRMSOS, we need Vnomial = 85 V (VRMSnom = 777551) and Vnominal/10 = 8.5V (VRMSnom/10 = 78225).
+	So, VRMSOS = (V1*VRMS2 - V2*VRMS1)/(V2 - V1) = -522 = 0b110111110110 = 0xDF6
+
+6. We want to use Positive-only accumulation mode by setting the MSB of the mode register (MODE[15]). This is normally set off.
+
+
+Steps to calibrate the Power/Energy readings of the ADE
+========================================================
+
+1. There are two registers to adjust for the active power measurement: APOS and WGAIN.
+
+2. First, the line accumulation mode and the line accumulation interrupt should be enabled. Next, the number of half line cycles for the energy accumulation is written to the LINECYC register. This sets the accumulation time. Reset the interrupt status register and wait for the line cycle accumulation interrupt. Also the CYCMODE bit in the mode register needs to be enabled.
+
+3. When LINECYC half line cycles have elapsed, the IRQ pin goes active low and the nominal LAENERGY with the test current applied can be read. This LAENERGY value is compared to the expected LAENERGY value to deter- mine the WGAIN value.
+
+4. If apparent energy gain calibration is performed at the same time, LVAENERGY can be read directly after LAENERGY. Both registers should be read before the next interrupt is issued on the IRQ pin. 
+
+Test Setup
+===========
+
+1. Test Points required: 
+	1. 0.01 and 5 amps
+	2. 12 and 120 volts
+	3. 2.4 watts to 24? watts

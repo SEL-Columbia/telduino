@@ -7,8 +7,12 @@ gsmSMS::gsmSMS(Serial& _telit, uint32_t (*_millis)(), Serial* _debug)
 
 //////////////////////////////////////////////////////////////////////INIT FUNC
 bool gsmSMS::init(uint16_t _band){
-	GSMbase::init(_band);
-DebugPort->write("gsm INT");
+	if(GSMbase::init(_band) && smsInit()) return 1;
+return 0;
+}
+
+bool gsmSMS::smsInit(){
+	
 	if(!sendRecQuickATCommand("AT+CMGF=1")) return 0;             	// set tesxt mode not PDU	
 	//Configuration for receive/send SMS
 	if(!sendRecQuickATCommand("AT#SMSMODE=0")) return 0;		// set extended smsmode off
@@ -18,7 +22,7 @@ DebugPort->write("gsm INT");
 	//<buffer notification>, <no notification sent to DTE>, 
 	//<no brodcast notification>,<no status notification>, 
 	//<when buffering switches state flushes all stored notification to DTE >
-
+    
 return 1;
 }
 //////////////////////////////////////////////////////////////////////INIT FUNC*

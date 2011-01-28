@@ -12,19 +12,34 @@
 # $@ first name of target of rule
 # $*
 
-CLOCK = 8000000L
+CLOCK = 16000000L
 PROJECT = telduino
-GCCFLAGS = -c -g -Os -w -ffunction-sections -fdata-sections -Ilibraries/GSM
-G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries/GSM
-VPATH = libraries/GSM
-GRND_OBJECTS = gsm.o gsmSMS.o ioHelper.o serial2.o timer.o $(PROJECT).o
+GCCFLAGS = -c -g -Os -w -std=c99 -ffunction-sections -fdata-sections -Ilibraries
+G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
 
-all : GRND program
+#GCCFLAGS = -c -g -Os -w -std=c99 -Ilibraries
+#G++FLAGS = -c -g -Os -w -fno-exceptions -Ilibraries
+VPATH = libraries/arduino libraries/Demux libraries/ShiftRegister\
+    libraries/SPI libraries/DbgTel libraries/Select \
+    libraries/ADE7753 libraries/Switches \
+	libraries/ReturnCode \
+	libraries/Circuit libraries/sd-reader
+#libraries/SDRaw 
+#libraries/GSM 
 
-GRND : $(GRND_OBJECTS)
-	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(GRND_OBJECTS) -Llibraries/GSM -lm
-	avr-objcopy -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
-	#avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
+OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_digital.o \
+	wiring_pulse.o wiring_shift.o Demux.o shiftregister.o main.o \
+	HardwareSerial.o Print.o WMath.o WString.o SPI.o ADE7753.o \
+	DbgTel.o select.o switches.o returncode.o circuit.o calibration.o\
+    byteordering.o fat.o partition.o sd_raw.o $(PROJECT).o 
+#gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o
+
+all : hex program #clean
+
+hex : $(OBJECT_FILES)
+	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(OBJECT_FILES) -Llibraries -lm
+	avr-objcopy -j .text -j .data -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
+	avr-size -C --mcu=atmega1280 $(PROJECT).elf 
 
 %.o : %.c
 	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@
@@ -33,7 +48,8 @@ GRND : $(GRND_OBJECTS)
 	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@
 
 clean:
-	rm *.o *.elf *.eep *.hex
+	rm *.o *.elf *.hex
 
 program: $(PROJECT).hex
-	avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
+#	avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
+	avrdude -patmega1280 -c dragon_isp -P usb -Uflash:w:$(PROJECT).hex -B10

@@ -35,13 +35,15 @@ uint32_t timer0::millis()
 	return mill;
 }
 
-bool timer0::delay(uint16_t delayMils){
-	static uint64_t oldTime;
-	uint64_t nowTime = millis();
-	if ( (nowTime - oldTime) > delayMils ){
-		oldTime=nowTime;
-		return true;
-	}return false;
+bool timer0::delay(uint32_t delayMils){
+	// catch time that function was called
+	uint32_t nowTime = millis();
+	// block until delayMils has elapsed
+	while (1) {
+		if ( (millis() - nowTime) > delayMils ){
+			return true;
+		}
+	}
 }
 
 //interupt declaration

@@ -1,5 +1,5 @@
-          #AVR SOURCE FILES FOR GSM,SERIAL FUNCTIONALITY#
-#                                                                     1%#
+#AVR SOURCE FILES FOR GSM,SERIAL FUNCTIONALITY#\
+#                                                                   1%  #
 # Copyright (C) 2010  Justin Downs of GRounND LAB                       #
 # www.GroundLab.cc                                                      #
 #                                                                       #
@@ -15,7 +15,7 @@
 #                                                                       #
 # You should have received a copy of the GNU General Public License     #
 # with this program.  If not, see <http://www.gnu.org/licenses/>.       #
-##################################################
+##################################################/
 
 
 
@@ -28,19 +28,16 @@
 ###GCC COMPILER########
 CXX=avr-g++
 MMCU = -mmcu=atmega1280 
-#CPPFLAGS = -I Include $(MMCU) -Wall -DF_CPU=8000000 # -Wstrict-prototypes
-CPPFLAGS = -I libraries/GSM $(MMCU) -Wall -DF_CPU=8000000 # -Wstrict-prototypes
+CPPFLAGS = -I Include $(MMCU) -Wall -DF_CPU=8000000 # -Wstrict-prototypes
 ALLCPPFLAGS = -Os $(CPPFLAGS)
 #use to link in libs -L tells directory -l tells lib name
 LINKFLAG = 
 Source=Source
 #VPATH = Source Include
-#vpath %.h Include #specify directory to look for .h files
-vpath %.h libraries/GSM #specify directory to look for .h files
-#vpath %.cpp Source #same .cpp
-vpath %.cpp libraries/GSM #same .cpp
+vpath %.h Include #specify directory to look for .h files
+vpath %.cpp Source #same .cpp
 # get all cpp files from Source directory
-SRCFiles=  $(wildcard $(libraries/GSM)/*.cpp)
+SRCFiles=  $(wildcard $(Source)/*.cpp)
 # create object file name targets
 OBJ= $(SRCFiles:.cpp=.o)
 
@@ -51,18 +48,6 @@ CHIP= m1280
 
 #all in one
 all: build upload
-
-# Uses elf file as target for a basic compile,
-# all cpp files get turned to o files and linked as dependents
-build: outMain.elf
-
-#Compile and link all o files into the main elf file
-outMain.elf: $(notdir $(OBJ))
-	$(CXX) $(MMCU) -o outMain.elf  $^ $(LINKFLAG)
-
-#Compile with outlinking all cpp files
-.cpp.o:
-	$(CXX) $(ALLCPPFLAGS) -c  $< -o $(notdir $@)
 
 upload: outMain.hex
 	avrdude -B10 -p $(CHIP) -c avrispmkII -P usb -U flash:w:$< 
@@ -78,7 +63,17 @@ debugASM.s : outMain.elf
 	avr-objdump -S -h $< > $@ 
 	avr-size outMain.elf
 
+# Uses elf file as target for a basic compile,
+# all cpp files get turned to o files and linked as dependents
+build: outMain.elf
 
+#Compile and link all o files into the main elf file
+outMain.elf: $(notdir $(OBJ))
+	$(CXX) $(MMCU) -o outMain.elf  $^ $(LINKFLAG)
+
+#Compile with outlinking all cpp files
+.cpp.o:
+	$(CXX) $(ALLCPPFLAGS) -c  $< -o $(notdir $@)
 
 # Rule how to process a cpp file into a make.d target
 # if it is out of date or not found

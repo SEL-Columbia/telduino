@@ -4,12 +4,12 @@
 #include <inttypes.h>
 
 class timer0{
-public:
-volatile uint64_t millis_count;  //init to 0
-timer0();
-//static void init();
-uint32_t millis();
-bool delay(uint16_t delayMils);
+	public:
+		volatile uint32_t millis_count;  //init to 0
+		timer0();
+		//static void init();
+		uint32_t millis();
+		bool delay(uint32_t delayMils);
 };
 
 extern timer0 Timer0;

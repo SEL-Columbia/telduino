@@ -1,5 +1,7 @@
 #include "gsmbase.h"
 
+//TODO use statically allocated buffer instead of dynamic memory
+
 //with debug
 GSMbase::GSMbase(Serial& _telit ,
 uint32_t(*_millis)(),Serial* _debug) 
@@ -60,7 +62,6 @@ return	(parseSplit(const_cast<char*>(catchTelitData()),_delimiters,_field));		//
 
 
 
-
 //////////////////////////////////////////////////////////////////////PARSE FUNCS
 //finds the objectOfDesire string in theString if it is ! a NULL pointer
 bool GSMbase::parseFind(const char* const theString
@@ -69,55 +70,97 @@ bool GSMbase::parseFind(const char* const theString
 return strstr(theString,objectOfDesire);
 }
 
+
 //Main function which retrives data from serial buffer and puts it into 
 //fullData, which has class scope.
-const char* const GSMbase::catchTelitData(uint32_t _timeout, bool quickCheck){
+const char* const GSMbase::catchTelitData(uint32_t _timeout, 
+										  bool quickCheck,
+										  uint16_t dataSize,
+										  uint32_t baudDelay){
+	//DebugPort->write("GSMbase::catchTelitData\r\n");
+	//memory allocation issue with realloc writes over itself and malloc fragments the SRAM with
+	//too many calls I tried for a happy medium but unless i know your program flow this is the 
+	//best I can do.
+	free(fullData);
+	fullData=NULL;
+	if (quickCheck) dataSize=256; //If it is just a quick check max size is "/n/nERROR/n/n/0"
 	
+	char* storeData = (char*) 
+	malloc(sizeof(char) * (dataSize));
+	
+	if (storeData == NULL){		//if we get bad memory
+								//DebugPort->write("bad memory malloc 1\r\n");
+		return 0;
+	}
+
 	// block wait for reply
-	uint64_t startTime = millis();			//9600/1000= 9.6bits per milli 6 milles ~6 bytes
+	uint64_t startTimeGlobal = millis();		//9600/1000= 9.6bits per milli 6 milles ~6 bytes
 	while (telitPort.available() < 1){ 		// smallest message "<CR><LF>OK<CR><LF>"    
-		if((millis() - startTime) > 
-		_timeout)return 0; 			// timed out bad message
+		if((millis() - startTimeGlobal) > _timeout){ 
+			//DebugPort->write("returning from global timeout\r\n");
+			return 0;
+		} 			// timed out bad message
 	}
 
-	//If serial data, get mem and fill 
-	//with telitData.
-	free(fullData);                  		//If it has been allocated Free the memory
-	fullData = (char*) malloc(sizeof(char));  	//Get memory, call free or it blows real quick
-	if (fullData == NULL)return 0;             	//If we couldn't get mem
-	
 	uint16_t dataPos=0;
-	uint16_t baudDelay=60;				//if no data in 60 milli sendings done
+	uint64_t startTimeBaud;
+	//if no data in 60 milli (baudDelay default) sendings done
 	while (1){
-		fullData[dataPos] = telitPort.read();	//Read out serial register
-DebugPort->write(fullData[dataPos]);
-		fullData = (char*)(realloc(fullData,
-		(++dataPos + 1) * sizeof(char)));	//Re alloc fullData
-		
-		if (fullData == NULL)return 0; 		//If we had a bad realloc blow up
-	
-		startTime = millis();			
-		while (telitPort.available() < 1){ 			
-		if((millis() - startTime) > 
-		baudDelay){goto doneReceive;} 		// if no data in x time goto doneReceive
+		if ((dataPos+1) >= dataSize) {
+			DebugPort->write("returning from overflow check\r\n");
+			return 0;			//don't overflow buffer
 		}
+		storeData[dataPos++] = telitPort.read();	//Read out serial register
+//		DebugPort->write(":");
+		DebugPort->write(storeData[dataPos-1]);
+//		DebugPort->write("\n");
+		startTimeBaud = millis();			
+		while (telitPort.available() < 1){ 						
+			if((millis() - startTimeBaud) > baudDelay){	//if no more data is coming
 
+				storeData[dataPos]= '\0';		//Add NULL for a string
+				//If it is a small amount of data 
+				//we can afford to cut it down.		
+				if (dataPos < 500){	//500 seems to be the threshold with nothing else running	
+					free(fullData);
+					fullData=NULL;
+					//DebugPort->write("end of receiving\r\n");
+					
+					fullData = (char*) 
+					malloc(sizeof(char) * (dataPos+1));
+					
+					if (fullData == NULL) {
+						//DebugPort->write("bad memory malloc 1\r\n");
+						return 0;
+					}
+					memcpy(fullData,storeData,dataPos+1);
+					free(storeData);
+					storeData=NULL;
+				}else fullData=storeData; //ELSE we just copy over the whole thing
+				goto doneReceive;
+			}	
+			
+		} //No data in x time goto doneReceive, based on baud delay
 	}
-doneReceive:
-	fullData[dataPos]= '\0';		//NULL for a string
 	
+	doneReceive:
+		//DebugPort->write("after doneReceive\r\n");
+		//DebugPort->write(fullData);
 	if(quickCheck){
-	if (parseFind(fullData, "\r\nOK\r\n")){ DebugPort->write("G\n"); return fullData;} 	//return fullData
-	else if (parseFind(fullData,"ERROR")){ DebugPort->write("B\n"); return 0;}   	//return NULL
-	else return 0;		
+//		if (parseFind(fullData, "\r\nOK\r\n")) {
+		if (parseFind(fullData, "OK")) {
+			//DebugPort->write("is ok\r\n");
+			return fullData; 	//return fullData
+		}
+		else if (parseFind(fullData,"ERROR")) {
+			//DebugPort->write("is not ok\r\n");
+			return 0;   		//return NULL
+		}
+		else return 0;		
 	}
-
-	//else telitPort.flush();}			//bad flush all
-//DebugPort->write("FULL DATA: \n");
-//DebugPort->write(fullData);
-//DebugPort->write(" END\n");
 
 return fullData;
+
 }
 
 //Sends AT command parses reply, makes string from the passed in strings
@@ -128,33 +171,32 @@ return fullData;
 //returns a pointer to "quick brown"
 const char* const GSMbase::parseData(const char* const theString,const char* start,
 const char* end){
-//DebugPort->write("parseData\n ");
 	if (!theString) return 0;                       // If we get a NULL pointer bail	
 
 	size_t startSize = strlen(start);		// get size of string 
 	char* startP = strstr (theString,start);        // looks for string gives pointer including look
+	if(!startP) return 0;				// If we didn't find begining of string *MEM LEAK IF TAKEN OUT*
 	startP+=startSize;                              // offset (gets rid of delim)
 	char* endP = strstr ((startP),end);             // starts at startP looks for END string
-	
-	
+	if(!endP) return 0;				// We didn't find end 			*MEM LEAK IF TAKEN OUT*
 	free(parsedData);          			// if it has been allocated, Free the memory
-	parsedData = (char*) malloc(sizeof(char));      // get memory, call free or it blows real quick
-	if (parsedData == NULL) return 0;            	// if we couldn't get mem
+	parsedData=NULL;
+	parsedData = (char*) malloc((size_t)(sizeof(char)*(endP-startP)+1));      // get memory 
+	if (parsedData == NULL) {
+	return 0;
+	}            					// if we couldn't get mem
 	
 	uint16_t dataPos=0;
 	while ( startP != endP ){			// grab between starP and endP
-		parsedData[dataPos]= *startP++;
-		parsedData = (char*)
-		(realloc(parsedData,(++dataPos + 1)
-		 * sizeof(char)));                	// re allocate mem
-		if (parsedData == NULL) return 0;     	// if we had a bad realloc die quietly
+		parsedData[dataPos++]= *startP++;
 	}
 	parsedData[dataPos]= '\0';                      // NULL to make a proper string
 return parsedData;					// gives back what it can. parsData has class scope.
 }
 
-//Sends AT command splits data according to delimeter
+//Splits data according to delimeter
 //EG
+//(THE FIELDS     0     1      2     3     4  )
 //input string: "the, quick: brown, blah: blah,"
 //_delimiters string ",:"
 //field: 2
@@ -172,6 +214,8 @@ const char* delimiters,uint16_t field){
      	}
 
 	free(parsedData);          			// if it has been allocated Free the memory
+	parsedData=NULL;
+	if(!temp)return 0;				// if we didn't find anything return NULL
 	parsedData =  (char*) malloc(sizeof(char)* (strlen(temp)+1));   // get mem +'\0'
 	if (parsedData == NULL) return 0;    				// If we get a NULL pointer 
 	strcpy(parsedData,temp);                                    	// copy to parsedData, it has class scope
@@ -182,27 +226,32 @@ return parsedData;
 //////////////////////////////////////////////////////////////////////PARSE FUNCS*
  
 
-//////////////////////////////////////////////////////////////////////INIT FUNCS
+//////////////////////////////////////////////////////////////////////HARDWARE FUNCS
 //This is the only function to be re written for arduino
 //you would need to include the wiring.h and binary.h 
 //in header file and #define _cplusplus
 #define OnOffPin PA0
 bool GSMbase::turnOn(){
+	DebugPort->write("GSMbase::turnOn()\r\n");
 	if(sendRecQuickATCommand("AT")) return 1;		// the power is already on
 	setOutput(DDRA,OnOffPin); 				// set direction register pin
+											//pinMode(22, OUTPUT);
 	uint64_t startTime; 
 	while(1){
+		DebugPort->write("GSMbase::turnOn() top of while loop\r\n");
 		outputHigh(PORTA,OnOffPin); 			// bring pin high
-	 	startTime = millis();		
+												//digitalWrite(22, HIGH);
+		startTime = millis();		
 		while ((millis() - startTime) < 3000); 		// block 3 seconds
 		outputLow(PORTA,OnOffPin);			// bring pin low
-
+											//digitalWrite(22, LOW);
+		
 		startTime = millis();		
 		while ((millis() - startTime) < 10000);		// block 10 seconds
 		if(sendRecQuickATCommand("AT")) return 1;	//set no echo if you get a OK we are ON!
-DebugPort->write("stuck in ON");
-		}
-return 1;							//should never get here
+		DebugPort->write("stuck in ON");
+	}
+	return 1;							//should never get here
 }
 
 
@@ -225,25 +274,29 @@ return 1;
 }
 //Used to init Telit to right settings, code doesn't work if not used.
 bool GSMbase::init(uint16_t _band){
-DebugPort->write("initalizing");
+DebugPort->write("GSMbase::init - initalizing\r\n");
 
-	if(!sendRecQuickATCommand("ATE0"))return 0;		//set no echo
-	if(!sendRecQuickATCommand("ATV1"))return 0;		//set verbose mode
-	if(!sendRecQuickATCommand("AT&K0"))return 0;		//set flow control off
-	if(!sendRecQuickATCommand("AT+IPR=0"))return 0;		//set autoBaud (default not really needed)
-	if(!sendRecQuickATCommand("AT+CMEE=2"))return 0;	//set exended error report
-	switch(_band){
-	case 0: if(!sendRecQuickATCommand("AT#BND=0"))return 0;	//0 - GSM 900MHz + DCS 1800MHz
-	case 1: if(!sendRecQuickATCommand("AT#BND=1"))return 0;	//1 - GSM 900MHz + PCS 1900MHz
-	case 2: if(!sendRecQuickATCommand("AT#BND=2"))return 0; //2 - GMS 850MHz + DCS 1800MHz 
-	case 3: if(!sendRecQuickATCommand("AT#BND=3"))return 0; //3 - GMS 850MHz + PCS 1900MHz
+	if (!sendRecQuickATCommand("ATE1"))        return 0;		//set echo 0 or 1
+	if (!sendRecQuickATCommand("AT#SELINT=2")) return 0;
+	if (!sendRecQuickATCommand("ATV1"))        return 0;		//set verbose mode
+	if (!sendRecQuickATCommand("AT&K0"))       return 0;		//set flow control off
+	if (!sendRecQuickATCommand("AT+IPR=0"))    return 0;		//set autoBaud (default not really needed)
+	if (!sendRecQuickATCommand("AT+CMEE=2"))   return 0;	//set exended error report
+	switch (_band){
+	case 0: if (!sendRecQuickATCommand("AT#BND=0")) return 0;	//0 - GSM 900MHz + DCS 1800MHz
+	case 1: if (!sendRecQuickATCommand("AT#BND=1")) return 0;	//1 - GSM 900MHz + PCS 1900MHz
+	case 2: if (!sendRecQuickATCommand("AT#BND=2")) return 0; //2 - GMS 850MHz + DCS 1800MHz 
+	case 3: if (!sendRecQuickATCommand("AT#BND=3")) return 0; //3 - GMS 850MHz + PCS 1900MHz
 	}
-
 return 1;
 }
 
-//////////////////////////////////////////////////////////////////////INIT FUNCS*
+//AT+TEMPMON=1 returns temp of mod in C
+const char* const GSMbase::getTemperatureTEMPMON(){
+//RETURNS: #TEMPMEAS: 0,25 
+return  sendRecATCommandSplit("AT+TEMPMON=1",",",1);
+}
 
-
+//////////////////////////////////////////////////////////////////////HARDWARE FUNCS*
 
 
