@@ -62,7 +62,9 @@ void wdt_init(void)
 }
 
 
-int _testChannel = 20;
+
+int _testChannel = 20; //This is the input daughter board channel. The _ implies that it should only be changed by user input.
+
 
 void setup();
 void loop();
@@ -89,7 +91,7 @@ void turnOnTelit();
 
 void setup()
 {
-	setClockPrescaler(CLOCK_PRESCALER_1);	//Disable prescaler.
+	setClockPrescaler(CLOCK_PRESCALER_2);	//prescale of 2 after startup prescale of 8. This ensures that the arduino is running at 8 MHz.
 
 	// start up serial ports
 	debugPort.begin(DEBUG_BAUD_RATE);		//Debug serial
@@ -116,7 +118,6 @@ void setup()
 	SPI.begin();				//SPI
 
 	SWallOff(); //switch all off.
-	_testChannel = 20;
 
 	//Load circuit data from EEPROM
 	uint8_t *addrEEPROM = 0;
@@ -286,7 +287,8 @@ void parseBerkeley()
 	setDbgLeds(0);
 }
 
-void softSetup() 
+void softSetup()
+//resets the test channel (input daughter board) to default parameters and sets the linecycle count up.
 {
 	int32_t data = 0;
 
@@ -294,38 +296,41 @@ void softSetup()
 	debugPort.println(_testChannel,DEC);
 	
 	CSselectDevice(_testChannel); //start SPI comm with the test device channel
+
 	//Enable Digital Integrator for _testChannel
 	int8_t ch1os=0,enableBit=1;
-
 	debugPort.print("set CH1OS:");
-	debugPort.println(RCstr(ADEsetCHXOS(1,&enableBit,&ch1os)));
+	ADEsetCHXOS(1,&enableBit,&ch1os);
+	debugPort.println(RCstr(_retCode));
 	debugPort.print("get CH1OS:");
-	debugPort.println(RCstr(ADEgetCHXOS(1,&enableBit,&ch1os)));
+	ADEgetCHXOS(1,&enableBit,&ch1os);
+	debugPort.println(RCstr(_retCode));
 	debugPort.print("enabled: ");
 	debugPort.println(enableBit,BIN);
 	debugPort.print("offset: ");
 	debugPort.println(ch1os);
 
-	//set the gain to 2 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
-	int32_t gainVal = 1;
-
+	//set the gain to 16 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
+	int32_t gainVal = 0x4;
 	debugPort.print("BIN GAIN (set,get):");
-	debugPort.print(RCstr(ADEsetRegister(GAIN,&gainVal)));
+	ADEsetRegister(GAIN,&gainVal);
+	debugPort.print(RCstr(_retCode));
 	debugPort.print(",");
-	debugPort.print(RCstr(ADEgetRegister(GAIN,&gainVal)));
+	ADEgetRegister(GAIN,&gainVal);
+	debugPort.print(RCstr(_retCode));
 	debugPort.print(":");
 	debugPort.println(gainVal,BIN);
 	
+	//NOTE*****  I am using zeros right now because we are going to up the gain and see if this is the same
 	//Set the IRMSOS to 0d444 or 0x01BC. This is the measured offset value.
-	int32_t iRmsOsVal = 0x01BC;
+	int32_t iRmsOsVal = 0x0;//0x01BC;
 	ADEsetRegister(IRMSOS,&iRmsOsVal);
 	ADEgetRegister(IRMSOS,&iRmsOsVal);
 	debugPort.print("hex IRMSOS:");
 	debugPort.println(iRmsOsVal, HEX);
 	
-	//WHAT'S GOING ON WITH THIS OFFSET? THE COMMENT DOESN'T MATCH THE VALUE
 	//Set the VRMSOS to -0d549. This is the measured offset value.
-	int32_t vRmsOsVal = 0x07FF;//F800
+	int32_t vRmsOsVal = 0x0;//0x07FF;//F800
 	ADEsetRegister(VRMSOS,&vRmsOsVal);
 	ADEgetRegister(VRMSOS,&vRmsOsVal);
 	debugPort.print("hex VRMSOS read from register:");
@@ -378,10 +383,10 @@ void displayChannelInfo() {
 	if (0 /*loopCounter%4096*/ ){
 		debugPort.print("bin Interrupt Status Register:");
 		debugPort.println(interruptStatus, BIN);
-		
 	}	//endif
 	
 	//if the CYCEND bit of the Interrupt Status Registers is flagged
+	debugPort.print("\n\n\r");
 	debugPort.print("Waiting for next cycle: ");
 	ADEwaitForInterrupt(CYCEND,4000);
 	debugPort.println(RCstr(_retCode));
@@ -396,17 +401,23 @@ void displayChannelInfo() {
 		debugPort.println(interruptStatus, BIN);
 		
 		//IRMS SECTION
-		debugPort.print("mAmps IRMS:");
-		debugPort.println( RCstr(ADEgetRegister(IRMS,&val)) );
+		debugPort.print("IRMS:");
+		ADEgetRegister(IRMS,&val);
+		debugPort.println( RCstr(_retCode) );
+		debugPort.print("Counts:");
+		debugPort.println(val);
+		debugPort.print("mAmps:");
 		iRMS = val/iRMSSlope;//data*1000/40172/4;
 		debugPort.println(iRMS);
 		
 		//VRMS SECTION
 		debugPort.print("VRMS:");
-		debugPort.println(RCstr(ADEgetRegister(VRMS,&val)));
-
+		ADEgetRegister(VRMS,&val);
+		debugPort.println(RCstr(_retCode));
+		debugPort.print("Counts:");
+		debugPort.println(val);
 		vRMS = val/vRMSSlope; //old value:9142
-		debugPort.print("Volts VRMS:");
+		debugPort.print("Volts:");
 		debugPort.println(vRMS);
 
 		
@@ -420,23 +431,15 @@ void displayChannelInfo() {
 		debugPort.print("Calculated apparent power usage:");
 		debugPort.println(energyJoules/2);
 		
-		//THIS IS NOT WORKING FOR SOME REASON
-		//WE NEED TO FIX THE ACTIVE ENERGY REGISTER AT SOME POINT
 		//ACTIVE ENERGY SECTION
-		ifsuccess(ADEgetRegister(LAENERGY,&val)) {
+		ADEgetRegister(LAENERGY,&val);
+		ifsuccess(_retCode) {
 			debugPort.print("int Line Cycle Active Energy after 200 half-cycles:");
 			debugPort.println(val);
 		} else {
 			debugPort.println("Line Cycle Active Energy read failed.");
-		}
-		
-/*		iRMS = data/161;//data*1000/40172/4;
-		debugPort.print("mAmps IRMS:");
-		debugPort.println(iRMS);
-*/
-		
-		delay(500);
-	} //end of if statement
+		}// end ifsuccess
+	} //end ifsuccess
 
 	CSselectDevice(DEVDISABLE);
 }

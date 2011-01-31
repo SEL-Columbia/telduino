@@ -156,8 +156,8 @@ static uint8_t raw_block_written;
 #endif
 
 void configure_pin_ss(){ initSelect(); }
-void select_card(){CSSelectDevice(  SDCARD  );}
-void unselect_card(){CSSelectDevice(DEVDISABLE);}
+void select_card(){CSselectDevice(  SDCARD  );}
+void unselect_card(){CSselectDevice(DEVDISABLE);}
 
 
 /* card type state */

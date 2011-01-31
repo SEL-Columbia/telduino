@@ -12,7 +12,7 @@
 # $@ first name of target of rule
 # $*
 
-CLOCK = 16000000L
+CLOCK = 8000000L
 PROJECT = telduino
 GCCFLAGS = -c -g -Os -w -std=c99 -ffunction-sections -fdata-sections -Ilibraries
 G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
@@ -55,8 +55,8 @@ program: $(PROJECT).hex
 	avrdude -patmega1280 -c dragon_isp -P usb -Uflash:w:$(PROJECT).hex -B10
 
 programfuses:
-#	low fuses: set external clock, divide by 8
-	avrdude -patmega1280 -c dragon_isp -P usb -U lfuse:w:0x5E:m -U hfuse:w:0x91:m -U efuse:w:0xf5:m -B10
+#	low fuses: set external *FULLSWING* oscillator; startup time=16K clk + 0 ms; BOD enabled; divide clock by 8 initially
+	avrdude -patmega1280 -c dragon_isp -P usb -U lfuse:w:0x57:m -U hfuse:w:0x91:m -U efuse:w:0xf5:m -B10
 
 readfuses:
 	avrdude -patmega1280 -c dragon_isp -P usb -U hfuse:r:high.txt:r -U lfuse:r:low.txt:r -U efuse:r:ext.txt:r
