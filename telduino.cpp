@@ -91,7 +91,7 @@ void turnOnTelit();
 
 void setup()
 {
-	setClockPrescaler(CLOCK_PRESCALER_2);	//prescale to 2.
+	setClockPrescaler(CLOCK_PRESCALER_2);	//prescale of 2 after startup prescale of 8. This ensures that the arduino is running at 8 MHz.
 
 	// start up serial ports
 	debugPort.begin(DEBUG_BAUD_RATE);		//Debug serial
@@ -304,8 +304,8 @@ void softSetup()
 	debugPort.print("offset: ");
 	debugPort.println(ch1os);
 
-	//set the gain to 2 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
-	int32_t gainVal = 1;
+	//set the gain to 16 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
+	int32_t gainVal = 0x4;
 	debugPort.print("BIN GAIN (set,get):");
 	debugPort.print(RCstr(ADEsetRegister(GAIN,&gainVal)));
 	debugPort.print(",");
@@ -379,6 +379,7 @@ void displayChannelInfo() {
 	}	//endif
 	
 	//if the CYCEND bit of the Interrupt Status Registers is flagged
+	debugPort.print("\n\n\r")
 	debugPort.print("Waiting for next cycle: ");
 	retCode = ADEwaitForInterrupt(CYCEND,4000);
 	debugPort.println(RCstr(retCode));
@@ -393,17 +394,21 @@ void displayChannelInfo() {
 		debugPort.println(interruptStatus, BIN);
 		
 		//IRMS SECTION
-		debugPort.print("mAmps IRMS:");
+		debugPort.print("IRMS:");
 		debugPort.println( RCstr(ADEgetRegister(IRMS,&val)) );
+		debugPort.print("Counts:");
+		debugPort.println(val);
+		debugPort.print("mAmps:");
 		iRMS = val/iRMSSlope;//data*1000/40172/4;
 		debugPort.println(iRMS);
 		
 		//VRMS SECTION
 		debugPort.print("VRMS:");
 		debugPort.println(RCstr(ADEgetRegister(VRMS,&val)));
-
+		debugPort.print("Counts:");
+		debugPort.println(VRMS);
 		vRMS = val/vRMSSlope; //old value:9142
-		debugPort.print("Volts VRMS:");
+		debugPort.print("Volts:");
 		debugPort.println(vRMS);
 
 		

@@ -13,16 +13,31 @@ The setup we are proposing will involve a rig that hooks all the inputs and outp
 
 There are ADE register offsets that are associated with the above parameters. The other aspect that needs to be determined for each of the parameters is the slope. The slopes are not stored on the ADE. They have to be stored in the firmware on the uC. A two point calibration needs to be performed for each of the parameters in order to determine the slope and offset.
 
+Gain and max levels
+---------------------
+The gain of the analog channels determines the linear range of the metering and the maximum power that is possible. The gain of the voltage channel needs to be 1, this is because the full scale RMS voltage that is max allowable by the resistor divider network we have used so far is 353 Vrms. However the current channel gain needs to be determined according to the table below:
+
+| Gain    	| Max current (Amps) | Max power (Watts) | Min power |
+|:-------:	|:-----------------: |       : -----:    | :-----:   |
+| 2       	|        10          |      2400         | 24        |
+| 4       	|        5           |      1200         | 12        |
+| 8       	|        2.5         |       600         | 6         |
+| 16      	|        1.25        |       300         | 3         |
+
+The linear range of the reading goes down to Imax/100 so if we are interested in metering a 5watt load with a +/- 1 watt accuracy, we need to be able to measure currents down to .02 amps so the gain of 16.
+
 The optimal test points are listed below:
 
 1. Voltage: 120 volts & 240 volts
-2. Current: .1 amps and .8 amps
-3. Power: 12 watts and 96 watts
+2. Current: .0125 amps and .625 amps
+3. Power: 3 watts and 75 watts
+
+So with the ideal test points from above, the loads that we want are going to be 9600 Ohm, 1.5 watt load and a 192 Ohm, 75 watt load. Both of these points can be done with a voltage of 120 volts because this will ensure that the amount of power that we dissipate is less a factor of 2 over 240 volts.
 
 Test Setup
 ----------
 
 1. Two AC sources: at 120V and 240V
-2. Two loads: 2.4k Ohm, 25W and 150 Ohm, 100W
+2. Two loads: 9.6k Ohm, 5W and 192 Ohm, 100W
 
 The last requirement is to either have an external calibrated meter that we would use for the test process, or to Calibrate each meter input board and calibrate the rest according to that one.
