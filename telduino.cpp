@@ -18,11 +18,13 @@
 #include <string.h>
 #include <stdint.h>
 
-//Metering Hardware
-#include "arduino/WProgram.h"
-#include "SPI/SPI.h"
-#include "prescaler.h"
+//Helper functions
 #include "ReturnCode/returncode.h"
+#include "prescaler.h"
+#include "arduino/WProgram.h"
+
+//Metering Hardware
+#include "SPI/SPI.h"
 #include "DbgTel/DbgTel.h"
 #include "ADE7753/ADE7753.h"
 #include "ShiftRegister/shiftregister.h"
@@ -45,7 +47,6 @@
 #define TELIT_BAUD_RATE 115200
 #define verbose 1
 
-
 Circuit ckts[NCIRCUITS];
 
 /*  Disables the watchdog timer the first chance the AtMega gets as recommended
@@ -53,7 +54,6 @@ Circuit ckts[NCIRCUITS];
  */
 #include <avr/wdt.h>
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
-
 void wdt_init(void)
 {
 	MCUSR = 0;
@@ -62,7 +62,7 @@ void wdt_init(void)
 }
 
 
-int _testChannel = 1;
+int _testChannel = 20;
 
 void setup();
 void loop();
