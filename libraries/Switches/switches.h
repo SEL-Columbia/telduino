@@ -1,8 +1,9 @@
 #ifndef SWITCHES_H
 #define SWITCHES_H
 
-#include "ReturnCode/returncode.h"
+#include <inttypes.h>
 #include "ShiftRegister/shiftregister.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,7 +19,7 @@ static const int8_t mapRegToSw[] = {0,1,2,3,7,6,5,4,8,9,10,11,15,14,13,12,19,18,
 static int8_t _enabledC[WIDTH];
 
 void SWsetSwitches(int8_t enabledC[WIDTH]);
-int8_t SWset(int8_t sw, int8_t on);
+void SWset(int8_t sw, int8_t on);
 void SWallOff();
 void SWallOn();
 const int8_t* SWgetSwitchState();

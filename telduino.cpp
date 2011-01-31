@@ -28,7 +28,7 @@
 #include "DbgTel/DbgTel.h"
 #include "ADE7753/ADE7753.h"
 #include "ShiftRegister/shiftregister.h"
-#include "Demux/Demux.h"
+#include "Demux/demux.h"
 #include "Select/select.h"
 #include "sd-reader/sd_raw.h"
 #include "Switches/switches.h"
@@ -163,9 +163,10 @@ void parseBerkeley()
 			int32_t regData = 0;
 			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
 				if (strcmp(regList[i]->name,buff) == 0){
-					CSSelectDevice(_testChannel);
+					CSselectDevice(_testChannel);
 					debugPort.print("Current regData:");
-					debugPort.print(RCstr(ADEgetRegister(*regList[i],&regData)));
+					ADEgetRegister(*regList[i],&regData);
+					debugPort.print(RCstr(_retCode));
 					debugPort.print(":0x");
 					debugPort.print(regData,HEX);
 					debugPort.print(":");
@@ -174,12 +175,13 @@ void parseBerkeley()
 					debugPort.print("Enter new regData:");
 					if(CLgetInt(&debugPort,&regData) == CANCELED) break;	
 					debugPort.println();
-					debugPort.print(RCstr(ADEsetRegister(*regList[i],&regData)));
+					ADEsetRegister(*regList[i],&regData);
+					debugPort.print(RCstr(_retCode));
 					debugPort.print(":0x");
 					debugPort.print(regData,HEX);
 					debugPort.print(":");
 					debugPort.println(regData,DEC);
-					CSSelectDevice(DEVDISABLE);
+					CSselectDevice(DEVDISABLE);
 					break;
 				} 
 			}
@@ -192,14 +194,15 @@ void parseBerkeley()
 			int32_t regData = 0;
 			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
 				if (strcmp(regList[i]->name,buff) == 0){
-					CSSelectDevice(_testChannel);
+					CSselectDevice(_testChannel);
 					debugPort.print("regData:");
-					debugPort.print(RCstr(ADEgetRegister(*regList[i],&regData)));
+					ADEgetRegister(*regList[i],&regData);
+					debugPort.print(RCstr(_retCode));
 					debugPort.print(":0x");
 					debugPort.print(regData,HEX);
 					debugPort.print(":");
 					debugPort.println(regData,DEC);
-					CSSelectDevice(DEVDISABLE);
+					CSselectDevice(DEVDISABLE);
 					break;
 				} 
 			}
@@ -222,10 +225,10 @@ void parseBerkeley()
 		} else if (incoming == 'P') {		//Program values in ckts[] to ADE
 			for (int i = 0; i < NCIRCUITS; i++) {
 				Circuit *c = &(ckts[i]);
-				int8_t retCode = Cprogram(c);
-				debugPort.println(RCstr(retCode));
+				Cprogram(c);
+				debugPort.println(RCstr(_retCode));
 				debugPort.println("*****");
-				ifnsuccess(retCode) {
+				ifnsuccess(_retCode) {
 					break;
 				}
 			}
@@ -236,7 +239,8 @@ void parseBerkeley()
 			debugPort.println();
 		} else if (incoming == 'L') {		//Run calibration routine on channel
 			Circuit *c = &(ckts[_testChannel]);
-			debugPort.println(RCstr(calibrateCircuit(c)));
+			calibrateCircuit(c);
+			debugPort.println(RCstr(_retCode));
 		} else if (incoming == 'D') {		//Initialize ckts[] to safe defaults
 			for (int i = 0; i < NCIRCUITS; i++) {
 				Circuit *c = &(ckts[i]);
@@ -289,7 +293,7 @@ void softSetup()
 	debugPort.print("\n\n\rSetting Channel:");
 	debugPort.println(_testChannel,DEC);
 	
-	CSSelectDevice(_testChannel); //start SPI comm with the test device channel
+	CSselectDevice(_testChannel); //start SPI comm with the test device channel
 	//Enable Digital Integrator for _testChannel
 	int8_t ch1os=0,enableBit=1;
 
@@ -350,11 +354,10 @@ void softSetup()
 	debugPort.print("bin Interrupt Status Register:");
 	debugPort.println(data, BIN);
 
-	CSSelectDevice(DEVDISABLE); //end SPI comm with the selected device	
+	CSselectDevice(DEVDISABLE); //end SPI comm with the selected device	
 }
 
 void displayChannelInfo() {
-	int8_t retCode;
 	int32_t val;
 	uint32_t iRMS = 0;
 	uint32_t vRMS = 0;
@@ -367,7 +370,7 @@ void displayChannelInfo() {
 	uint32_t energyJoules = 0;
 
 	//Select the Device
-	CSSelectDevice(_testChannel);
+	CSselectDevice(_testChannel);
 	
 	//Read and clear the Interrupt Status Register
 	ADEgetRegister(RSTSTATUS, &interruptStatus);
@@ -380,10 +383,10 @@ void displayChannelInfo() {
 	
 	//if the CYCEND bit of the Interrupt Status Registers is flagged
 	debugPort.print("Waiting for next cycle: ");
-	retCode = ADEwaitForInterrupt(CYCEND,4000);
-	debugPort.println(RCstr(retCode));
+	ADEwaitForInterrupt(CYCEND,4000);
+	debugPort.println(RCstr(_retCode));
 
-	ifsuccess(retCode) {
+	ifsuccess(_retCode) {
 		setDbgLeds(GYRPAT);
 
 		debugPort.print("_testChannel:");
@@ -435,7 +438,7 @@ void displayChannelInfo() {
 		delay(500);
 	} //end of if statement
 
-	CSSelectDevice(DEVDISABLE);
+	CSselectDevice(DEVDISABLE);
 }
 
 int8_t getChannelID() 
@@ -479,21 +482,21 @@ void testHardware() {
 
 	//Test communications with each ADE
 	for (int i = 0; i < 21; i++) {
-		CSSelectDevice(i);
+		CSselectDevice(i);
 		
 		debugPort.print("Can communicate with channel ");
 		debugPort.print(i,DEC);
 		debugPort.print(": ");
 
-		int retCode = ADEgetRegister(DIEREV,&val);
-		ifnsuccess(retCode) {
+		ADEgetRegister(DIEREV,&val);
+		ifnsuccess(_retCode) {
 			debugPort.print("NO-");
-			debugPort.println(RCstr(retCode));
+			debugPort.println(RCstr(_retCode));
 		} else {
 			debugPort.print("YES-DIEREV:");
 			debugPort.println(val,DEC);
 		}
-		CSSelectDevice(DEVDISABLE);
+		CSselectDevice(DEVDISABLE);
 	}
 }
 	
@@ -574,14 +577,16 @@ void setupLVAMode(int icid, int32_t linecycVal) {
 	debugPort.print("Setting Channel for LVA Mode:");
 	debugPort.println(icid, DEC);
 	
-	CSSelectDevice(icid); //start SPI comm with the test device channel
+	CSselectDevice(icid); //start SPI comm with the test device channel
 								  //Enable Digital Integrator for _testChannel
 	int8_t ch1os=0,enableBit=1;
 	
-	debugPort.print("set CH1OS:");
-	debugPort.println(RCstr(ADEsetCHXOS(1,&enableBit,&ch1os)));
-	debugPort.print("get CH1OS:");
-	debugPort.println(RCstr(ADEgetCHXOS(1,&enableBit,&ch1os)));
+	debugPort.print("set CH1OS:"); 
+	ADEsetCHXOS(1,&enableBit,&ch1os);
+	debugPort.println(RCstr(_retCode));
+	debugPort.print("get CH1OS:"); 
+	ADEgetCHXOS(1,&enableBit,&ch1os);
+	debugPort.println(RCstr(_retCode)); 
 	debugPort.print("enabled: ");
 	debugPort.println(enableBit,BIN);
 	debugPort.print("offset: ");
@@ -590,10 +595,12 @@ void setupLVAMode(int icid, int32_t linecycVal) {
 	//set the gain to 2 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
 	int32_t gainVal = 1;
 	
-	debugPort.print("BIN GAIN (set,get):");
-	debugPort.print(RCstr(ADEsetRegister(GAIN,&gainVal)));
+	debugPort.print("BIN GAIN (set,get):"); 
+	ADEsetRegister(GAIN,&gainVal);
+	debugPort.println(RCstr(_retCode));
 	debugPort.print(",");
-	debugPort.print(RCstr(ADEgetRegister(GAIN,&gainVal)));
+	ADEgetRegister(GAIN,&gainVal);
+	debugPort.print(RCstr(_retCode));
 	debugPort.print(":");
 	debugPort.println(gainVal,BIN);
 	
@@ -632,13 +639,13 @@ void setupLVAMode(int icid, int32_t linecycVal) {
 	debugPort.print("bin Interrupt Status Register:");
 	debugPort.println(data, BIN);
 	
-	CSSelectDevice(DEVDISABLE); //end SPI comm with the selected device	
+	CSselectDevice(DEVDISABLE); //end SPI comm with the selected device	
 	
 }
 
 void setupDefaultMode(int icid) {
 	int32_t modeReg = 0;
-	CSSelectDevice(icid); 
+	CSselectDevice(icid); 
 	
 	// read bits before write
 	ADEgetRegister(MODE,&modeReg);
@@ -668,7 +675,7 @@ void setupDefaultMode(int icid) {
 	debugPort.print("MODE register after setting default:");
 	debugPort.println(modeReg, BIN);
 	
-	CSSelectDevice(DEVDISABLE);
+	CSselectDevice(DEVDISABLE);
 }
 
 void setupRVAMode(int icid) {
@@ -682,14 +689,16 @@ void setupRVAMode(int icid) {
 	debugPort.print("\n\n\rSetting Accumulation Mode for Channel:");
 	debugPort.println(icid, DEC);
 	
-	CSSelectDevice(icid); //start SPI comm with the test device channel
+	CSselectDevice(icid); //start SPI comm with the test device channel
 								  //Enable Digital Integrator for _testChannel
 	int8_t ch1os=0,enableBit=1;
 	
 	debugPort.print("set CH1OS:");
-	debugPort.println(RCstr(ADEsetCHXOS(1,&enableBit,&ch1os)));
+	ADEsetCHXOS(1,&enableBit,&ch1os);
+	debugPort.println(RCstr(_retCode));
 	debugPort.print("get CH1OS:");
-	debugPort.println(RCstr(ADEgetCHXOS(1,&enableBit,&ch1os)));
+	ADEgetCHXOS(1,&enableBit,&ch1os);
+	debugPort.println(RCstr(_retCode));
 	debugPort.print("enabled: ");
 	debugPort.println(enableBit,BIN);
 	debugPort.print("offset: ");
@@ -699,9 +708,11 @@ void setupRVAMode(int icid) {
 	int32_t gainVal = 0;
 	
 	debugPort.print("BIN GAIN (set,get):");
-	debugPort.print(RCstr(ADEsetRegister(GAIN,&gainVal)));
+	ADEsetRegister(GAIN,&gainVal);
+	debugPort.print(RCstr(_retCode));
 	debugPort.print(",");
-	debugPort.print(RCstr(ADEgetRegister(GAIN,&gainVal)));
+	ADEgetRegister(GAIN,&gainVal);
+	debugPort.print(RCstr(_retCode));
 	debugPort.print(":");
 	debugPort.println(gainVal,BIN);
 	
@@ -740,7 +751,7 @@ void setupRVAMode(int icid) {
 	debugPort.print("register read MODE");
 	debugPort.println(modeReg, BIN);
 	
-	CSSelectDevice(DEVDISABLE);		//end SPI comm with the selected device		
+	CSselectDevice(DEVDISABLE);		//end SPI comm with the selected device		
 }
 
 void jobReadLVA(int icid) {
@@ -759,7 +770,7 @@ void jobReadLVA(int icid) {
 	int32_t regVal = 0;
 	
 	// select SPI circuit
-	CSSelectDevice(icid);
+	CSselectDevice(icid);
 	
 	// read current
 	int32_t irms = 0;
@@ -774,10 +785,9 @@ void jobReadLVA(int icid) {
 	debugPort.println(vrms, HEX);
 	
 	//if the CYCEND bit of the Interrupt Status Registers is flagged
-	int8_t retCode;
 	debugPort.print("Waiting for next cycle: ");
-	retCode = ADEwaitForInterrupt(CYCEND, 90000);
-	debugPort.println(RCstr(retCode));
+	ADEwaitForInterrupt(CYCEND, 90000);
+	debugPort.println(RCstr(_retCode));
 	
 	// test read of interrupt register
 	ADEgetRegister(RSTSTATUS, &regVal);
@@ -796,7 +806,7 @@ void jobReadLVA(int icid) {
 	debugPort.println(regVal, BIN);
 	
 	// deselect SPI circuit
-	CSSelectDevice(DEVDISABLE);
+	CSselectDevice(DEVDISABLE);
 	
 	// construct and send back response
 	String responseString = "";
@@ -832,7 +842,7 @@ void jobReadRVA(int icid) {
 	int32_t regVal = 0;
 	
 	// select SPI circuit
-	CSSelectDevice(icid);
+	CSselectDevice(icid);
 	
 	// read current
 	int32_t irms = 0;
@@ -863,7 +873,7 @@ void jobReadRVA(int icid) {
 	debugPort.println(power, HEX);
 		
 	// deselect SPI circuit
-	CSSelectDevice(DEVDISABLE);
+	CSselectDevice(DEVDISABLE);
 	
 	// construct and send back response
 	String responseString = "";

@@ -52,12 +52,12 @@ void ADEwriteData(ADEReg reg, uint32_t *data)
 *	returns SUCCESS if the read failed
 *	returns COMMERR if the computed check sum fails to make the ADE chksum
 */
-uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
+void ADEgetRegister(ADEReg reg, int32_t *regValue)
 {
 	//Serial1.print("GET ");
 	//Serial1.println(reg.name);
 	//get raw data, MSB of data is MSB from ADE irrespective of byte length
-	uint8_t retCode = SUCCESS;
+	_retCode = SUCCESS;
 	uint32_t rawData = 0;
 	uint8_t nBytes = (reg.nBits+7)/8;
 	uint32_t chksum = 0;
@@ -67,9 +67,9 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 	ADEreadData(CHKSUM,&chksum);
 	if (ADEchksum(rawData) != ((uint8_t*)&chksum)[3]) {
 		//for some reason this is returning FALURE and not commerr
-		retCode = COMMERR;
+		_retCode = COMMERR;
 	} else {
-		retCode = SUCCESS;
+		_retCode = SUCCESS;
 	}
 	/*
 	Serial1.print("ADEgetRegister rawData: ");
@@ -105,11 +105,10 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 		} else {
 			*regValue = rawData;
 		}*/
-		retCode = FAILURE;
+		_retCode = FAILURE;
 	}
 
 	/*Serial1.println("ADEgetRegister EXIT");*/
-	return retCode;
 }
 
 /**
@@ -117,11 +116,11 @@ uint8_t ADEgetRegister(ADEReg reg, int32_t *regValue)
 *	@warning Range of input value is not checked. Refer to the ADE7753 datasheet for proper input ranges.
 *	@return return code
   */
-uint8_t ADEsetRegister(ADEReg reg, int32_t *value)
+void ADEsetRegister(ADEReg reg, int32_t *value)
 {
 	//Serial1.print("SET ");
 	//Serial1.println(reg.name);
-	uint8_t retCode = SUCCESS;
+	_retCode = SUCCESS;
 	uint32_t writeData;
 	uint8_t nBytes = (reg.nBits+7)/8;
 	uint8_t shiftBits = nBytes*8-reg.nBits;
@@ -134,7 +133,7 @@ uint8_t ADEsetRegister(ADEReg reg, int32_t *value)
 	} else { 
 		//Do nothing this shouldn't happen
 		//Serial1.println("MAJOR PROBLEM");
-		retCode = FAILURE;
+		_retCode = FAILURE;
 	}
 	//write data
 	//Serial1.println("writtenData: ");
@@ -149,10 +148,9 @@ uint8_t ADEsetRegister(ADEReg reg, int32_t *value)
 	//Serial1.println(readData,HEX);
 	//Serial1.println(readData<<shiftBits,HEX);
 	if ((writeData<<shiftBits) != (readData<<shiftBits)) {
-		retCode = COMMERR;
+		_retCode = COMMERR;
 	}
 	
-	return retCode;
 }
 
 /**
@@ -176,17 +174,17 @@ uint8_t ADEchksum(uint32_t data)
 
 	@return SUCCESS, ARGEVALUEERR or ADEgetRegister errors
 */
-uint8_t ADEgetCHXOS(const uint8_t X,int8_t *enableInt,int8_t *val) 
+void ADEgetCHXOS(const uint8_t X,int8_t *enableInt,int8_t *val) 
 {
-	int retCode = SUCCESS;
+	_retCode = SUCCESS;
 	int32_t data  = 0;
 
 	if (X == 1) {
-		retCode = ADEgetRegister(CH1OS, &data);
+		ADEgetRegister(CH1OS, &data);
 	} else if (X == 2){
-		retCode = ADEgetRegister(CH2OS, &data);
+		ADEgetRegister(CH2OS, &data);
 	} else {
-		retCode = ARGVALUEERR;
+		_retCode = ARGVALUEERR;
 	}
 
 	uint8_t msB = ((uint8_t*)(&data))[0];
@@ -199,12 +197,11 @@ uint8_t ADEgetCHXOS(const uint8_t X,int8_t *enableInt,int8_t *val)
 	if (msB & 0x20) {
 		*val = -(*val);
 	} 
-	return retCode;
 }
 
-uint8_t ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val) 
+void ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val) 
 {
-	int retCode = SUCCESS;
+	_retCode = SUCCESS;
 	int32_t data  =*val;
 
 	//convert to signed magnitude
@@ -219,13 +216,12 @@ uint8_t ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val)
 	}
 
 	if (X == 1) {
-		retCode = ADEsetRegister(CH1OS, &data);
+		ADEsetRegister(CH1OS, &data);
 	} else if (X == 2){
-		retCode = ADEsetRegister(CH2OS, &data);
+		ADEsetRegister(CH2OS, &data);
 	} else {
-		retCode = ARGVALUEERR;
+		_retCode = ARGVALUEERR;
 	}
-	return retCode;
 }
 
 /** 
@@ -234,11 +230,11 @@ uint8_t ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val)
 int8_t ADEreadInterrupt(uint16_t regMask)
 {
 	int32_t status;
-	int8_t retCode = ADEgetRegister(RSTSTATUS,&status);
-	if (retCode == SUCCESS) {
+	ADEgetRegister(RSTSTATUS,&status);
+	ifsuccess(_retCode) {
 		return status & regMask;
 	} else {
-		return -retCode;
+		return 0;
 	}
 }
 
@@ -246,19 +242,17 @@ int8_t ADEreadInterrupt(uint16_t regMask)
   @return SUCCESS if interrupt was fired, FAILURE otherwise.
 
   */
-int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
+void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 {
 	int32_t status = 0;
-	int8_t retCode = SUCCESS;
+	_retCode = SUCCESS;
 	unsigned long time = millis();
 	unsigned long endTime = time + waitTimems;
 	if (time > endTime) {
 		//wait for rollover
 		do {
-			retCode = ADEgetRegister(RSTSTATUS,&status);
-			if (retCode == SUCCESS && (status & regMask)) {
-				return SUCCESS;
-			}
+			ADEgetRegister(RSTSTATUS,&status);
+			if ((status & regMask) && _retCode == SUCCESS) return;
 
 			//Wait between reads
 			for (int i=0; i<10; i++); 
@@ -269,10 +263,8 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	//overflowed to be much less than endTime to the point
 	//where it is more than waitTimems far away
 	do {
-		retCode = ADEgetRegister(RSTSTATUS,&status);
-		if (retCode == SUCCESS && (status & regMask)) {
-			return SUCCESS;
-		} 
+		ADEgetRegister(RSTSTATUS,&status);
+		if (_retCode == SUCCESS && (status & regMask)) return;
 		time = millis();
 	} while ((time <= endTime) && (endTime-time <= waitTimems));
 	/*
@@ -283,7 +275,7 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	Serial1.print("waitforInterrupt endTime(ms):");
 	Serial1.println(endTime);
 	*/
-	return TIMEOUT;
+	_retCode = TIMEOUT;
 }
 
 /**
@@ -291,21 +283,18 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	0 of bit is zero and 1 if  bit is otherwise.
 	@return SUCCESS if bit has been changed.
   */
-int8_t ADEsetModeBit(uint16_t regMask, uint8_t bit)
+void ADEsetModeBit(uint16_t regMask, uint8_t bit)
 {
 	int32_t mode;
-	int8_t retCode;
-	retCode = ADEgetRegister(MODE, &mode);
-	if (retCode != SUCCESS) {
-		return retCode;
-	}
+	ADEgetRegister(MODE, &mode);
+	ifnsuccess(_retCode) return;
 
 	mode = mode & ~regMask;
 	if (bit != 0) {
 		mode = mode | regMask;
 	}
 
-	return ADEsetRegister(MODE, &mode);
+	ADEsetRegister(MODE, &mode);
 }
 
 /**
@@ -319,6 +308,7 @@ int8_t ADEperToFreq(int32_t period)
 
 /**
 	Perform a software reset of the ADE. It must be reprogrammed afterwards.
+	I don't believe this actually does anything.
 	@warning This assumes that at most a 16mhz clock is being used.
   */
 void ADEreset()

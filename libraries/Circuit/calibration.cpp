@@ -10,15 +10,27 @@
 #define dbg Serial1
 #define waitTime 8000
 
+#define EXITIFCANCELED(X)		\
+	if ((X) == CANCELED) {		\
+	    CsetOn(&cCal,false);	\
+		dbg.println(CANCELEDSTR);\
+		_retCode = CANCELED;	\
+		return;	}				
+
+#define EXITIFNOCYCLES()		\
+	if (nsuccess(_retCode)) {	\
+	    CsetOn(&cCal,false);	\
+		dbg.println(NOACSTR);	\
+		return;	 }				
+
 /**
     Calibrate circuit interactively using serial port. 
 	This function leaves the circuit off after completion.
 	@warning need to finish VAslope/offset and WSlope/offset
 	@warning this assumes that there is a gain of 1 on CH2OS
   */
-int8_t calibrateCircuit(Circuit *c)
+void calibrateCircuit(Circuit *c)
 {
-	int8_t retCode; 
 	int32_t regData;
 	//The *Meas values are in mV or mA when read from the user
 	int32_t VlowCkt,VlowMeas;
@@ -32,42 +44,38 @@ int8_t calibrateCircuit(Circuit *c)
 	cCal.chIos = cCal.chVos = cCal.IRMSoffset = cCal.VRMSoffset = 0;
 	cCal.VAoffset = cCal.Woffset = 0;
 	cCal.IRMSslope = cCal.VRMSslope = cCal.VAslope = cCal.Wslope = 1;
-	retCode = Cprogram(&cCal);
-	ifnsuccess(retCode) {
+	Cprogram(&cCal);
+	ifnsuccess(_retCode) {
 		dbg.println("Clearing failed in calibrateCircuit.");
-		return retCode;
+		return;
 	}
 
 	//Calibrate low level channel offsets
-	CSSelectDevice(cCal.circuitID);
+	CSselectDevice(cCal.circuitID);
 	CsetOn(&cCal,false);
 	dbg.print("Ground both lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC);
 	dbg.println("\'.");
 	dbg.println(PRESSENTERSTR);
 	while (dbg.read() != '\r');
-	CsetOn(&cCal,true);
 
 	//Set waveform mode to read voltage
 	dbg.println("Configuring to read raw voltage.");
-	retCode = ADEsetModeBit(WAVESEL_0,true);
-	ifnsuccess(retCode) {
-		CsetOn(&cCal,false);
-		return retCode;
-	}
+	ADEsetModeBit(WAVESEL_0,true);
+	ifnsuccess(_retCode) return;
 	dbg.println("Modebit 0 set.");
-	retCode = ADEsetModeBit(WAVESEL1_,true);
-	ifnsuccess(retCode) {
-		CsetOn(&cCal,false);
-		return retCode;
-	}
+	ADEsetModeBit(WAVESEL1_,true);
+	ifnsuccess(_retCode) return;
 	
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
+	CsetOn(&cCal,true);
 	ADEwaitForInterrupt(WSMP,waitTime);
-	retCode = ADEgetRegister(WAVEFORM,&regData);
-	ifnsuccess(retCode) return retCode;
-	dbg.print("CHVwaveform:");dbg.println(regData);
+	ifnsuccess(_retCode) { CsetOn(&cCal,false); return;}
+	ADEgetRegister(WAVEFORM,&regData);
+	CsetOn(&cCal,false); 
+	ifnsuccess(_retCode) { return;}
+	dbg.print("CHVwaveform:"); dbg.println(regData);
 	//regData = regData*500*100/10322/161; //(1.61mV/LSB in CH2OS) and 500/10322 in WAVEFORM
 	regData = (regData*31549)>>20; 
 	//The CHXOS maxes out at 2^4 as it is a 5 bit signed magnitude number
@@ -77,10 +85,9 @@ int8_t calibrateCircuit(Circuit *c)
 		regData= -15;
 	}
 	int8_t offset = (int8_t)regData;
-	retCode = ADEsetCHXOS(2,&(cCal.chIint),&offset);
-	ifnsuccess(retCode) return retCode;
+	ADEsetCHXOS(2,&(cCal.chIint),&offset);
+	ifnsuccess(_retCode) return;
 	dbg.print("CHVoffset:"); dbg.println(offset);
-	CsetOn(&cCal,false);
 
 	//Query user to place load for low V,high I measurement
 	dbg.println("Low-voltage (120VAC 50Hz), high-current (.8A):");
@@ -90,44 +97,29 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 
+	//GetmMV, mA from user for low voltage and low current
 	CsetOn(&cCal,true);
 	dbg.println(MVQUERYSTR);
-	if (CLgetInt(&dbg,&VlowMeas) == CANCELED) {
-		CsetOn(&cCal,false);
-		dbg.println(CANCELEDSTR);
-		return CANCELED;
-	}
+	EXITIFCANCELED(CLgetInt(&dbg,&VlowMeas));	
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(VlowMeas,DEC);
 	dbg.print(MAQUERYSTR);
-	if (CLgetInt(&dbg,&IhighMeas) == CANCELED) {
-		CsetOn(&cCal,false);
-		dbg.println(CANCELEDSTR);
-		return CANCELED;
-	}
+	EXITIFCANCELED(CLgetInt(&dbg,&IhighMeas));	
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(IhighMeas,DEC);
 
 	//get VRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
-	ifnsuccess(retCode){
-		CsetOn(&cCal,false);
-		dbg.println(NOACSTR);
-		return retCode;
-	}
-	ifnsuccess(retCode = ADEgetRegister(VRMS,&VlowCkt)) return retCode;
+	ADEwaitForInterrupt(CYCEND,waitTime);
+	CsetOn(&cCal,false);
+	EXITIFNOCYCLES();
+	ADEgetRegister(VRMS,&VlowCkt);
+	ifnsuccess(_retCode) return;
 
 	//get IRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
-	ifnsuccess(retCode){
-		CsetOn(&cCal,false);
-		dbg.println(NOACSTR);
-		return retCode;
-	}
-	ifnsuccess(retCode = ADEgetRegister(IRMS,&IhighCkt)) return retCode;
-	CsetOn(&cCal,false);
+	ADEgetRegister(IRMS,&IhighCkt);
+	ifnsuccess(_retCode) return; 
 
 	//Query user to place load for high V,low I measurement
 	dbg.print("Please attach a high-voltage source (240VAC 50Hz) "); 
@@ -139,45 +131,26 @@ int8_t calibrateCircuit(Circuit *c)
 
 	CsetOn(&cCal,true);
 	dbg.println(MVQUERYSTR);
-	if (CLgetInt(&dbg,&VhighMeas) == CANCELED) {
-		CsetOn(&cCal,false);
-		dbg.println(CANCELEDSTR);
-		return CANCELED;
-	}
+	EXITIFCANCELED(CLgetInt(&dbg,&VhighMeas));
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(VhighMeas,DEC);
 	dbg.println(MAQUERYSTR);
-	if (CLgetInt(&dbg,&IlowMeas) == CANCELED) {
-		CsetOn(&cCal,false);
-		dbg.println(CANCELEDSTR);
-		return CANCELED;
-	}
+	EXITIFCANCELED(CLgetInt(&dbg,&IlowMeas));	
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(IlowMeas,DEC);
 
 	//get VRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
-	ifnsuccess(retCode){
-		CsetOn(&cCal,false);
-		dbg.println(NOACSTR);
-		return retCode;
-	}
-	ifnsuccess(retCode = ADEgetRegister(VRMS,&VhighCkt)) return retCode;
+	ADEwaitForInterrupt(CYCEND,waitTime);
+	CsetOn(&cCal,false);
+	EXITIFNOCYCLES();
+	ADEgetRegister(VRMS,&VhighCkt);
+	ifnsuccess(_retCode) return;
 
 	//get IRMS from Ckt
-	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
-	ifnsuccess(retCode){
-		CsetOn(&cCal,false);
-		dbg.println(NOACSTR);
-		return retCode;
-	}
-	ifnsuccess(retCode = ADEgetRegister(IRMS,&IlowCkt)) {
-		CsetOn(&cCal,false);
-		return retCode;
-	}
-	CsetOn(&cCal,false);
+	ADEgetRegister(IRMS,&IlowCkt);
+	ifnsuccess(_retCode) return; 	
 	
 	dbg.println("Computing offsets and slopes for VRMS and IRMS.");
 	//From page 46 in the ADE data sheet
@@ -217,11 +190,14 @@ int8_t calibrateCircuit(Circuit *c)
 	chIos
 	VASlope
 	*/
-	ifnsuccess(retCode = Cprogram(&cCal)) return retCode;
-	ifnsuccess(retCode = CSSelectDevice(DEVDISABLE)) return retCode;
+	Cprogram(&cCal);
+	ifnsuccess(_retCode) {
+		dbg.println("Programming Failed.");
+		return;
+	} 
+	CSselectDevice(DEVDISABLE);
 	*c = cCal;						//Save new settings to *c
 	dbg.println("Calibration Complete.");
-	return retCode;
 }
 
 int8_t CLgetString(HardwareSerial *ser,char *buff, size_t bSize)

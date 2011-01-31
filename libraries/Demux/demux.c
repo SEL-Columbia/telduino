@@ -3,7 +3,7 @@
 #include "arduino/wiring.h"
 #include "ReturnCode/returncode.h"
 
-#include "Demux.h"
+#include "demux.h"
 
 
 /**
@@ -20,7 +20,7 @@ void initDemux(){
 	pinMode(NENABLED,OUTPUT);
 	
 	muxSetEnabled(false);
-        muxSelect(0);
+    muxSelect(0);
 }
 
 void muxSetEnabled(uint8_t enabled){
@@ -29,7 +29,7 @@ void muxSetEnabled(uint8_t enabled){
 	
 //Lines are numbered from 0 to 20
 //The last circuit line 20 is physcially the mains circuit
-int8_t muxSelect( int8_t line ){
+void muxSelect( int8_t line ){
 	//The hex pair X,Y corresponding to number 0-20 (00 - A5) defines the physcial circuit being activated.
 	//for line 20, the last/main line, DCBA=1111 HGFE=0101
         muxSetEnabled(false);
@@ -46,7 +46,7 @@ int8_t muxSelect( int8_t line ){
 		digitalWrite(E, LOW);
 		digitalWrite(F, LOW);
 		digitalWrite(G, LOW);
-	} else if (15 <= line && line < 21) {
+	} else if (15 <= line && line < NCIRCUITS) {
 		//See comment above. The first muxer is set to enable the second muxer.
 		digitalWrite(A, HIGH);
 		digitalWrite(B, HIGH);
@@ -60,10 +60,10 @@ int8_t muxSelect( int8_t line ){
 	} else {
 		//TODO: This is more an error than anything else.
         muxSetEnabled(false);
-		return ARGVALUEERR;
+		_retCode = ARGVALUEERR;
 	}
         muxSetEnabled(true);
-	return SUCCESS;
+	_retCode = SUCCESS;
 }
 
 void testDemux() {

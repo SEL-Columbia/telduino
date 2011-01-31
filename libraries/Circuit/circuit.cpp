@@ -11,7 +11,27 @@
 #define dbg Serial1
 #define MAGIC 2014/10000
 #define max(X,Y) ((X)>=(Y))?(X):(Y)
+#define	ERRCHECKRETURN(Cptr) if (_shouldReturn(Cptr)) return;
 
+int8_t _shouldReturn(Circuit *c) 
+{
+	ifnsuccess(_retCode) {			
+		int8_t retCode = _retCode;	
+		if (_retCode == COMMERR) {		
+			c->status |= COMM;			
+			CSselectDevice(DEVDISABLE);	
+			_retCode = COMMERR;			
+			return true;						
+		} else if (_retCode == TIMEOUT) {
+			//Do Nothing
+		} else {						
+			CSselectDevice(DEVDISABLE);	
+			_retCode = retCode;		
+			return true;						
+		}								
+	}
+	return false;
+}
 /** 
   Updates circuit measured parameters
   @TODO Achintya what is this number: MAGIC?
@@ -20,35 +40,20 @@
   @return ARGVALUEERR if the circuitID is invalid
   @return COMMERR if there is a communications error or the ADE is not detected
 */
-int8_t Cmeasure(Circuit *c)
+void Cmeasure(Circuit *c)
 {
-	int8_t retCode = SUCCESS;
 	int32_t regData;
 	int8_t timeout = false;
-	ifnsuccess(retCode=CSSelectDevice(c->circuitID)){
-		c->status |= COMM;
-		CSSelectDevice(DEVDISABLE);
-		return retCode;
-	} 
-	c->status &= ~COMM;
+	CSselectDevice(c->circuitID);					ERRCHECKRETURN(c);
 
 	//Check for presence and clear the interrupt register
-	ifnsuccess(retCode = ADEgetRegister(RSTSTATUS,&regData)) {
-		c->status |= COMM;
-		CSSelectDevice(DEVDISABLE);
-		return retCode;
-	} 
+	ADEgetRegister(RSTSTATUS,&regData);				ERRCHECKRETURN(c);
+	c->status &= ~COMM;
 	c->status &= 0xFFFF0000;
 	c->status |= (0x0000FFFF&regData);
 
 	//Start measuring
-	ifnsuccess(retCode = ADEgetRegister(PERIOD,&regData)){
-		if (retCode == COMMERR) {
-			c->status |= COMM;
-			CSSelectDevice(DEVDISABLE);
-			return retCode;
-		}
-	}
+	ADEgetRegister(PERIOD,&regData);				ERRCHECKRETURN(c);
 	c->periodus = regData*22/10;
 	dbg.print("Peruiodus:");dbg.println(c->periodus,DEC);
 
@@ -57,65 +62,35 @@ int8_t Cmeasure(Circuit *c)
 	dbg.print("waitTime:");dbg.println(waitTime,DEC);
 	//uint16_t waitTime = 2*1000*c->halfCyclesSample/max(c->frequency,40);
 
-	ifnsuccess(retCode = ADEwaitForInterrupt(CYCEND,waitTime)){
-		if (retCode == COMMERR) {
-			c->status |= COMM;
-			CSSelectDevice(DEVDISABLE);
-			return retCode;
-		}
-		//The failure may have occured because there was no interrupt
-		if (retCode == TIMEOUT) {
-			timeout = true;
-		}
+	ADEwaitForInterrupt(CYCEND,waitTime);			ERRCHECKRETURN(c);
+	//The failure may have occured because there was no interrupt
+	if (_retCode == TIMEOUT) {
+		timeout = true;
 	}
 
 	if (!timeout) {
 		//Apparent power or Volt Amps
-		ifnsuccess(retCode = ADEgetRegister(LVAENERGY,&regData)){
-			if (retCode == COMMERR) c->status |= COMM;
-			CSSelectDevice(DEVDISABLE);
-			return retCode;
-		}
+		ADEgetRegister(LVAENERGY,&regData);			ERRCHECKRETURN(c);
 		c->VA = regData*MAGIC/(c->halfCyclesSample*c->periodus/1000/1000);
 
 		//Apparent power or Volt Amps
-		ifnsuccess(retCode = ADEgetRegister(LAENERGY,&regData)){
-			if (retCode == COMMERR) c->status |= COMM;
-			CSSelectDevice(DEVDISABLE);
-			return retCode;
-		}
+		ADEgetRegister(LAENERGY,&regData);			ERRCHECKRETURN(c);
 		c->W = regData*MAGIC/(c->halfCyclesSample*c->periodus/1000/1000);
 
 		//Apparent energy accumulated since last query
-		ifnsuccess(retCode = ADEgetRegister(RVAENERGY,&regData)){
-			if (retCode == COMMERR) c->status |= COMM;
-			CSSelectDevice(DEVDISABLE);
-			return retCode;
-		}
+		ADEgetRegister(RVAENERGY,&regData);			ERRCHECKRETURN(c);
 		c->VAEnergy = regData*MAGIC;
 
 		//Actve energy accumulated since last query
-		ifnsuccess(retCode = ADEgetRegister(RAENERGY,&regData)){
-			if (retCode == COMMERR) c->status |= COMM;
-			CSSelectDevice(DEVDISABLE);
-			return retCode;
-		}
+		ADEgetRegister(RAENERGY,&regData);			ERRCHECKRETURN(c);
 		c->WEnergy = regData*MAGIC;
 
 		//IRMS
-		ifnsuccess(retCode = ADEgetRegister(IRMS,&regData)){
-			if (retCode == COMMERR) c->status |= COMM;
-			CSSelectDevice(DEVDISABLE);
-			return retCode;
-		}
+		ADEgetRegister(IRMS,&regData);				ERRCHECKRETURN(c);
 		c->IRMS = regData/c->IRMSslope;
 
 		//VRMS
-		ifnsuccess(retCode = ADEgetRegister(VRMS,&regData)){
-			if (retCode == COMMERR) c->status |= COMM;
-			CSSelectDevice(DEVDISABLE);
-			return retCode;
-		}
+		ADEgetRegister(VRMS,&regData);				ERRCHECKRETURN(c);
 		c->VRMS= regData/c->VRMSslope;
 
 		//Power Factor PF
@@ -126,56 +101,52 @@ int8_t Cmeasure(Circuit *c)
 		}
 	}//end if (!timeout)
 
-	CSSelectDevice(DEVDISABLE);
+	CSselectDevice(DEVDISABLE);
 
 	if (timeout){
-		return TIMEOUT;
+		_retCode = TIMEOUT;
 	}
 }
 
-int8_t Cprogram(const Circuit *c)
+void Cprogram(Circuit *c)
 {
 
-	int8_t retCode = SUCCESS;
+	_retCode = SUCCESS;
 	int32_t regData;
-
-	ifnsuccess(retCode = CSSelectDevice(c->circuitID)) return retCode;
+	CSselectDevice(c->circuitID);					ERRCHECKRETURN(c);
 
 	ADEreset();
 
 	regData = c->sagDurationCycles + 1;
 	if (regData >= 2) { 
-		ifnsuccess(retCode = ADEsetModeBit(DISSAG,false)) return retCode;
-		ifnsuccess(retCode = ADEsetRegister(SAGCYC,&regData)) return retCode;
+		ADEsetModeBit(DISSAG,false);				ERRCHECKRETURN(c);
+		ADEsetRegister(SAGCYC,&regData);			ERRCHECKRETURN(c);
 	} else {
-		ifnsuccess(retCode = ADEsetModeBit(DISSAG,true)) return retCode;
+		ADEsetModeBit(DISSAG,true);					ERRCHECKRETURN(c);
 	}
-	ifnsuccess(retCode = ADEsetCHXOS(1,&c->chIint,&c->chIos)) return retCode;
+	ADEsetCHXOS(1,&c->chIint,&c->chIos);			ERRCHECKRETURN(c);
 	regData = c->chIgainExp;
-	ifnsuccess(retCode = ADEsetRegister(GAIN,&regData)) return retCode;
+	ADEsetRegister(GAIN,&regData);					ERRCHECKRETURN(c);
 	regData = c->IRMSoffset;
-	ifnsuccess(retCode = ADEsetRegister(IRMSOS, &regData)) return retCode;
+	ADEsetRegister(IRMSOS, &regData);				ERRCHECKRETURN(c);
 	//since this is channel 2 c->chIint is ignored
-	ifnsuccess(retCode = ADEsetCHXOS(2,&c->chIint,&c->chVos)) return retCode;
+	ADEsetCHXOS(2,&c->chIint,&c->chVos);			ERRCHECKRETURN(c);
 	regData = c->VRMSoffset;
-	ifnsuccess(retCode = ADEsetRegister(VRMSOS, &regData)) return retCode;
+	ADEsetRegister(VRMSOS, &regData);				ERRCHECKRETURN(c);
 	regData = c->halfCyclesSample;
 	if (regData > 0) {
-		ifnsuccess(retCode = ADEsetRegister(LINECYC,&regData)) return retCode;
-		ifnsuccess(retCode = ADEsetModeBit(CYCMODE,true)) return retCode;
+		ADEsetRegister(LINECYC,&regData);			ERRCHECKRETURN(c);
+		ADEsetModeBit(CYCMODE,true);				ERRCHECKRETURN(c);
 	} else {
-		ifnsuccess(retCode = ADEsetModeBit(CYCMODE,false)) return retCode;
+		ADEsetModeBit(CYCMODE,false);				ERRCHECKRETURN(c);
 	}
 	
-	CSSelectDevice(DEVDISABLE);
-	return retCode;
+	CSselectDevice(DEVDISABLE);
 }
 
-int8_t CsetOn(Circuit *c, int8_t on) 
+void CsetOn(Circuit *c, int8_t on) 
 {
-	int8_t retCode;
-	retCode = SWset(c->circuitID,on);
-	return retCode;
+	SWset(c->circuitID,on);
 }
 
 int8_t CisOn(Circuit *c) 
@@ -192,6 +163,10 @@ void Csave(Circuit *c, uint8_t* addrEEPROM)
 	eeprom_update_block(c,addrEEPROM,sizeof(Circuit));
 }
 
+/** 
+	Reasonable default values for Circuit.
+	@warning Does not program the ADE7753s
+  */
 void CsetDefaults(Circuit *c, int8_t circuitID) 
 {
 	c->circuitID = circuitID;

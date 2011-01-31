@@ -6,8 +6,8 @@
 extern "C"{
 #endif
 
-#define success(X) ((X) == SUCCESS)
-#define nsuccess(X) ((X) != SUCCESS)
+uint8_t success(int8_t X); 
+uint8_t nsuccess(int8_t X);
 #define RCreset() (_retCode = SUCCESS)
 #define ifnsuccess(X) if ((X) != SUCCESS)
 #define ifsuccess(X) if ((X) == SUCCESS)

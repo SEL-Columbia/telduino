@@ -2,12 +2,14 @@
 #include "ShiftRegister/shiftregister.h"
 #include "ReturnCode/returncode.h"
 
+
 void _SWsetSwitches() 
 {
 	uint8_t regBits[WIDTH];
 	int8_t sreg;
 	SRsetEnabled(true);
 	for (sreg = 0; sreg < WIDTH; sreg++) {
+		//We want the shiftregisters to have invered logic if enableC[i] == 1 -> switch i is on.
 		regBits[sreg] = !_enabledC[mapRegToSw[sreg]];
 	}
 	SRshiftArray(regBits,WIDTH);
@@ -27,16 +29,18 @@ void SWsetSwitches(int8_t enabledC[WIDTH])
 	_SWsetSwitches();
 }
 /**
+  For any non-zero value of on the switch is turned on.
   0 <= sw < WIDTH
   */
-int8_t SWset(int8_t sw, int8_t on) 
+void SWset(int8_t sw, int8_t on) 
 {
+	_retCode = SUCCESS;
 	if (0 <= sw && sw < WIDTH) {
 		_enabledC[sw] = on;
 		_SWsetSwitches();
-		return SUCCESS;
+	} else {
+		_retCode = ARGVALUEERR;
 	}
-	return ARGVALUEERR;
 }
 void SWallOff()
 {
@@ -58,7 +62,7 @@ void SWallOn()
 	SRlatch();
 }
 /**
-	Returns an array of size WIDTH
+	Returns an array of size WIDTH.	If entry 0 is 1 then switch 0 is on
   */
 const int8_t* SWgetSwitchState()
 {
@@ -70,8 +74,12 @@ const int8_t* SWgetSwitchState()
   */
 uint8_t SWisOn(int8_t sw)
 {
+	_retCode = SUCCESS;
 	if (0<=sw && sw<WIDTH) {
 		return _enabledC[sw] != 0;
+	} else {
+		_retCode = ARGVALUEERR;
+		return false;
 	}
 }
 

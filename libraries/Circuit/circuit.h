@@ -80,13 +80,13 @@ typedef struct {
   Updates circuit measured parameters
   @returns a return code
 */
-int8_t CsetOn(Circuit *c, int8_t on);
+void CsetOn(Circuit *c, int8_t on);
 int8_t CisOn(Circuit *c);
 void Cload(Circuit *c, uint8_t* addrEEPROM);
 void Csave(Circuit *c, uint8_t* addrEEPROM);
 void CsetDefaults(Circuit *c, int8_t circuitID);
-int8_t Cmeasure(Circuit *c);
-int8_t Cprogram(const Circuit *c);
+void Cmeasure(Circuit *c);
+void Cprogram(Circuit *c);
 void CprintMeas(HardwareSerial *ser, Circuit *c);
 
 #endif
