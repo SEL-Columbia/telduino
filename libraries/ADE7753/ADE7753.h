@@ -73,6 +73,7 @@ static const uint16_t SAG		= 0x0002; //bit 1
 static const uint16_t CYCEND	= 0x0004; //bit 2
 static const uint16_t WSMP		= 0x0008; //bit 3
 static const uint16_t ZX		= 0x0010; //bit 4
+static const uint16_t ZX0		= 0x0011; //Wait for a 0 not a 1
 static const uint16_t TEMPREG	= 0x0020; //bit 5 ---I changed this from TEMP to TEMPREG because of the ADEReg with the same name.
 static const uint16_t RESET	= 0x0040; //bit 6
 static const uint16_t AEOF		= 0x0080; //bit 7

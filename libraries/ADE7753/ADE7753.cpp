@@ -252,10 +252,13 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	int8_t retCode = SUCCESS;
 	unsigned long time = millis();
 	unsigned long endTime = time + waitTimems;
+	uint8_t invStatus = false;
+	if (regMask == ZX0) {invStatus = true; regMask = ZX;}
 	if (time > endTime) {
 		//wait for rollover
 		do {
 			retCode = ADEgetRegister(RSTSTATUS,&status);
+			if (invStatus) status = ~status;
 			if (retCode == SUCCESS && (status & regMask)) {
 				return SUCCESS;
 			}
@@ -270,6 +273,7 @@ int8_t ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	//where it is more than waitTimems far away
 	do {
 		retCode = ADEgetRegister(RSTSTATUS,&status);
+		if (invStatus) status = ~status;
 		if (retCode == SUCCESS && (status & regMask)) {
 			return SUCCESS;
 		} 
