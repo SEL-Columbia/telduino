@@ -379,7 +379,7 @@ void displayChannelInfo() {
 	}	//endif
 	
 	//if the CYCEND bit of the Interrupt Status Registers is flagged
-	debugPort.print("\n\n\r")
+	debugPort.print("\n\n\r");
 	debugPort.print("Waiting for next cycle: ");
 	retCode = ADEwaitForInterrupt(CYCEND,4000);
 	debugPort.println(RCstr(retCode));
@@ -406,7 +406,7 @@ void displayChannelInfo() {
 		debugPort.print("VRMS:");
 		debugPort.println(RCstr(ADEgetRegister(VRMS,&val)));
 		debugPort.print("Counts:");
-		debugPort.println(VRMS);
+		debugPort.println(val);
 		vRMS = val/vRMSSlope; //old value:9142
 		debugPort.print("Volts:");
 		debugPort.println(vRMS);
