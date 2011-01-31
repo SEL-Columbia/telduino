@@ -5,6 +5,7 @@
 #include "calibration.h"
 #include "ReturnCode/returncode.h"
 #include "ADE7753/ADE7753.h"
+#include "Strings/strings.h"
 
 #define dbg Serial1
 #define waitTime 8000
@@ -26,7 +27,6 @@ int8_t calibrateCircuit(Circuit *c)
 	int32_t IhighCkt,IhighMeas;
 	Circuit cCal = *c;				//In case of failure so settings are not lost.
 
-	CSSelectDevice(cCal.circuitID);
 	
 	//Clear values which need to be calibrated
 	cCal.chIos = cCal.chVos = cCal.IRMSoffset = cCal.VRMSoffset = 0;
@@ -34,23 +34,25 @@ int8_t calibrateCircuit(Circuit *c)
 	cCal.IRMSslope = cCal.VRMSslope = cCal.VAslope = cCal.Wslope = 1;
 	retCode = Cprogram(&cCal);
 	ifnsuccess(retCode) {
-		dbg.println("Clearing failed in calibrateCircuit");
+		dbg.println("Clearing failed in calibrateCircuit.");
 		return retCode;
 	}
 
 	//Check to see if the circuit can be enabled.
 	retCode = Cenable(&cCal,true);
 	ifnsuccess(retCode) {
-		dbg.print("Circuit could not be enabled:");
+		dbg.print("Circuit could not be enabled.");
 		dbg.println(RCstr(retCode));
 		return retCode;
 	}
 
 	//Calibrate low level channel offsets
+	CSSelectDevice(cCal.circuitID);
 	CsetOn(&cCal,false);
 	dbg.print("Ground both lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC);
-	dbg.println("\' and press ENTER (\'\\r\') when done.");
+	dbg.println("\'.");
+	dbg.println(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 	CsetOn(&cCal,true);
 
@@ -92,34 +94,35 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.println("Low-voltage (120VAC 50Hz), high-current (.8A):");
 	dbg.print("Attach a low-voltage source and a 150 Ohm load to circuit \'");
 	dbg.print(cCal.circuitID,DEC);
-	dbg.print("\' and press ENTER (\'\r\') when done.");
+	dbg.println("\'.");
+	dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 
 	CsetOn(&cCal,true);
-	dbg.println("Enter measured mV. Press ENTER when done:");
+	dbg.println(MVQUERYSTR);
 	if (CLgetInt(&dbg,&VlowMeas) == CANCELED) {
 		CsetOn(&cCal,false);
-		dbg.println("CANCELED");
+		dbg.println(CANCELEDSTR);
 		return CANCELED;
 	}
 	dbg.println();
-	dbg.print("Reported by user:");
+	dbg.print(REPORTEDSTR);
 	dbg.println(VlowMeas,DEC);
-	dbg.print("Enter measured mA. Press ENTER when done:");
+	dbg.print(MAQUERYSTR);
 	if (CLgetInt(&dbg,&IhighMeas) == CANCELED) {
 		CsetOn(&cCal,false);
-		dbg.println("CANCELED");
+		dbg.println(CANCELEDSTR);
 		return CANCELED;
 	}
 	dbg.println();
-	dbg.print("Reported by user:");
+	dbg.print(REPORTEDSTR);
 	dbg.println(IhighMeas,DEC);
 
 	//get VRMS from Ckt
 	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
-		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
+		dbg.println(NOACSTR);
 		return retCode;
 	}
 	ifnsuccess(retCode = ADEgetRegister(VRMS,&VlowCkt)) return retCode;
@@ -128,7 +131,7 @@ int8_t calibrateCircuit(Circuit *c)
 	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
-		dbg.println("Failed to sense cycles. Is a 240VAC 50Hz source connected?");
+		dbg.println(NOACSTR);
 		return retCode;
 	}
 	ifnsuccess(retCode = ADEgetRegister(IRMS,&IhighCkt)) return retCode;
@@ -138,34 +141,35 @@ int8_t calibrateCircuit(Circuit *c)
 	dbg.print("Please attach a high-voltage source (240VAC 50Hz) "); 
 	dbg.print("and a 2.4 KOhm load to circuit (.1A) \'");
 	dbg.print(cCal.circuitID,DEC);
-	dbg.println("\' and press ENTER when done. ");
+	dbg.println("\'.");
+	dbg.println(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 
 	CsetOn(&cCal,true);
-	dbg.println("Enter measured mV:");
+	dbg.println(MVQUERYSTR);
 	if (CLgetInt(&dbg,&VhighMeas) == CANCELED) {
 		CsetOn(&cCal,false);
-		dbg.println("CANCELED");
+		dbg.println(CANCELEDSTR);
 		return CANCELED;
 	}
 	dbg.println();
-	dbg.print("Reported by user:");
+	dbg.print(REPORTEDSTR);
 	dbg.println(VhighMeas,DEC);
-	dbg.println("Enter measured mA:");
+	dbg.println(MAQUERYSTR);
 	if (CLgetInt(&dbg,&IlowMeas) == CANCELED) {
 		CsetOn(&cCal,false);
-		dbg.println("CANCELED");
+		dbg.println(CANCELEDSTR);
 		return CANCELED;
 	}
 	dbg.println();
-	dbg.print("Reported by user:");
+	dbg.print(REPORTEDSTR);
 	dbg.println(IlowMeas,DEC);
 
 	//get VRMS from Ckt
 	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
-		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
+		dbg.println(NOACSTR);
 		return retCode;
 	}
 	ifnsuccess(retCode = ADEgetRegister(VRMS,&VhighCkt)) return retCode;
@@ -174,7 +178,7 @@ int8_t calibrateCircuit(Circuit *c)
 	retCode = ADEwaitForInterrupt(CYCEND,waitTime);
 	ifnsuccess(retCode){
 		CsetOn(&cCal,false);
-		dbg.println("Failed to sense cycles. Is a 120VAC 50Hz source connected?");
+		dbg.println(NOACSTR);
 		return retCode;
 	}
 	ifnsuccess(retCode = ADEgetRegister(IRMS,&IlowCkt)) {

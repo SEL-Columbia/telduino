@@ -175,6 +175,7 @@ int8_t Cenable(Circuit *c, int8_t enabled)
 {
 	int32_t dummy;
 	int8_t retCode;
+	CSSelectDevice(c->circuitID);
 	retCode = ADEgetRegister(DIEREV,&dummy);
 	if (enabled && success(retCode)){ 
 		c->status |= ENABLED;
@@ -185,6 +186,7 @@ int8_t Cenable(Circuit *c, int8_t enabled)
 	} else {
 		c->status &= ~ENABLED;
 	}
+	CSSelectDevice(DEVDISABLE);
 	return SUCCESS;
 }
 

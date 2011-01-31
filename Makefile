@@ -34,7 +34,7 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_dig
     byteordering.o fat.o partition.o sd_raw.o $(PROJECT).o 
 #gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o
 
-all : hex program #clean
+all : hex program 
 
 hex : $(OBJECT_FILES)
 	avr-gcc -Os -Wl,--gc-sections -mmcu=atmega1280 -o $(PROJECT).elf $(OBJECT_FILES) -Llibraries -lm
@@ -48,7 +48,7 @@ hex : $(OBJECT_FILES)
 	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@
 
 clean:
-	rm *.o *.elf *.hex
+	rm -f *.o *.elf *.hex
 
 program: $(PROJECT).hex
 #	avrdude -patmega1280 -cusbtiny -Uflash:w:$(PROJECT).hex
@@ -60,6 +60,8 @@ programfuses:
 
 readfuses:
 	avrdude -patmega1280 -c dragon_isp -P usb -U hfuse:r:high.txt:r -U lfuse:r:low.txt:r -U efuse:r:ext.txt:r
-	hexdump high.txt low.txt ext.txt
+	echo -n "high :" && hexdump high.txt
+	echo -n "low  :" && hexdump low.txt
+	echo -n "efuse:" && hexdump ext.txt
 	rm -f high.txt low.txt ext.txt
 
