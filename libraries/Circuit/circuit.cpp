@@ -171,32 +171,9 @@ int8_t Cprogram(const Circuit *c)
 	return retCode;
 }
 
-int8_t Cenable(Circuit *c, int8_t enabled) 
-{
-	int32_t dummy;
-	int8_t retCode;
-	CSSelectDevice(c->circuitID);
-	retCode = ADEgetRegister(DIEREV,&dummy);
-	if (enabled && success(retCode)){ 
-		c->status |= ENABLED;
-	} else if (enabled) {
-		c->status |= COMM;
-		c->status &= ~ENABLED;
-		return retCode;
-	} else {
-		c->status &= ~ENABLED;
-	}
-	CSSelectDevice(DEVDISABLE);
-	return SUCCESS;
-}
-
 int8_t CsetOn(Circuit *c, int8_t on) 
 {
 	int8_t retCode;
-	if (!(c->status & ENABLED)){
-		retCode = FAILURE;
-		return retCode;
-	}
 	retCode = SWset(c->circuitID,on);
 	return retCode;
 }
@@ -231,9 +208,6 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 	c->VAoffset = 0;
 	c->sagDurationCycles = 10;
 	c->minVSag = 100;
-
-	c->status |= ENABLED;
-
 
 	//Meausured
 	c->IRMS = 0;

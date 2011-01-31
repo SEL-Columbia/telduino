@@ -4,8 +4,7 @@
 
 #include "arduino/HardwareSerial.h"
 
-static const uint32_t ENABLED = 0x00010000;
-static const uint32_t COMM	  = 0x00020000;
+static const uint32_t COMM	  = 0x00010000;
 
 typedef struct {
 
@@ -81,7 +80,6 @@ typedef struct {
   Updates circuit measured parameters
   @returns a return code
 */
-int8_t Cenable(Circuit *c, int8_t enabled);
 int8_t CsetOn(Circuit *c, int8_t on);
 int8_t CisOn(Circuit *c);
 void Cload(Circuit *c, uint8_t* addrEEPROM);

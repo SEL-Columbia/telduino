@@ -38,14 +38,6 @@ int8_t calibrateCircuit(Circuit *c)
 		return retCode;
 	}
 
-	//Check to see if the circuit can be enabled.
-	retCode = Cenable(&cCal,true);
-	ifnsuccess(retCode) {
-		dbg.print("Circuit could not be enabled.");
-		dbg.println(RCstr(retCode));
-		return retCode;
-	}
-
 	//Calibrate low level channel offsets
 	CSSelectDevice(cCal.circuitID);
 	CsetOn(&cCal,false);
