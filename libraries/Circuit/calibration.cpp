@@ -116,6 +116,7 @@ void calibrateCircuit(Circuit *c)
 	//Will this increase reliability?
 	CSselectDevice(DEVDISABLE);
 	CSselectDevice(cCal.circuitID);
+	delay(1);
 
 	//get VRMS from Ckt
 	ADEwaitForInterrupt(CYCEND,waitTime);
@@ -153,11 +154,13 @@ void calibrateCircuit(Circuit *c)
 	CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,&VhighCkt);
-	ifnsuccess(_retCode) { dbg.println("get VRMS Failed");return;}
+	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return;}
+	dbg.print("VRMS:"); dbg.println(VhighCkt);
 
 	//get IRMS from Ckt
 	ADEgetRegister(IRMS,&IlowCkt);
-	ifnsuccess(_retCode) { dbg.println("get IRMS Failed");return;}
+	dbg.print("IRMS:"); dbg.println(IlowCkt);
+	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return;}
 	
 	dbg.println("Computing offsets and slopes for VRMS and IRMS.");
 	//From page 46 in the ADE data sheet

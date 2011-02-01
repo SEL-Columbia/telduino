@@ -173,7 +173,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 	c->chIgainExp = 1;
 	c->IRMSoffset = 0x01BC;
 	c->IRMSslope = 164;
-	c->chVos = 0;
+	c->chVos = 15;
 	c->VRMSoffset = 0x07FF;
 	c->VRMSslope = 4700;
 	c->VAslope = 2014/10000.0;

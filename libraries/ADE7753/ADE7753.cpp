@@ -71,7 +71,7 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 	} else {
 		_retCode = SUCCESS;
 	}
-	
+	/*
 	Serial1.print("ADEgetRegister rawData: ");
 	Serial1.println(rawData,BIN);
 	Serial1.print("ADEgetRegister chksum(rawdata): ");
@@ -81,7 +81,7 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 	Serial1.print("ADEgetRegister chksum from ADE after shift: ");
 	Serial1.println((int)(((uint8_t*)&chksum)[3]),BIN);
 	Serial1.println(RCstr(_retCode));
-	
+	*/
 	//Push bits into MSB for irregular sizes
 	rawData <<= (nBytes*8-reg.nBits);
 	if (reg.signType == TWOS) {
