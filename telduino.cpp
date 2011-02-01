@@ -46,8 +46,9 @@
 #define SHEEVA_BAUD_RATE 9600
 #define TELIT_BAUD_RATE 115200
 #define verbose 1
+#define MAXLEN_PLUG_MESSAGE 160
 
-
+boolean msgWaitLock = false;
 Circuit ckts[NCIRCUITS];
 
 /*  Disables the watchdog timer the first chance the AtMega gets as recommended
@@ -85,8 +86,8 @@ String getValueForKey(String key, String commandString);
 String getSMSText(String commandString);
 void meter(String commandString);
 void modem(String commandString);
-String readSheevaPort();
-String readTelitPort();
+void readSheevaPort();
+void readTelitPort();
 void chooseDestination(String destination, String commandString);
 void turnOnTelit();
 
@@ -131,8 +132,8 @@ void setup()
 
 void loop()
 {	
-	parseBerkeley();
-	//parseColumbia();
+	//parseBerkeley();
+	parseColumbia();
 } //end of main loop
 
 /**
@@ -553,35 +554,17 @@ void __cxa_pure_virtual(void)
 }
 }
 
+/**
+ *	key-value parsing interface for telduino-sheeva communications
+ */
 void parseColumbia() {
-	/**
-	 *	key-value parsing interface for telduino-sheeva communications
-	 */
     if (verbose > 1) {
         debugPort.println("top of loop()");
         debugPort.println(millis());
     }
-    String commandString;
-    String destination;
 	
-    commandString = readSheevaPort();
-	destination = getValueForKey("cmp", commandString);
-    chooseDestination(destination, commandString);    
-	
-    String modemString = "";
-    modemString = readTelitPort();
-    modemString = modemString.trim();
-    if (modemString.length() != 0) {
-        String responseString = "";
-        responseString += "cmp=mdm&text=";
-        responseString += '"';
-        responseString += modemString;
-        responseString += '"';
-        sheevaPort.println(responseString);
-        
-        debugPort.println("string received from telit");
-        debugPort.println(modemString);
-    }
+    readSheevaPort();
+    readTelitPort();
 }
 
 void setupLVAMode(int icid, int32_t linecycVal) {
@@ -1044,51 +1027,91 @@ void modem(String commandString) {
     
 }
 
-String readSheevaPort() {
-	/**
-	 *	this function reads the sheevaPort (Serial2) for incoming commands
-	 *	and returns them as String objects.
-	 */
-    char incomingByte = ';';    
-    String commandString = "";
-    while ((sheevaPort.available() > 0) || ((incomingByte != ';') && (incomingByte != '\n'))) {
-        incomingByte = sheevaPort.read();
-        if (incomingByte != -1) {      
-            if (verbose > 1) {
-                debugPort.print(incomingByte);
+/**
+ *	this function reads the sheevaPort (Serial2) for incoming commands
+ *	and returns them as String objects.
+ */
+void readSheevaPort()
+{
+    int i;
+    unsigned char c;
+    const char *sp;
+    boolean valid_message_streaming, valid_message_received;
+    
+    if (sheevaPort.available()) {
+        debugPort.println("readSheevaPort():start");
+
+        char s[MAXLEN_PLUG_MESSAGE];
+        valid_message_streaming = false; 
+        valid_message_received = false;
+
+        i = 0;
+        while (sheevaPort.available() && i < MAXLEN_PLUG_MESSAGE) {
+            if ((c = sheevaPort.read()) != -1) {
+                debugPort.print(c);
+                if (valid_message_streaming) {
+                    if (c == ')') {
+                        valid_message_received =  true;
+                    }
+                    else {
+                        s[i] = c;
+                        i++;
+                        if (c == '\n') { break;}
+                    }
+                }
+                else if (c == '(') { 
+                    valid_message_streaming = true; 
+                }
+                /* REMOVE WHEN DONE DEBUGGING */
+                else if (c == 26) {
+                    debugPort.println("got ctrl-z");
+                    telitPort.println(c);
+                }
             }
-            commandString += incomingByte;
         }
-        if (incomingByte == ';') {
-            commandString = commandString.substring(0, commandString.length() - 1);
-            break;
+        s[i] = '\0';
+
+        if (i > 0 and valid_message_received) {
+            if (msgWaitLock || \
+                ((s[0] == 'a') || (s[0] == 'A')) && \
+                    ((s[1] == 't') || (s[1] == 'T'))) { // modem job
+                debugPort.println("received modem message");
+                i = -1;
+                while (s[++i] != '\0') {
+                    telitPort.print(s[i]);
+                }
+                if (msgWaitLock) { msgWaitLock = false; }
+            }
+            else { // meter job
+                debugPort.print("received meter message:");
+                sp = s;
+                String job = sp;
+                debugPort.println(job);
+                meter(job);
+            }
         }
-    }   
-    commandString = commandString.trim();
-    return commandString;
+
+        debugPort.println("readSheevaPort():end");
+    }
 }
 
-String readTelitPort() {
-	/**
-	 *	this function reads the telitPort (Serial3) for incoming commands
-	 *	and returns them as String objects.
-	 */
+/**
+ *	this function reads the telitPort (Serial3) for incoming commands
+ *	and returns them as String objects.
+ */
+void readTelitPort() {
 	uint32_t startTime = millis();
-    char incomingByte = '\n';
-    String commandString = "";
-    while ((telitPort.available() > 0) || (incomingByte != '\n')) {
-        incomingByte = telitPort.read();
-        if (incomingByte != -1) {      
-            commandString += incomingByte;
-        }
-		if (commandString.indexOf(">") != -1) {
-			return commandString;
-		}
-		if (millis() - startTime > 1000) {
-			return commandString;
-		}
+    byte b;
+    while (telitPort.available()) {
+        if ((b = telitPort.read()) != -1) {
+            debugPort.print(b);
+            sheevaPort.print(b);
+            if (b == '>') { // modem awaits the content of the sms 
+                msgWaitLock = true;
+                // delay(100);
+            }
+        } 
     }
-    return commandString;
 }
 
 void chooseDestination(String destination, String commandString) {
