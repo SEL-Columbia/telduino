@@ -30,7 +30,7 @@ VPATH = libraries/arduino libraries/Demux libraries/ShiftRegister\
 OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_digital.o \
 	wiring_pulse.o wiring_shift.o demux.o shiftregister.o main.o \
 	HardwareSerial.o Print.o WMath.o WString.o SPI.o ADE7753.o \
-	DbgTel.o select.o switches.o returncode.o circuit.o calibration.o\
+	DbgTel.o select.o switches.o returncode.o  circuit.o calibration.o\
     byteordering.o fat.o partition.o sd_raw.o $(PROJECT).o 
 #gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o
 
@@ -60,8 +60,8 @@ programfuses:
 
 readfuses:
 	avrdude -patmega1280 -c dragon_isp -P usb -U hfuse:r:high.txt:r -U lfuse:r:low.txt:r -U efuse:r:ext.txt:r
-	echo -n "high :" && hexdump high.txt
 	echo -n "low  :" && hexdump low.txt
+	echo -n "high :" && hexdump high.txt
 	echo -n "efuse:" && hexdump ext.txt
-	rm -f high.txt low.txt ext.txt
+	rm -f low.txt high.txt ext.txt
 

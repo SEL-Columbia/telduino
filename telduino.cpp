@@ -47,6 +47,7 @@
 #define TELIT_BAUD_RATE 115200
 #define verbose 1
 
+
 Circuit ckts[NCIRCUITS];
 
 /*  Disables the watchdog timer the first chance the AtMega gets as recommended
@@ -122,7 +123,7 @@ void setup()
 	//Load circuit data from EEPROM
 	uint8_t *addrEEPROM = 0;
 	for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
-		//Cload(c,addrEEPROM);
+		Cload(c,addrEEPROM);
 		addrEEPROM += sizeof(Circuit);
 	}
 } //end of setup section
@@ -192,12 +193,14 @@ void parseBerkeley()
 			CLgetString(&debugPort,buff,sizeof(buff));
 			debugPort.println();
 
+			//debugPort.print("(int32_t)(&),HEX:");
+			//debugPort.println((int32_t)(&WAVEFORM),HEX);
 			int32_t regData = 0;
 			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
 				if (strcmp(regList[i]->name,buff) == 0){
 					CSselectDevice(_testChannel);
-					debugPort.print("regData:");
 					ADEgetRegister(*regList[i],&regData);
+					debugPort.print("regData:");
 					debugPort.print(RCstr(_retCode));
 					debugPort.print(":0x");
 					debugPort.print(regData,HEX);
@@ -249,6 +252,7 @@ void parseBerkeley()
 			}
 			debugPort.println("Defaults set. Don't forget to program! ('P')");
 		} else if (incoming == 'E') {		//Save data in ckts[] to EEPROM
+			debugPort.println("Saving circuit settings to EEPROM.");
 			uint8_t *addrEEPROM = 0;
 			for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
 				Csave(c,addrEEPROM);
@@ -257,6 +261,7 @@ void parseBerkeley()
 			debugPort.println("Save Complete");
 		} else if (incoming=='e'){			//Load circuit data from EEPROM
 			uint8_t *addrEEPROM = 0;
+			debugPort.println("Loading circuit settings from EEPROM.");
 			for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
 				Cload(c,addrEEPROM);
 				addrEEPROM += sizeof(Circuit);

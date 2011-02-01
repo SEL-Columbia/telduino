@@ -1,5 +1,5 @@
 #include "returncode.h"
-
+int8_t _retCode;
 /**
 	Takes a return code and returns a short description and otherwise returns "RCERR".
 */

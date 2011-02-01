@@ -5,9 +5,6 @@
 
 #include "ADE7753.h"
 
-//TODO Add range checks for all safe functions
-//TODO writeData shouldn't use a pointer to data, neither should readData.
-
 /**
 * returns BYTES from the ADE in a uint32_t value
 * MSB of ADE output is the MSB of the data output
@@ -63,11 +60,15 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 	uint32_t chksum = 0;
 	int8_t retries = RETRIES;
 
+	//Serial1.print("(int32_t)(&),HEX:");
+	//Serial1.println((int32_t)(&WAVEFORM),HEX);
+
 	ADEreadData(reg, &rawData);
 	ADEreadData(CHKSUM,&chksum);
 	if (ADEchksum(rawData) != ((uint8_t*)&chksum)[3]) {
-		//for some reason this is returning FALURE and not commerr
 		_retCode = COMMERR;
+		Serial1.print("ADE _retCode:");
+		Serial1.println(RCstr(_retCode));
 	} else {
 		_retCode = SUCCESS;
 	}

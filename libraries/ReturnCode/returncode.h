@@ -21,7 +21,8 @@ static const int8_t PARSEERR =	3;
 static const int8_t COMMERR =	4;
 static const int8_t TIMEOUT =	5;
 static const int8_t CANCELED=	6;
-static int8_t _retCode = 0;
+
+extern int8_t _retCode;
 
 static char* returnStr[] = {"SUCCESS","FAILURE","ARGVALUEERR","PARSEERR","COMMERR","TIMEOUT","CANCELED"};
 

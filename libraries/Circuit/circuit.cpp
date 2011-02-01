@@ -21,12 +21,14 @@ int8_t _shouldReturn(Circuit *c)
 			c->status |= COMM;			
 			CSselectDevice(DEVDISABLE);	
 			_retCode = COMMERR;			
+			dbg.println("returning");
 			return true;						
 		} else if (_retCode == TIMEOUT) {
 			//Do Nothing
 		} else {						
 			CSselectDevice(DEVDISABLE);	
 			_retCode = retCode;		
+			dbg.println("returning");
 			return true;						
 		}								
 	}

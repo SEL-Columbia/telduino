@@ -94,7 +94,7 @@ void calibrateCircuit(Circuit *c)
 	dbg.print("Attach a low-voltage source and a 150 Ohm load to circuit \'");
 	dbg.print(cCal.circuitID,DEC);
 	dbg.println("\'.");
-	dbg.print(PRESSENTERSTR);
+	dbg.println(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 
 	//GetmMV, mA from user for low voltage and low current
