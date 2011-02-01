@@ -27,12 +27,14 @@ void muxSetEnabled(uint8_t enabled){
         digitalWrite(NENABLED, enabled?LOW:HIGH);
 }
 	
-//Lines are numbered from 0 to 20
-//The last circuit line 20 is physcially the mains circuit
+/** Lines are numbered from 0 to 20
+	The last circuit line 20 is physcially the mains circuit
+	_retCode is not reset, but is set to ARGVALUEERR if there is an error
+  */
 void muxSelect( int8_t line ){
 	//The hex pair X,Y corresponding to number 0-20 (00 - A5) defines the physcial circuit being activated.
 	//for line 20, the last/main line, DCBA=1111 HGFE=0101
-        muxSetEnabled(false);
+    muxSetEnabled(false);
 	if ( 0 <= line && line < 15){
 		//This just converts line into binary input to the mux.
 		digitalWrite(A, (line & 0x01)?HIGH:LOW);
@@ -63,7 +65,6 @@ void muxSelect( int8_t line ){
 		_retCode = ARGVALUEERR;
 	}
         muxSetEnabled(true);
-	_retCode = SUCCESS;
 }
 
 void testDemux() {

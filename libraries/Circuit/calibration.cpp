@@ -63,18 +63,21 @@ void calibrateCircuit(Circuit *c)
 	dbg.println("Configuring to read raw voltage.");
 	ADEsetModeBit(WAVESEL_0,true);
 	ifnsuccess(_retCode) return;
-	dbg.println("Modebit 0 set.");
 	ADEsetModeBit(WAVESEL1_,true);
 	ifnsuccess(_retCode) return;
+	ADEsetIrqEnBit(WSMP,true);	//The WAVEFORM register will not work without this.
+	ADEsetIrqEnBit(CYCEND,true);//Just in case
+	ifnsuccess(_retCode) return;
+	dbg.println("WAVEFORM set to V, WSMP set to 1.");
 	
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
 	CsetOn(&cCal,true);
 	ADEwaitForInterrupt(WSMP,waitTime);
-	ifnsuccess(_retCode) { CsetOn(&cCal,false); return;}
+	ifnsuccess(_retCode) { CsetOn(&cCal,false); dbg.println("Waiting for WSMP failed."); return;}
 	ADEgetRegister(WAVEFORM,&regData);
 	CsetOn(&cCal,false); 
-	ifnsuccess(_retCode) { return;}
+	ifnsuccess(_retCode) {dbg.println("get WAVEFORM failed"); return;}
 	dbg.print("CHVwaveform:"); dbg.println(regData);
 	//regData = regData*500*100/10322/161; //(1.61mV/LSB in CH2OS) and 500/10322 in WAVEFORM
 	regData = (regData*31549)>>20; 
@@ -86,7 +89,7 @@ void calibrateCircuit(Circuit *c)
 	}
 	int8_t offset = (int8_t)regData;
 	ADEsetCHXOS(2,&(cCal.chIint),&offset);
-	ifnsuccess(_retCode) return;
+	ifnsuccess(_retCode) { dbg.println("set CHXOS 2 failed.");return;}
 	dbg.print("CHVoffset:"); dbg.println(offset);
 
 	//Query user to place load for low V,high I measurement
@@ -110,16 +113,20 @@ void calibrateCircuit(Circuit *c)
 	dbg.print(REPORTEDSTR);
 	dbg.println(IhighMeas,DEC);
 
+	//Will this increase reliability?
+	CSselectDevice(DEVDISABLE);
+	CSselectDevice(cCal.circuitID);
+
 	//get VRMS from Ckt
 	ADEwaitForInterrupt(CYCEND,waitTime);
 	CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,&VlowCkt);
-	ifnsuccess(_retCode) return;
+	ifnsuccess(_retCode) { dbg.println("get VRMS Failed");return;}
 
 	//get IRMS from Ckt
 	ADEgetRegister(IRMS,&IhighCkt);
-	ifnsuccess(_retCode) return; 
+	ifnsuccess(_retCode) { dbg.println("get IRMS Failed");return;}
 
 	//Query user to place load for high V,low I measurement
 	dbg.print("Please attach a high-voltage source (240VAC 50Hz) "); 
@@ -146,11 +153,11 @@ void calibrateCircuit(Circuit *c)
 	CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,&VhighCkt);
-	ifnsuccess(_retCode) return;
+	ifnsuccess(_retCode) { dbg.println("get VRMS Failed");return;}
 
 	//get IRMS from Ckt
 	ADEgetRegister(IRMS,&IlowCkt);
-	ifnsuccess(_retCode) return; 	
+	ifnsuccess(_retCode) { dbg.println("get IRMS Failed");return;}
 	
 	dbg.println("Computing offsets and slopes for VRMS and IRMS.");
 	//From page 46 in the ADE data sheet

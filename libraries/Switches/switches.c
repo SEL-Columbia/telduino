@@ -34,7 +34,6 @@ void SWsetSwitches(int8_t enabledC[WIDTH])
   */
 void SWset(int8_t sw, int8_t on) 
 {
-	_retCode = SUCCESS;
 	if (0 <= sw && sw < WIDTH) {
 		_enabledC[sw] = on;
 		_SWsetSwitches();
@@ -74,7 +73,6 @@ const int8_t* SWgetSwitchState()
   */
 uint8_t SWisOn(int8_t sw)
 {
-	_retCode = SUCCESS;
 	if (0<=sw && sw<WIDTH) {
 		return _enabledC[sw] != 0;
 	} else {

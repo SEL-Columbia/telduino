@@ -129,6 +129,7 @@ void ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val);
 int8_t ADEreadInterrupt(uint16_t regMask);
 void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems);
 void ADEsetModeBit(uint16_t regMask, uint8_t bit);
+void ADEsetIrqEnBit(uint16_t regMask, uint8_t bit);
 int8_t ADEperToFreq(int32_t period);
 void ADEreset();
 

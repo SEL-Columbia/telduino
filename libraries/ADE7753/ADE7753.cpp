@@ -46,8 +46,7 @@ void ADEwriteData(ADEReg reg, uint32_t *data)
 }
 
 /**
-*	returns SUCCESS if the read failed
-*	returns COMMERR if the computed check sum fails to make the ADE chksum
+  resets _retCode to SUCCESS then tries to get the regValue from register reg
 */
 void ADEgetRegister(ADEReg reg, int32_t *regValue)
 {
@@ -67,12 +66,12 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 	ADEreadData(CHKSUM,&chksum);
 	if (ADEchksum(rawData) != ((uint8_t*)&chksum)[3]) {
 		_retCode = COMMERR;
-		Serial1.print("ADE _retCode:");
-		Serial1.println(RCstr(_retCode));
+		//Serial1.print("ADE _retCode:");
+		//Serial1.println(RCstr(_retCode));
 	} else {
 		_retCode = SUCCESS;
 	}
-	/*
+	
 	Serial1.print("ADEgetRegister rawData: ");
 	Serial1.println(rawData,BIN);
 	Serial1.print("ADEgetRegister chksum(rawdata): ");
@@ -81,8 +80,8 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 	Serial1.println(chksum,BIN);
 	Serial1.print("ADEgetRegister chksum from ADE after shift: ");
 	Serial1.println((int)(((uint8_t*)&chksum)[3]),BIN);
-	Serial1.println(RCstr(retCode));
-	*/
+	Serial1.println(RCstr(_retCode));
+	
 	//Push bits into MSB for irregular sizes
 	rawData <<= (nBytes*8-reg.nBits);
 	if (reg.signType == TWOS) {
@@ -114,8 +113,8 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 
 /**
 *	
+*	resets _retCode to SUCCESS then tries to get the regValue from register reg
 *	@warning Range of input value is not checked. Refer to the ADE7753 datasheet for proper input ranges.
-*	@return return code
   */
 void ADEsetRegister(ADEReg reg, int32_t *value)
 {
@@ -173,11 +172,9 @@ uint8_t ADEchksum(uint32_t data)
 	CH2 does not use the enableInt bit.
 	@warning CH2 is a negative offset so positive values decrease CH2
 
-	@return SUCCESS, ARGEVALUEERR or ADEgetRegister errors
 */
 void ADEgetCHXOS(const uint8_t X,int8_t *enableInt,int8_t *val) 
 {
-	_retCode = SUCCESS;
 	int32_t data  = 0;
 
 	if (X == 1) {
@@ -202,7 +199,6 @@ void ADEgetCHXOS(const uint8_t X,int8_t *enableInt,int8_t *val)
 
 void ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val) 
 {
-	_retCode = SUCCESS;
 	int32_t data  =*val;
 
 	//convert to signed magnitude
@@ -226,50 +222,46 @@ void ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val)
 }
 
 /** 
-  * @return 0,1 value of interrupt. Returns a negative error code if a failure occurs. 
+  * @return 1 if interrupt is fired. Returns 0 otherwise or if a failure occurs. 
   */
 int8_t ADEreadInterrupt(uint16_t regMask)
 {
 	int32_t status;
 	ADEgetRegister(RSTSTATUS,&status);
 	ifsuccess(_retCode) {
-		return status & regMask;
+		if (regMask == ZX0) {
+			status = ~status;
+			regMask = ZX;
+		}
+		return ((status & regMask) != 0);
 	} else {
 		return 0;
 	}
 }
 
 /** Will wait at least waitTimems milliseconds before exiting.
-  @return SUCCESS if interrupt was fired, FAILURE otherwise.
+  _retCode is SUCCESS if interrupt was fired, TIMEOUT otherwise.
 
   */
 void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 {
 	int32_t status = 0;
-	_retCode = SUCCESS;
 	unsigned long time = millis();
 	unsigned long endTime = time + waitTimems;
-	uint8_t invStatus = false;
-	if (regMask == ZX0) {invStatus = true; regMask = ZX;}
+	_retCode = SUCCESS;
 	if (time > endTime) {
 		//wait for rollover
 		do {
-			ADEgetRegister(RSTSTATUS,&status);
-			if (invStatus) status = ~status;
-			if ((status & regMask) && _retCode == SUCCESS) return;
-
-			//Wait between reads
-			for (int i=0; i<10; i++); 
-
+			if (ADEreadInterrupt(regMask)) return;
+			ifnsuccess(_retCode) {Serial1.println("COMMERR in waitForInterrupt");}
 		} while (millis() > endTime);
 	}
 	//now time=millis() should be less than endTime unless time 
 	//overflowed to be much less than endTime to the point
 	//where it is more than waitTimems far away
 	do {
-		ADEgetRegister(RSTSTATUS,&status);
-		if (invStatus) status = ~status;
-		if ((status & regMask) && _retCode == SUCCESS) return;
+		if (ADEreadInterrupt(regMask)) return;
+		ifnsuccess(_retCode) { Serial1.println("COMMERR in waitForInterrupt");}
 		time = millis();
 	} while ((time <= endTime) && (endTime-time <= waitTimems));
 	/*
@@ -300,6 +292,20 @@ void ADEsetModeBit(uint16_t regMask, uint8_t bit)
 	}
 
 	ADEsetRegister(MODE, &mode);
+}
+
+void ADEsetIrqEnBit(uint16_t regMask, uint8_t bit)
+{
+	int32_t irq;
+	ADEgetRegister(IRQEN, &irq);
+	ifnsuccess(_retCode) return;
+
+	irq = irq & ~regMask;
+	if (bit != 0) {
+		irq = irq | regMask;
+	}
+
+	ADEsetRegister(IRQEN, &irq);
 }
 
 /**

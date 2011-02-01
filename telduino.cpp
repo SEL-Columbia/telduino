@@ -267,7 +267,18 @@ void parseBerkeley()
 				addrEEPROM += sizeof(Circuit);
 			}
 			debugPort.println("Load Complete");
-		}
+		} else if (incoming=='w') {
+			int32_t mask = 0;
+			debugPort.print("Enter interrupt mask. Will wait for 4sec. $");
+			CLgetInt(&debugPort,&mask);
+			debugPort.println();
+			//debugPort.print("(int32_t)(&),HEX:");
+			//debugPort.println((int32_t)(&WAVEFORM),HEX);
+			CSselectDevice(_testChannel);
+			ADEwaitForInterrupt((int16_t)mask,4000);
+			debugPort.println(RCstr(_retCode));
+			CSselectDevice(DEVDISABLE);
+		}	
 		else {								//Indicate received character
 			int waiting = 2048;				//Used to eat up junk that follows
 			debugPort.print("\n\rNot_Recognized:");

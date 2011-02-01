@@ -23,7 +23,6 @@ void initSelect()
 */
 void CSselectDevice(int device) 
 {
-	_retCode = SUCCESS;
     if (device == SDCARD) {
         muxSetEnabled(false);   
         digitalWrite(SDSS,LOW);
