@@ -54,9 +54,7 @@ void calibrateCircuit(Circuit *c)
 	CSselectDevice(cCal.circuitID);
 	CsetOn(&cCal,false);
 	dbg.print("Ground both lines on circuit \'");
-	dbg.print(cCal.circuitID,DEC);
-	dbg.println("\'.");
-	dbg.println(PRESSENTERSTR);
+	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 
 	//Set waveform mode to read voltage
@@ -73,8 +71,9 @@ void calibrateCircuit(Circuit *c)
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
 	CsetOn(&cCal,true);
+	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(WSMP,waitTime);
-	ifnsuccess(_retCode) { CsetOn(&cCal,false); dbg.println("Waiting for WSMP failed."); return;}
+	ifnsuccess(_retCode) {CsetOn(&cCal,false); dbg.println("Waiting for WSMP failed."); return;}
 	ADEgetRegister(WAVEFORM,&regData);
 	CsetOn(&cCal,false); 
 	ifnsuccess(_retCode) {dbg.println("get WAVEFORM failed"); return;}
@@ -95,9 +94,7 @@ void calibrateCircuit(Circuit *c)
 	//Query user to place load for low V,high I measurement
 	dbg.println("Low-voltage (120VAC 50Hz), high-current (.8A):");
 	dbg.print("Attach a low-voltage source and a 150 Ohm load to circuit \'");
-	dbg.print(cCal.circuitID,DEC);
-	dbg.println("\'.");
-	dbg.println(PRESSENTERSTR);
+	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 
 	//GetmMV, mA from user for low voltage and low current
@@ -119,6 +116,7 @@ void calibrateCircuit(Circuit *c)
 	delay(1);
 
 	//get VRMS from Ckt
+	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(CYCEND,waitTime);
 	CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
@@ -150,6 +148,7 @@ void calibrateCircuit(Circuit *c)
 	dbg.println(IlowMeas,DEC);
 
 	//get VRMS from Ckt
+	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(CYCEND,waitTime);
 	CsetOn(&cCal,false);
 	EXITIFNOCYCLES();

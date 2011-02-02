@@ -163,7 +163,7 @@ void parseBerkeley()
 			debugPort.println();
 			
 			int32_t regData = 0;
-			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
+			for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
 				if (strcmp(regList[i]->name,buff) == 0){
 					CSselectDevice(_testChannel);
 					debugPort.print("Current regData:");
@@ -196,7 +196,7 @@ void parseBerkeley()
 			//debugPort.print("(int32_t)(&),HEX:");
 			//debugPort.println((int32_t)(&WAVEFORM),HEX);
 			int32_t regData = 0;
-			for (int i=0; i < sizeof(regList)/sizeof(regList[0]); i++) {
+			for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
 				if (strcmp(regList[i]->name,buff) == 0){
 					CSselectDevice(_testChannel);
 					ADEgetRegister(*regList[i],&regData);

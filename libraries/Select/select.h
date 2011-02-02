@@ -20,6 +20,9 @@ extern "C"{
 
 void initSelect();
 void CSselectDevice(int device);
+void CSstrobe();
+int CSgetDevice();
+void CSsetEnable(int8_t enabled);
 
 #ifdef __cplusplus
 }
