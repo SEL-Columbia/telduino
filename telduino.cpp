@@ -132,8 +132,8 @@ void setup()
 
 void loop()
 {	
-	//parseBerkeley();
-	parseColumbia();
+	parseBerkeley();
+	//parseColumbia();
 } //end of main loop
 
 /**

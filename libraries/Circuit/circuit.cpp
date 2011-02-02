@@ -170,18 +170,18 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 	c->halfCyclesSample = 200;
 	c->chIint = true;
 	c->chIos = 0;
-	c->chIgainExp = 1;
-	c->IRMSoffset = 0x01BC;
-	c->IRMSslope = 164;
-	c->chVos = 15;
-	c->VRMSoffset = 0x07FF;
-	c->VRMSslope = 4700;
-	c->VAslope = 2014/10000.0;
+	c->chIgainExp = 4;
+	c->IRMSoffset = 0;//0x01BC;
+	c->IRMSslope = 1;//164;
+	c->chVos = 0;//15;
+	c->VRMSoffset = 0;//0x07FF;
+	c->VRMSslope = 1;//4700;
+	c->VAslope = 1;//2014/10000.0;
 	c->VAoffset = 0;
 	c->sagDurationCycles = 10;
 	c->minVSag = 100;
 
-	//Meausured
+	//Measured
 	c->IRMS = 0;
 	c->VRMS = 0;
 	c->VAEnergy = 0;

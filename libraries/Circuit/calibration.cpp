@@ -40,6 +40,7 @@ void calibrateCircuit(Circuit *c)
 	Circuit cCal = *c;				//In case of failure so settings are not lost.
 
 	
+	CsetOn(&cCal,true);
 	//Clear values which need to be calibrated
 	cCal.chIos = cCal.chVos = cCal.IRMSoffset = cCal.VRMSoffset = 0;
 	cCal.VAoffset = cCal.Woffset = 0;
@@ -52,7 +53,7 @@ void calibrateCircuit(Circuit *c)
 
 	//Calibrate low level channel offsets
 	CSselectDevice(cCal.circuitID);
-	CsetOn(&cCal,false);
+	//CsetOn(&cCal,false);
 	dbg.print("Ground both lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
@@ -70,12 +71,13 @@ void calibrateCircuit(Circuit *c)
 	
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
-	CsetOn(&cCal,true);
+	//CsetOn(&cCal,true);
+	CSstrobe();
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(WSMP,waitTime);
 	ifnsuccess(_retCode) {CsetOn(&cCal,false); dbg.println("Waiting for WSMP failed."); return;}
 	ADEgetRegister(WAVEFORM,&regData);
-	CsetOn(&cCal,false); 
+	//CsetOn(&cCal,false); 
 	ifnsuccess(_retCode) {dbg.println("get WAVEFORM failed"); return;}
 	dbg.print("CHVwaveform:"); dbg.println(regData);
 	//regData = regData*500*100/10322/161; //(1.61mV/LSB in CH2OS) and 500/10322 in WAVEFORM
@@ -98,7 +100,7 @@ void calibrateCircuit(Circuit *c)
 	while (dbg.read() != '\r');
 
 	//GetmMV, mA from user for low voltage and low current
-	CsetOn(&cCal,true);
+	//CsetOn(&cCal,true);
 	dbg.println(MVQUERYSTR);
 	EXITIFCANCELED(CLgetInt(&dbg,&VlowMeas));	
 	dbg.println();
@@ -110,15 +112,10 @@ void calibrateCircuit(Circuit *c)
 	dbg.print(REPORTEDSTR);
 	dbg.println(IhighMeas,DEC);
 
-	//Will this increase reliability?
-	CSselectDevice(DEVDISABLE);
-	CSselectDevice(cCal.circuitID);
-	delay(1);
-
 	//get VRMS from Ckt
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(CYCEND,waitTime);
-	CsetOn(&cCal,false);
+	//CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,&VlowCkt);
 	ifnsuccess(_retCode) { dbg.println("get VRMS Failed");return;}
@@ -135,7 +132,7 @@ void calibrateCircuit(Circuit *c)
 	dbg.println(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 
-	CsetOn(&cCal,true);
+	//CsetOn(&cCal,true);
 	dbg.println(MVQUERYSTR);
 	EXITIFCANCELED(CLgetInt(&dbg,&VhighMeas));
 	dbg.println();
@@ -148,9 +145,10 @@ void calibrateCircuit(Circuit *c)
 	dbg.println(IlowMeas,DEC);
 
 	//get VRMS from Ckt
+	CSstrobe();
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(CYCEND,waitTime);
-	CsetOn(&cCal,false);
+	//CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,&VhighCkt);
 	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return;}
