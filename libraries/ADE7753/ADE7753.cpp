@@ -134,7 +134,16 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 		*regValue = rawData;
 		//Use signed shift for 8 byte alignment, then to move LSB to 0 byte
 		(*regValue) >>= (nBytes*8-reg.nBits);
-		(*regValue) >>= ((sizeof(regValue)-nBytes)*8);
+		(*regValue) >>= ((sizeof(*regValue)-nBytes)*8);
+		/*Serial1.print("ADEgetRegister rawData: ");
+		Serial1.println(rawData,HEX);
+		Serial1.print("ADEgetRegister bitshift right: ");
+		Serial1.println((nBytes*8-reg.nBits));
+		Serial1.print("ADEgetRegister byteshift right: ");
+		Serial1.println(((sizeof(*regValue)-nBytes)*8));
+		Serial1.print("ADEgetRegister *value: ");
+		Serial1.println(*regValue,HEX);*/
+
 	} else if (reg.signType == UNSIGN) {
 		//Use unsigned shift for 8 byte alignment, then to move LSB to 0 byte
 		rawData >>= (nBytes*8-reg.nBits);
@@ -152,6 +161,8 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 		}*/
 		_retCode = FAILURE;
 	}
+	
+	
 
 	/*Serial1.println("ADEgetRegister EXIT");*/
 }

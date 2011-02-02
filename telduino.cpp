@@ -127,6 +127,7 @@ void setup()
 		Cload(c,addrEEPROM);
 		addrEEPROM += sizeof(Circuit);
 	}
+
 } //end of setup section
 
 
