@@ -212,7 +212,9 @@ void parseBerkeley()
 				} 
 			}
 		} else if (incoming == 'x') {
+			CSselectDevice(_testChannel);
 			CLwaitForZX10VIRMS();
+			CSselectDevice(DEVDISABLE);
 		} else if (incoming == 'C') {		//Change active channel
 			_testChannel = getChannelID();	
 		} else if (incoming == 'S') {		//Toggle channel circuit
@@ -283,7 +285,16 @@ void parseBerkeley()
 			ADEwaitForInterrupt((int16_t)mask,4000);
 			debugPort.println(RCstr(_retCode));
 			CSselectDevice(DEVDISABLE);
-		}	
+		} else if (incoming == 'W')	 {
+			CSselectDevice(_testChannel);
+			int32_t regData;
+			for (int i =0; i < 80; i++) {
+				ADEgetRegister(WAVEFORM,&regData);
+				debugPort.print(regData);
+				debugPort.print(" ");
+			}
+			CSselectDevice(DEVDISABLE);
+		}
 		else {								//Indicate received character
 			int waiting = 2048;				//Used to eat up junk that follows
 			debugPort.print("\n\rNot_Recognized:");

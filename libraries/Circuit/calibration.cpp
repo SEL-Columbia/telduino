@@ -54,8 +54,8 @@ void calibrateCircuit(Circuit *c)
 
 	//Calibrate low level channel offsets
 	CSselectDevice(cCal.circuitID);
-	/*
 	//CsetOn(&cCal,false);
+	/*
 	dbg.print("Ground both lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
@@ -87,7 +87,7 @@ void calibrateCircuit(Circuit *c)
 	//The CHXOS maxes out at 2^4 as it is a 5 bit signed magnitude number
 	if (regData > 15){
 		regData = 15;
-	} else if (regData < -15){
+	} else if (regData < -15) {
 		regData= -15;
 	}
 	int8_t offset = (int8_t)regData;
@@ -96,7 +96,6 @@ void calibrateCircuit(Circuit *c)
 	ifnsuccess(_retCode) {dbg.println("set CHXOS 2 failed.");return;}
 	dbg.print("CHVoffset:"); dbg.println(offset);
 	*/
-
 	//Query user to place load for low V,high I measurement
 	dbg.print("Low-voltage (120VAC 50Hz), high-current (.72A) on ckt \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
@@ -174,10 +173,15 @@ void calibrateCircuit(Circuit *c)
 	//From page 46 in the ADE data sheet
 	cCal.VRMSoffset = (VhighMeas*VlowCkt-VlowMeas*VhighCkt)/(VlowMeas-VhighMeas);
 	if (cCal.VRMSoffset > 0x7FF) {
+		int32_t leftOver = cCal.VRMSoffset-0x7FF;
 		cCal.VRMSoffset = 0x7FF;
+		leftOver = leftOver*500*100/161/1561400;
+		dbg.print("leftOver:");
+		dbg.println(leftOver);
 	} else if (cCal.VRMSoffset < -2048) {
 		cCal.VRMSoffset = -2048;
 	}
+
 
 	//Square everything and pray that IlowMeas is less than 2^15
 	int64_t I1Msq = IhighMeas*IhighMeas;
