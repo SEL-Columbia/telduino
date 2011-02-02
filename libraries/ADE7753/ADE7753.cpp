@@ -284,7 +284,7 @@ int8_t ADEreadInterrupt(uint16_t regMask)
 {
 	int32_t status;
 	ADEgetRegister(RSTSTATUS,&status);
-	Serial1.println(status);
+	//Serial1.println(status);
 	ifsuccess(_retCode) {
 		if (regMask == ZX0) {
 			status = ~status;

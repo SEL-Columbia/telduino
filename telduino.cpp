@@ -252,7 +252,7 @@ void parseBerkeley()
 		} else if (incoming == 'L') {		//Run calibration routine on channel
 			Circuit *c = &(ckts[_testChannel]);
 			calibrateCircuit(c);
-			debugPort.println(RCstr(_retCode));
+			//debugPort.println(RCstr(_retCode));
 		} else if (incoming == 'D') {		//Initialize ckts[] to safe defaults
 			for (int i = 0; i < NCIRCUITS; i++) {
 				Circuit *c = &(ckts[i]);

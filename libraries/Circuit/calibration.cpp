@@ -24,6 +24,47 @@
 		dbg.println(NOACSTR);	\
 		return;	 }				
 
+void getPoint( Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMeas,
+	 		               int32_t *VRMSCkt, int32_t *IRMSCkt,  int32_t *VACkt ) 
+{
+	dbg.println(MVQUERYSTR);
+	EXITIFCANCELED(CLgetInt(&dbg,VRMSMeas));	
+	dbg.println();
+	dbg.print(REPORTEDSTR);
+	dbg.println(*VRMSMeas,DEC);
+	dbg.print(MAQUERYSTR);
+	EXITIFCANCELED(CLgetInt(&dbg,IRMSMeas));	
+	dbg.println();
+	dbg.print(REPORTEDSTR);
+	dbg.println(*IRMSMeas,DEC);
+	*VAMeas = *IRMSMeas**VRMSMeas/1000;
+
+	//get VRMS from Ckt
+	ADEgetRegister(RSTSTATUS,VRMSCkt); //reset interrupt
+	ADEwaitForInterrupt(ZX,waitTime);
+	EXITIFNOCYCLES();
+	//dbg.println("Saw ZX as 1");
+	ADEwaitForInterrupt(ZX0,waitTime);
+	//CsetOn(&cCal,false);
+	EXITIFNOCYCLES();
+	ADEgetRegister(VRMS,VRMSCkt);
+	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return;}
+
+	//get IRMS from Ckt
+	ADEgetRegister(IRMS,IRMSCkt);
+	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return;}
+	dbg.print("ADEVRMS: "); dbg.println(*VRMSCkt);
+	dbg.print("ADEIRMS: "); dbg.println(*IRMSCkt);
+
+	//getVA from Ckt
+	ADEgetRegister(RSTSTATUS,VACkt);
+	ADEwaitForInterrupt(CYCEND,waitTime);
+	EXITIFNOCYCLES();
+	ADEgetRegister(LVAENERGY,VACkt);
+	//Assumes 200 line cycles and 50hz
+	*VACkt = *VACkt*2/1000;
+
+}
 /**
     Calibrate circuit interactively using serial port. 
 	This function leaves the circuit off after completion.
@@ -38,6 +79,8 @@ void calibrateCircuit(Circuit *c)
 	int32_t VhighCkt,VhighMeas;
 	int32_t IlowCkt,IlowMeas;
 	int32_t IhighCkt,IhighMeas;
+	int32_t VAhighCkt,VAhighMeas;
+	int32_t VAlowCkt,VAlowMeas;
 	Circuit cCal = *c;				//In case of failure so settings are not lost.
 
 	
@@ -55,7 +98,7 @@ void calibrateCircuit(Circuit *c)
 	//Calibrate low level channel offsets
 	CSselectDevice(cCal.circuitID);
 	//CsetOn(&cCal,false);
-	/*
+	
 	dbg.print("Ground both lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
@@ -69,7 +112,7 @@ void calibrateCircuit(Circuit *c)
 	ADEsetIrqEnBit(WSMP,true);	//The WAVEFORM register will not work without this.
 	ADEsetIrqEnBit(CYCEND,true);//Just in case
 	ifnsuccess(_retCode) return;
-	dbg.println("WAVEFORM set to V, WSMP set to 1.");
+	//dbg.println("WAVEFORM set to V, WSMP set to 1.");
 	
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
@@ -95,7 +138,7 @@ void calibrateCircuit(Circuit *c)
 	ADEsetCHXOS(2,&(cCal.chIint),&offset);
 	ifnsuccess(_retCode) {dbg.println("set CHXOS 2 failed.");return;}
 	dbg.print("CHVoffset:"); dbg.println(offset);
-	*/
+	
 	//Query user to place load for low V,high I measurement
 	dbg.print("Low-voltage (120VAC 50Hz), high-current (.72A) on ckt \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
@@ -114,12 +157,13 @@ void calibrateCircuit(Circuit *c)
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(IhighMeas,DEC);
+	VAhighMeas = IhighMeas*VlowMeas*2/1000;
 
 	//get VRMS from Ckt
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(ZX,waitTime);
 	EXITIFNOCYCLES();
-	dbg.println("Saw ZX as 1");
+	//dbg.println("Saw ZX as 1");
 	ADEwaitForInterrupt(ZX0,waitTime);
 	//CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
@@ -131,6 +175,12 @@ void calibrateCircuit(Circuit *c)
 	ifnsuccess(_retCode) { dbg.println("get IRMS Failed");return;}
 	dbg.print("ADELowVRMS: "); dbg.println(VlowCkt);
 	dbg.print("ADEHighIRMS: "); dbg.println(IhighCkt);
+
+	//getVA from Ckt
+	ADEgetRegister(RSTSTATUS,&regData);
+	ADEwaitForInterrupt(CYCEND,waitTime);
+	EXITIFNOCYCLES();
+	ADEgetRegister(LVAENERGY,&VAhighCkt);
 
 	//Query user to place load for high V,low I measurement
 	dbg.print("High-voltage (240VAC 50Hz), low-current (.025A) on ckt \'");
@@ -150,13 +200,14 @@ void calibrateCircuit(Circuit *c)
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(IlowMeas,DEC);
+	VAlowMeas = IlowMeas*VhighMeas*2/1000;
 
 	//get VRMS from Ckt
 	CSstrobe();
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(ZX,waitTime);
 	EXITIFNOCYCLES();
-	dbg.println("Saw ZX as 1");
+	//dbg.println("Saw ZX as 1");
 	ADEwaitForInterrupt(ZX0,waitTime);
 	//CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
@@ -166,17 +217,23 @@ void calibrateCircuit(Circuit *c)
 	//get IRMS from Ckt
 	ADEgetRegister(IRMS,&IlowCkt);
 	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return;}
-	
 	dbg.print("ADEHighVRMS: "); dbg.println(VhighCkt);
 	dbg.print("ADELowIRMS: "); dbg.println(IlowCkt);
+
+	//getVA from Ckt
+	ADEgetRegister(RSTSTATUS,&regData);
+	ADEwaitForInterrupt(CYCEND,waitTime);
+	EXITIFNOCYCLES();
+	ADEgetRegister(LVAENERGY,&VAlowCkt);
 	dbg.println("Computing offsets and slopes for VRMS and IRMS.");
+
 	//From page 46 in the ADE data sheet
 	cCal.VRMSoffset = (VhighMeas*VlowCkt-VlowMeas*VhighCkt)/(VlowMeas-VhighMeas);
 	if (cCal.VRMSoffset > 0x7FF) {
 		int32_t leftOver = cCal.VRMSoffset-0x7FF;
 		cCal.VRMSoffset = 0x7FF;
 		leftOver = leftOver*500*100/161/1561400;
-		dbg.print("leftOver:");
+		dbg.print("leftOver in offset:");
 		dbg.println(leftOver);
 	} else if (cCal.VRMSoffset < -2048) {
 		cCal.VRMSoffset = -2048;
@@ -197,6 +254,7 @@ void calibrateCircuit(Circuit *c)
 	
 	cCal.IRMSslope = ((float)(IlowMeas-IhighMeas))/(IlowCkt-IhighCkt);
 	cCal.VRMSslope = ((float)(VlowMeas-VhighMeas))/(VlowCkt-VhighCkt);
+	cCal.VAslope   =  ((float)(VAlowMeas-VAhighMeas))/(VAlowCkt-VAhighCkt);
 
 	/* pts are 
 	Need to derive:

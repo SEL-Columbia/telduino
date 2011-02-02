@@ -66,7 +66,7 @@ void Cmeasure(Circuit *c)
 	if (!timeout) {
 		//Apparent power or Volt Amps
 		ADEgetRegister(LVAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->VA = regData/c->VAslope/(c->halfCyclesSample*c->periodus/1000/1000);
+		c->VA = regData*c->VAslope;///(c->halfCyclesSample*c->periodus/1000/1000);
 
 		//Apparent energy accumulated since last query
 		ADEgetRegister(RVAENERGY,&regData);			ERRCHECKRETURN(c);
@@ -196,6 +196,8 @@ void Cprint(HardwareSerial *ser, Circuit *c)
 	ser->println(c->IRMSslope);
 	ser->print("VRMS slope:");
 	ser->println(c->VRMSslope);
+	ser->print("VA slope:");
+	ser->println(c->VAslope);
 
 }
 void CprintMeas(HardwareSerial *ser, Circuit *c)
@@ -205,6 +207,8 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
 	ser->print(" ");
 	ser->print("VRMS&");
 	ser->println(c->VRMS);
+	ser->print("VA&");
+	ser->println(c->VA);
 }
 
 /*
