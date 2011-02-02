@@ -14,9 +14,10 @@
 
 CLOCK = 8000000L
 PROJECT = telduino
-GCCFLAGS = -c -g -Os -w -std=c99 -ffunction-sections -fdata-sections -Ilibraries
-G++FLAGS = -c -g -Os -w -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
+GCCFLAGS = -c -g -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Ilibraries
+G++FLAGS = -c -g -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
 
+#-Wa,aln=foo.s
 #GCCFLAGS = -c -g -Os -w -std=c99 -Ilibraries
 #G++FLAGS = -c -g -Os -w -fno-exceptions -Ilibraries
 VPATH = libraries/arduino libraries/Demux libraries/ShiftRegister\
@@ -42,10 +43,10 @@ hex : $(OBJECT_FILES)
 	avr-size -C --mcu=atmega1280 $(PROJECT).elf 
 
 %.o : %.c
-	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@
+	avr-gcc $(GCCFLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@ 
 
 %.o : %.cpp 
-	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@
+	avr-g++ $(G++FLAGS) -mmcu=atmega1280 -DF_CPU=$(CLOCK) $< -o$@ 
 
 clean:
 	rm -f *.o *.elf *.hex

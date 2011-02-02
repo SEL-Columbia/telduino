@@ -5,7 +5,7 @@
 
 #include "ADE7753.h"
 
-const ADEReg WAVEFORM  = {"WAVEFORM",0x01,24,TWOS};
+const ADEReg WAVEFORM  = {"WAVEFORM",0x01,24,TWOS}; 
 const ADEReg AENERGY	= {"AENERGY",0x02,24,TWOS};
 const ADEReg RAENERGY    = {"RAENERGY",0x03,24,TWOS};
 const ADEReg LAENERGY    = {"LAENERGY",0x04,24,TWOS};
