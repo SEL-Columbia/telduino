@@ -87,6 +87,7 @@ void Csave(Circuit *c, uint8_t* addrEEPROM);
 void CsetDefaults(Circuit *c, int8_t circuitID);
 void Cmeasure(Circuit *c);
 void Cprogram(Circuit *c);
+void Cprint(HardwareSerial *ser, Circuit *c);
 void CprintMeas(HardwareSerial *ser, Circuit *c);
 
 #endif

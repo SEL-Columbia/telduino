@@ -211,6 +211,8 @@ void parseBerkeley()
 					break;
 				} 
 			}
+		} else if (incoming == 'x') {
+			CLwaitForZX10VIRMS();
 		} else if (incoming == 'C') {		//Change active channel
 			_testChannel = getChannelID();	
 		} else if (incoming == 'S') {		//Toggle channel circuit
@@ -241,6 +243,8 @@ void parseBerkeley()
 			Circuit *c = &(ckts[_testChannel]);
 			Cmeasure(c);
 			CprintMeas(&debugPort,c);
+			debugPort.println(RCstr(_retCode));
+			Cprint(&debugPort,c);
 			debugPort.println();
 		} else if (incoming == 'L') {		//Run calibration routine on channel
 			Circuit *c = &(ckts[_testChannel]);

@@ -9,6 +9,7 @@
 
 #define dbg Serial1
 #define waitTime 8000
+#define NAVG
 
 #define EXITIFCANCELED(X)		\
 	if ((X) == CANCELED) {		\
@@ -53,6 +54,7 @@ void calibrateCircuit(Circuit *c)
 
 	//Calibrate low level channel offsets
 	CSselectDevice(cCal.circuitID);
+	/*
 	//CsetOn(&cCal,false);
 	dbg.print("Ground both lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
@@ -89,18 +91,20 @@ void calibrateCircuit(Circuit *c)
 		regData= -15;
 	}
 	int8_t offset = (int8_t)regData;
+	cCal.chVos = offset;
 	ADEsetCHXOS(2,&(cCal.chIint),&offset);
-	ifnsuccess(_retCode) { dbg.println("set CHXOS 2 failed.");return;}
+	ifnsuccess(_retCode) {dbg.println("set CHXOS 2 failed.");return;}
 	dbg.print("CHVoffset:"); dbg.println(offset);
+	*/
 
 	//Query user to place load for low V,high I measurement
-	dbg.println("Low-voltage (120VAC 50Hz), high-current (.8A):");
-	dbg.print("Attach a low-voltage source and a 150 Ohm load to circuit \'");
+	dbg.print("Low-voltage (120VAC 50Hz), high-current (.72A) on ckt \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 
 	//GetmMV, mA from user for low voltage and low current
 	//CsetOn(&cCal,true);
+	dbg.println();
 	dbg.println(MVQUERYSTR);
 	EXITIFCANCELED(CLgetInt(&dbg,&VlowMeas));	
 	dbg.println();
@@ -114,7 +118,10 @@ void calibrateCircuit(Circuit *c)
 
 	//get VRMS from Ckt
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
-	ADEwaitForInterrupt(CYCEND,waitTime);
+	ADEwaitForInterrupt(ZX,waitTime);
+	EXITIFNOCYCLES();
+	dbg.println("Saw ZX as 1");
+	ADEwaitForInterrupt(ZX0,waitTime);
 	//CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,&VlowCkt);
@@ -123,10 +130,11 @@ void calibrateCircuit(Circuit *c)
 	//get IRMS from Ckt
 	ADEgetRegister(IRMS,&IhighCkt);
 	ifnsuccess(_retCode) { dbg.println("get IRMS Failed");return;}
+	dbg.print("ADELowVRMS: "); dbg.println(VlowCkt);
+	dbg.print("ADEHighIRMS: "); dbg.println(IhighCkt);
 
 	//Query user to place load for high V,low I measurement
-	dbg.print("Please attach a high-voltage source (240VAC 50Hz) "); 
-	dbg.print("and a 2.4 KOhm load to circuit (.1A) \'");
+	dbg.print("High-voltage (240VAC 50Hz), low-current (.025A) on ckt \'");
 	dbg.print(cCal.circuitID,DEC);
 	dbg.println("\'.");
 	dbg.println(PRESSENTERSTR);
@@ -147,18 +155,21 @@ void calibrateCircuit(Circuit *c)
 	//get VRMS from Ckt
 	CSstrobe();
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
-	ADEwaitForInterrupt(CYCEND,waitTime);
+	ADEwaitForInterrupt(ZX,waitTime);
+	EXITIFNOCYCLES();
+	dbg.println("Saw ZX as 1");
+	ADEwaitForInterrupt(ZX0,waitTime);
 	//CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,&VhighCkt);
 	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return;}
-	dbg.print("VRMS:"); dbg.println(VhighCkt);
 
 	//get IRMS from Ckt
 	ADEgetRegister(IRMS,&IlowCkt);
-	dbg.print("IRMS:"); dbg.println(IlowCkt);
 	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return;}
 	
+	dbg.print("ADEHighVRMS: "); dbg.println(VhighCkt);
+	dbg.print("ADELowIRMS: "); dbg.println(IlowCkt);
 	dbg.println("Computing offsets and slopes for VRMS and IRMS.");
 	//From page 46 in the ADE data sheet
 	cCal.VRMSoffset = (VhighMeas*VlowCkt-VlowMeas*VhighCkt)/(VlowMeas-VhighMeas);
@@ -182,6 +193,7 @@ void calibrateCircuit(Circuit *c)
 	
 	cCal.IRMSslope = ((float)(IlowMeas-IhighMeas))/(IlowCkt-IhighCkt);
 	cCal.VRMSslope = ((float)(VlowMeas-VhighMeas))/(VlowCkt-VhighCkt);
+
 	/* pts are 
 	Need to derive:
 	IRMSoffset the IRMS offset register is 2^15 times one bit in IRMS so
@@ -197,6 +209,7 @@ void calibrateCircuit(Circuit *c)
 	chIos
 	VASlope
 	*/
+	Cprint(&dbg,&cCal);
 	Cprogram(&cCal);
 	ifnsuccess(_retCode) {
 		dbg.println("Programming Failed.");
@@ -270,4 +283,32 @@ int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
 			return CANCELED;
 		}
 	} while(true);
+}
+
+void CLwaitForZX10VIRMS() 
+{
+	int32_t regData,Vckt,Ickt;
+
+	//get VRMS from Ckt
+	CSstrobe();
+	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
+	_retCode = SUCCESS;
+	ADEwaitForInterrupt(ZX,waitTime);
+	dbg.println(RCstr(_retCode));
+	dbg.print("Saw ZX as 1?:");
+	dbg.println(RCstr(_retCode));
+	_retCode = SUCCESS;
+	ADEwaitForInterrupt(ZX0,waitTime);
+	dbg.println(RCstr(_retCode));
+	//CsetOn(&cCal,false);
+	ADEgetRegister(VRMS,&Vckt);
+	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return;}
+
+	//get IRMS from Ckt
+	ADEgetRegister(IRMS,&Ickt);
+	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return;}
+	
+	dbg.print("ADEIRMS: "); dbg.println(Ickt);
+	dbg.print("ADEVRMS: "); dbg.println(Vckt);
+
 }

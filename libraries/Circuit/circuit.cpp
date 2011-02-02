@@ -9,7 +9,6 @@
 
 
 #define dbg Serial1
-#define MAGIC 2014/10000
 #define max(X,Y) ((X)>=(Y))?(X):(Y)
 #define	ERRCHECKRETURN(Cptr) if (_shouldReturn(Cptr)) return;
 
@@ -31,7 +30,6 @@ int8_t _shouldReturn(Circuit *c)
 }
 /** 
   Updates circuit measured parameters
-  @TODO Achintya what is this number: MAGIC?
   @warning a communications error may leave Circuit *c in an inconsisent state.
   @warning The completion time of this function is dependent on the frequency of the line as well as halfCyclesSample. At worst the function will take one minute to return if halfCyclesSample is 1400 and the frequency drops below 40hz.
   @return ARGVALUEERR if the circuitID is invalid
@@ -68,27 +66,27 @@ void Cmeasure(Circuit *c)
 	if (!timeout) {
 		//Apparent power or Volt Amps
 		ADEgetRegister(LVAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->VA = regData*MAGIC/(c->halfCyclesSample*c->periodus/1000/1000);
-
-		//Apparent power or Volt Amps
-		ADEgetRegister(LAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->W = regData*MAGIC/(c->halfCyclesSample*c->periodus/1000/1000);
+		c->VA = regData/c->VAslope/(c->halfCyclesSample*c->periodus/1000/1000);
 
 		//Apparent energy accumulated since last query
 		ADEgetRegister(RVAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->VAEnergy = regData*MAGIC;
+		c->VAEnergy = regData/c->VAslope;
+
+		//Active power or watts
+		ADEgetRegister(LAENERGY,&regData);			ERRCHECKRETURN(c);
+		c->W = regData/(c->halfCyclesSample*c->periodus/1000/1000);
 
 		//Actve energy accumulated since last query
 		ADEgetRegister(RAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->WEnergy = regData*MAGIC;
+		c->WEnergy = regData;
 
 		//IRMS
 		ADEgetRegister(IRMS,&regData);				ERRCHECKRETURN(c);
-		c->IRMS = regData/c->IRMSslope;
+		c->IRMS = regData*c->IRMSslope;
 
 		//VRMS
 		ADEgetRegister(VRMS,&regData);				ERRCHECKRETURN(c);
-		c->VRMS= regData/c->VRMSslope;
+		c->VRMS= regData*c->VRMSslope;
 
 		//Power Factor PF
 		if (c->VAEnergy != 0){ 
@@ -188,6 +186,18 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 	c->WEnergy = 0;
 }
 
+void Cprint(HardwareSerial *ser, Circuit *c) 
+{
+	ser->print("IRMSOS:");
+	ser->println(c->IRMSoffset);
+	ser->print("VRMSOS:");
+	ser->println(c->VRMSoffset);
+	ser->print("IRMS slope:");
+	ser->println(c->IRMSslope);
+	ser->print("VRMS slope:");
+	ser->println(c->VRMSslope);
+
+}
 void CprintMeas(HardwareSerial *ser, Circuit *c)
 {
 	ser->print("IRMS&");

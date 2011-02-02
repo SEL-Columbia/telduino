@@ -273,6 +273,7 @@ int8_t ADEreadInterrupt(uint16_t regMask)
 {
 	int32_t status;
 	ADEgetRegister(RSTSTATUS,&status);
+	Serial1.println(status);
 	ifsuccess(_retCode) {
 		if (regMask == ZX0) {
 			status = ~status;
@@ -318,6 +319,7 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	Serial1.print("waitforInterrupt endTime(ms):");
 	Serial1.println(endTime);
 	*/
+	Serial1.println("Should indicate timeout");
 	_retCode = TIMEOUT;
 }
 
