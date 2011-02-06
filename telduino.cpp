@@ -37,6 +37,8 @@
 #include "Circuit/circuit.h"
 #include "Circuit/calibration.h"
 
+#include "Strings/strings.h"
+
 //definition of serial ports for debug, sheeva communication, and telit communication
 #define debugPort Serial1
 #define sheevaPort Serial2
@@ -160,7 +162,7 @@ void parseBerkeley()
 		char incoming = debugPort.read(); 
 		if (incoming == 'A') {			//Write to ADE Register
 			char buff[16] = {0};
-			debugPort.print("Enter name of register to write:");
+			debugPort.print("Register to write $");
 			CLgetString(&debugPort,buff,sizeof(buff));
 			debugPort.println();
 			
@@ -260,21 +262,21 @@ void parseBerkeley()
 			}
 			debugPort.println("Defaults set. Don't forget to program! ('P')");
 		} else if (incoming == 'E') {		//Save data in ckts[] to EEPROM
-			debugPort.println("Saving circuit settings to EEPROM.");
+			debugPort.println("Saving to EEPROM.");
 			uint8_t *addrEEPROM = 0;
 			for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
 				Csave(c,addrEEPROM);
 				addrEEPROM += sizeof(Circuit);
 			}
-			debugPort.println("Save Complete");
+			debugPort.println(COMPLETESTR);
 		} else if (incoming=='e'){			//Load circuit data from EEPROM
 			uint8_t *addrEEPROM = 0;
-			debugPort.println("Loading circuit settings from EEPROM.");
+			debugPort.println("Loading from EEPROM.");
 			for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
 				Cload(c,addrEEPROM);
 				addrEEPROM += sizeof(Circuit);
 			}
-			debugPort.println("Load Complete");
+			debugPort.println(COMPLETESTR);
 		} else if (incoming=='w') {
 			int32_t mask = 0;
 			debugPort.print("Enter interrupt mask. Will wait for 4sec. $");
