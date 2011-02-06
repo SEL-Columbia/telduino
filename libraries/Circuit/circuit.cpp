@@ -66,15 +66,15 @@ void Cmeasure(Circuit *c)
 	if (!timeout) {
 		//Apparent power or Volt Amps
 		ADEgetRegister(LVAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->VA = regData*c->VAslope;///(c->halfCyclesSample*c->periodus/1000/1000);
+		c->VA = regData*c->VAEslope/(c->halfCyclesSample/2*c->periodus/1000);  //Watts
 
-		//Apparent energy accumulated since last query
+		//Apparent energy in joules accumulated since last query
 		ADEgetRegister(RVAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->VAEnergy = regData/c->VAslope;
+		c->VAEnergy = regData*c->VAEslope/1000;
 
 		//Active power or watts
 		ADEgetRegister(LAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->W = regData/(c->halfCyclesSample*c->periodus/1000/1000);
+		c->W = regData/(c->halfCyclesSample/2*c->periodus/1000);
 
 		//Actve energy accumulated since last query
 		ADEgetRegister(RAENERGY,&regData);			ERRCHECKRETURN(c);
@@ -169,12 +169,12 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 	c->chIint = true;
 	c->chIos = 0;
 	c->chIgainExp = 4;
-	c->IRMSoffset = 0;//0x01BC;
-	c->IRMSslope = 1;//164;
-	c->chVos = 0;//15;
-	c->VRMSoffset = 0;//0x07FF;
-	c->VRMSslope = 1;//4700;
-	c->VAslope = 1;//2014/10000.0;
+	c->IRMSoffset = -2048;//0x01BC;
+	c->IRMSslope = .0010;//164;
+	c->chVos = 1;//15;
+	c->VRMSoffset = 2047;//0x07FF;
+	c->VRMSslope = .2199;//4700;
+	c->VAEslope = 34.2760;//2014/10000.0;
 	c->VAoffset = 0;
 	c->sagDurationCycles = 10;
 	c->minVSag = 100;
@@ -193,11 +193,11 @@ void Cprint(HardwareSerial *ser, Circuit *c)
 	ser->print("VRMSOS:");
 	ser->println(c->VRMSoffset);
 	ser->print("IRMS slope:");
-	ser->println(c->IRMSslope);
+	ser->println(c->IRMSslope,4);
 	ser->print("VRMS slope:");
-	ser->println(c->VRMSslope);
-	ser->print("VA slope:");
-	ser->println(c->VAslope);
+	ser->println(c->VRMSslope,4);
+	ser->print("VAE slope:");
+	ser->println(c->VAEslope,4);
 
 }
 void CprintMeas(HardwareSerial *ser, Circuit *c)
@@ -209,6 +209,8 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
 	ser->println(c->VRMS);
 	ser->print("VA&");
 	ser->println(c->VA);
+	ser->print("VAEnergy&");
+	ser->println(c->VAEnergy);
 }
 
 /*

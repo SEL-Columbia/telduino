@@ -39,7 +39,7 @@ typedef struct {
 	/**
 	  Power parameters
 	*/
-	float VAslope;	
+	float VAEslope;	
 	int32_t VAoffset;	
 	float Wslope;		
 	int32_t Woffset;

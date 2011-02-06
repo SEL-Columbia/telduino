@@ -16,15 +16,15 @@
 	    CsetOn(&cCal,false);	\
 		dbg.println(CANCELEDSTR);\
 		_retCode = CANCELED;	\
-		return;	}				
+		return false;	}				
 
 #define EXITIFNOCYCLES()		\
 	if (nsuccess(_retCode)) {	\
 	    CsetOn(&cCal,false);	\
 		dbg.println(NOACSTR);	\
-		return;	 }				
+		return false;	 }				
 
-void getPoint( Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMeas,
+int8_t getPoint( Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMeas,
 	 		               int32_t *VRMSCkt, int32_t *IRMSCkt,  int32_t *VACkt ) 
 {
 	dbg.println(MVQUERYSTR);
@@ -37,7 +37,7 @@ void getPoint( Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMea
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(*IRMSMeas,DEC);
-	*VAMeas = *IRMSMeas**VRMSMeas/1000;
+	*VAMeas = *IRMSMeas**VRMSMeas*2/1000;
 
 	//get VRMS from Ckt
 	ADEgetRegister(RSTSTATUS,VRMSCkt); //reset interrupt
@@ -48,11 +48,11 @@ void getPoint( Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMea
 	//CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,VRMSCkt);
-	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return;}
+	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return false;}
 
 	//get IRMS from Ckt
 	ADEgetRegister(IRMS,IRMSCkt);
-	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return;}
+	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return false;}
 	dbg.print("ADEVRMS: "); dbg.println(*VRMSCkt);
 	dbg.print("ADEIRMS: "); dbg.println(*IRMSCkt);
 
@@ -62,15 +62,9 @@ void getPoint( Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMea
 	EXITIFNOCYCLES();
 	ADEgetRegister(LVAENERGY,VACkt);
 	//Assumes 200 line cycles and 50hz
-	*VACkt = *VACkt*2/1000;
-
+	return true;
 }
-/**
-    Calibrate circuit interactively using serial port. 
-	This function leaves the circuit off after completion.
-	@warning need to finish VAslope/offset and WSlope/offset
-	@warning this assumes that there is a gain of 1 on CH2OS
-  */
+
 void calibrateCircuit(Circuit *c)
 {
 	int32_t regData;
@@ -88,7 +82,134 @@ void calibrateCircuit(Circuit *c)
 	//Clear values which need to be calibrated
 	cCal.chIos = cCal.chVos = cCal.IRMSoffset = cCal.VRMSoffset = 0;
 	cCal.VAoffset = cCal.Woffset = 0;
-	cCal.IRMSslope = cCal.VRMSslope = cCal.VAslope = cCal.Wslope = 1;
+	cCal.IRMSslope = cCal.VRMSslope = cCal.VAEslope = cCal.Wslope = 1;
+	Cprogram(&cCal);
+	ifnsuccess(_retCode) {
+		dbg.println("Clearing failed in calibrateCircuit.");
+		return;
+	}
+
+	//Calibrate low level channel offsets
+	CSselectDevice(cCal.circuitID);
+	//CsetOn(&cCal,false);
+	
+	dbg.print("Ground both lines on circuit \'");
+	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
+	while (dbg.read() != '\r');
+
+	//Set waveform mode to read voltage
+	dbg.println("Configuring to read raw voltage.");
+	ADEsetModeBit(WAVESEL_0,true);
+	ifnsuccess(_retCode) return;
+	ADEsetModeBit(WAVESEL1_,true);
+	ifnsuccess(_retCode) return;
+	ADEsetIrqEnBit(WSMP,true);	//The WAVEFORM register will not work without this.
+	ADEsetIrqEnBit(CYCEND,true);//Just in case
+	ifnsuccess(_retCode) return;
+	//dbg.println("WAVEFORM set to V, WSMP set to 1.");
+	
+	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
+	dbg.println("Setting voltage offset.");
+	//CsetOn(&cCal,true);
+	CSstrobe();
+	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
+	ADEwaitForInterrupt(WSMP,waitTime);
+	ifnsuccess(_retCode) {CsetOn(&cCal,false); dbg.println("Waiting for WSMP failed."); return;}
+	ADEgetRegister(WAVEFORM,&regData);
+	//CsetOn(&cCal,false); 
+	ifnsuccess(_retCode) {dbg.println("get WAVEFORM failed"); return;}
+	dbg.print("CHVwaveform:"); dbg.println(regData);
+	//regData = regData*500*100/10322/161; //(1.61mV/LSB in CH2OS) and 500/10322 in WAVEFORM
+	regData = (regData*31549)>>20; 
+	//The CHXOS maxes out at 2^4 as it is a 5 bit signed magnitude number
+	if (regData > 15){
+		regData = 15;
+	} else if (regData < -15) {
+		regData= -15;
+	}
+	int8_t offset = (int8_t)regData;
+	cCal.chVos = offset;
+	ADEsetCHXOS(2,&(cCal.chIint),&offset);
+	ifnsuccess(_retCode) {dbg.println("set CHXOS 2 failed.");return;}
+	dbg.print("CHVoffset:"); dbg.println(offset);
+	
+	//Query user to place load for low V,high I measurement
+	dbg.print("Low-voltage (120VAC 50Hz), high-current (.72A) on ckt \'");
+	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
+	while (dbg.read() != '\r');
+	dbg.println();
+	if(!getPoint(cCal,&VlowMeas,&IhighMeas, &VAhighMeas, &VlowCkt, &IhighCkt, &VAhighCkt)) return; 
+
+	//Query user to place load for high V,low I measurement
+	dbg.print("High-voltage (240VAC 50Hz), low-current (.025A) on ckt \'");
+	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
+	while (dbg.read() != '\r');
+	dbg.println();
+	if(!getPoint(cCal,&VhighMeas,&IlowMeas, &VAlowMeas, &VhighCkt, &IlowCkt, &VAlowCkt)) return; 
+
+	//Compute the VRMSOS
+	//From page 46 in the ADE data sheet 
+	cCal.VRMSoffset = (VhighMeas*VlowCkt-VlowMeas*VhighCkt)/(VlowMeas-VhighMeas);
+	if (cCal.VRMSoffset > 0x7FF) {
+		int32_t leftOver = cCal.VRMSoffset-0x7FF;
+		cCal.VRMSoffset = 0x7FF;
+		leftOver = leftOver*500*100/161/1561400;
+		dbg.print("leftOver in offset:");
+		dbg.println(leftOver);
+	} else if (cCal.VRMSoffset < -2048) {
+		cCal.VRMSoffset = -2048;
+	}
+
+	//Square everything and pray that IlowMeas is less than 2^15
+	int64_t I1Msq = IhighMeas*IhighMeas;
+	int64_t I2Msq = IlowMeas*IlowMeas;
+	int64_t I1Csq = IlowCkt*IlowCkt;
+	int64_t I2Csq = IhighCkt*IhighCkt;
+	cCal.IRMSoffset = (int32_t)(((I1Msq*I2Csq-I2Msq*I1Csq)/(I2Msq - I1Msq))>>15);
+	if (cCal.IRMSoffset > 0x7FF) {	//12 bit twos complement limits
+		cCal.IRMSoffset = 0x7FF;
+	} else if (cCal.IRMSoffset < -0x800) {
+		cCal.IRMSoffset = -0x800;
+	}
+	
+	cCal.IRMSslope = ((float)(IlowMeas-IhighMeas))/(IlowCkt-IhighCkt);
+	cCal.VRMSslope = ((float)(VlowMeas-VhighMeas))/(VlowCkt-VhighCkt);
+	cCal.VAEslope  = ((float)(VAlowMeas-VAhighMeas))/(VAlowCkt-VAhighCkt);
+
+	Cprint(&dbg,&cCal);
+	Cprogram(&cCal);
+	*c = cCal;						//Save new settings to *c
+	ifnsuccess(_retCode) {
+		dbg.println("Programming Failed. Try to program again.");
+		return;
+	} 
+	CSselectDevice(DEVDISABLE);
+	dbg.println("Calibration Complete.");
+}
+
+/**
+    Calibrate circuit interactively using serial port. 
+	This function leaves the circuit off after completion.
+	@warning need to finish VAEslope/offset and WSlope/offset
+	@warning this assumes that there is a gain of 1 on CH2OS
+void calibrateCircuit(Circuit *c)
+{
+	int32_t regData;
+	//The *Meas values are in mV or mA when read from the user
+	int32_t VlowCkt,VlowMeas;
+	int32_t VhighCkt,VhighMeas;
+	int32_t IlowCkt,IlowMeas;
+	int32_t IhighCkt,IhighMeas;
+	int32_t VAhighCkt,VAhighMeas;
+	int32_t VAlowCkt,VAlowMeas;
+	Circuit cCal = *c;				//In case of failure so settings are not lost.
+
+	
+	CsetOn(&cCal,true);
+	//Clear values which need to be calibrated
+	cCal.chIos = cCal.chVos = cCal.IRMSoffset = cCal.VRMSoffset = 0;
+	cCal.VAoffset = cCal.Woffset = 0;
+	cCal.IRMSslope = cCal.VRMSslope = cCal.VAEslope = cCal.Wslope = 1;
 	Cprogram(&cCal);
 	ifnsuccess(_retCode) {
 		dbg.println("Clearing failed in calibrateCircuit.");
@@ -254,23 +375,8 @@ void calibrateCircuit(Circuit *c)
 	
 	cCal.IRMSslope = ((float)(IlowMeas-IhighMeas))/(IlowCkt-IhighCkt);
 	cCal.VRMSslope = ((float)(VlowMeas-VhighMeas))/(VlowCkt-VhighCkt);
-	cCal.VAslope   =  ((float)(VAlowMeas-VAhighMeas))/(VAlowCkt-VAhighCkt);
+	cCal.VAEslope   =  ((float)(VAlowMeas-VAhighMeas))/(VAlowCkt-VAhighCkt);
 
-	/* pts are 
-	Need to derive:
-	IRMSoffset the IRMS offset register is 2^15 times one bit in IRMS so
-		so the offset must be divided by 2^15
-	IRMSSlope  this converts to engineering units
-	Assuming no corrections are needed to chXos 
-		we want to find the inverse of r(m) = (r1-r0)/(m0-m1)*m + 
-			offsetIRMS*2^15, where m is the measured value and r 
-			is the reported value
-	VRMSoffset
-	VRMSSlope
-	chVos
-	chIos
-	VASlope
-	*/
 	Cprint(&dbg,&cCal);
 	Cprogram(&cCal);
 	ifnsuccess(_retCode) {
@@ -281,6 +387,8 @@ void calibrateCircuit(Circuit *c)
 	*c = cCal;						//Save new settings to *c
 	dbg.println("Calibration Complete.");
 }
+*/
+  
 
 int8_t CLgetString(HardwareSerial *ser,char *buff, size_t bSize)
 {
