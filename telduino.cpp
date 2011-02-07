@@ -48,7 +48,7 @@
 #define SHEEVA_BAUD_RATE 9600
 #define TELIT_BAUD_RATE 115200
 #define verbose 1
-#define MAXLEN_PLUG_MESSAGE 160
+#define MAXLEN_PLUG_MESSAGE 127
 
 boolean msgWaitLock = false;
 Circuit ckts[NCIRCUITS];
@@ -1053,7 +1053,6 @@ void readSheevaPort()
 {
     int i;
     unsigned char c;
-    const char *sp;
     boolean valid_message_streaming, valid_message_received;
     
     if (sheevaPort.available()) {
@@ -1072,9 +1071,11 @@ void readSheevaPort()
                         valid_message_received =  true;
                     }
                     else {
-                        s[i] = c;
-                        i++;
-                        if (c == '\n') { break;}
+                        s[i++] = c;
+                        if (c == '\n') { 
+                            s[i] = '\0';
+                            break;
+                        }
                     }
                 }
                 else if (c == '(') { 
@@ -1087,26 +1088,34 @@ void readSheevaPort()
                 }
             }
         }
-        s[i] = '\0';
+        sheevaPort.flush();
 
-        if (i > 0 and valid_message_received) {
+        if (i > 0 && i < 4) { // ()
+            debugPort.println("received empty message.");
+        }
+        else if (valid_message_received) {
             if (msgWaitLock || \
                 ((s[0] == 'a') || (s[0] == 'A')) && \
                     ((s[1] == 't') || (s[1] == 'T'))) { // modem job
                 debugPort.println("received modem message");
-                i = -1;
-                while (s[++i] != '\0') {
+
+                i = 0;
+                do {
                     telitPort.print(s[i]);
-                }
+                } while (s[++i] != '\0');
+
                 if (msgWaitLock) { msgWaitLock = false; }
             }
             else { // meter job
+                String job = String(s);
+                job = job.trim();
                 debugPort.print("received meter message:");
-                sp = s;
-                String job = sp;
                 debugPort.println(job);
                 meter(job);
             }
+        }
+        else {
+            debugPort.println("received invalid message.")
         }
 
         debugPort.println("readSheevaPort():end");
