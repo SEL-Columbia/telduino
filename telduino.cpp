@@ -1070,12 +1070,9 @@ void readSheevaPort()
                     if (c == ')') {
                         valid_message_received =  true;
                     }
-                    else {
+                    else if ((c != ' ') && (c != '\t')) { // skip whitespace
                         s[i++] = c;
-                        if (c == '\n') { 
-                            s[i] = '\0';
-                            break;
-                        }
+                        if (c == '\n') { break; }
                     }
                 }
                 else if (c == '(') { 
@@ -1088,9 +1085,10 @@ void readSheevaPort()
                 }
             }
         }
+        s[i] = '\0';
         sheevaPort.flush();
 
-        if (i > 0 && i < 4) { // ()
+        if (i < 2) { // ()
             debugPort.println("received empty message.");
         }
         else if (valid_message_received) {
