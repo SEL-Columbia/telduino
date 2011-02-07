@@ -10,7 +10,7 @@
 
 #define dbg Serial1
 #define waitTime 8000
-#define NAVG
+#define NAVG 10
 
 #define EXITIFCANCELED(X)		\
 	if ((X) == CANCELED) {		\
@@ -31,17 +31,12 @@
 int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMeas,
 	 		               int32_t *VRMSCkt, int32_t *IRMSCkt,  int32_t *VACkt ) 
 {
+	//get VRMS from user
 	dbg.println(MVQUERYSTR);
 	EXITIFCANCELED(CLgetInt(&dbg,VRMSMeas));	
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(*VRMSMeas,DEC);
-	dbg.print(MAQUERYSTR);
-	EXITIFCANCELED(CLgetInt(&dbg,IRMSMeas));	
-	dbg.println();
-	dbg.print(REPORTEDSTR);
-	dbg.println(*IRMSMeas,DEC);
-	*VAMeas = *IRMSMeas**VRMSMeas*2/1000;
 
 	//get VRMS from Ckt
 	ADEgetRegister(RSTSTATUS,VRMSCkt); //reset interrupt
@@ -54,12 +49,21 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	ADEgetRegister(VRMS,VRMSCkt);
 	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return false;}
 
+	//get IRMS from user
+	dbg.print(MAQUERYSTR);
+	EXITIFCANCELED(CLgetInt(&dbg,IRMSMeas));	
+	dbg.println();
+	dbg.print(REPORTEDSTR);
+	dbg.println(*IRMSMeas,DEC);
+	*VAMeas = *IRMSMeas**VRMSMeas*2/1000;
+
 	//get IRMS from Ckt
 	ADEgetRegister(IRMS,IRMSCkt);
 	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return false;}
 	dbg.print("ADEVRMS: "); dbg.println(*VRMSCkt);
 	dbg.print("ADEIRMS: "); dbg.println(*IRMSCkt);
 
+	//TODO For active power attach load
 	//getVA from Ckt
 	ADEgetRegister(RSTSTATUS,VACkt);
 	ADEwaitForInterrupt(CYCEND,waitTime);

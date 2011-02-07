@@ -49,12 +49,12 @@ void Cmeasure(Circuit *c)
 
 	//Start measuring
 	ADEgetRegister(PERIOD,&regData);				ERRCHECKRETURN(c);
-	c->periodus = regData*22/10;
+	c->periodus = regData*22/10; //2.2us/bit
 	dbg.print("Peruiodus:");dbg.println(c->periodus,DEC);
 
 	uint16_t waitTime = (uint16_t)((regData*22/100)*(c->halfCyclesSample/100));
 	waitTime = waitTime + waitTime/2;//Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur
-	dbg.print("waitTime:");dbg.println(waitTime,DEC);
+	dbg.print("waitTime:"); dbg.println(waitTime,DEC);
 	//uint16_t waitTime = 2*1000*c->halfCyclesSample/max(c->frequency,40);
 
 	ADEwaitForInterrupt(CYCEND,waitTime);			ERRCHECKRETURN(c);
@@ -64,22 +64,6 @@ void Cmeasure(Circuit *c)
 	}
 
 	if (!timeout) {
-		//Apparent power or Volt Amps
-		ADEgetRegister(LVAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->VA = regData*c->VAEslope/(c->halfCyclesSample/2*c->periodus/1000);  //Watts
-
-		//Apparent energy in joules accumulated since last query
-		ADEgetRegister(RVAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->VAEnergy = regData*c->VAEslope/1000;
-
-		//Active power or watts
-		ADEgetRegister(LAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->W = regData/(c->halfCyclesSample/2*c->periodus/1000);
-
-		//Actve energy accumulated since last query
-		ADEgetRegister(RAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->WEnergy = regData;
-
 		//IRMS
 		ADEgetRegister(IRMS,&regData);				ERRCHECKRETURN(c);
 		c->IRMS = regData*c->IRMSslope;
@@ -88,17 +72,33 @@ void Cmeasure(Circuit *c)
 		ADEgetRegister(VRMS,&regData);				ERRCHECKRETURN(c);
 		c->VRMS= regData*c->VRMSslope;
 
+		//Apparent energy in joules accumulated since last query
+		ADEgetRegister(RVAENERGY,&regData);			ERRCHECKRETURN(c);
+		c->VAEnergy = regData*c->VAEslope/1000;
+
+		//Actve energy accumulated since last query
+		ADEgetRegister(RAENERGY,&regData);			ERRCHECKRETURN(c);
+		c->WEnergy = regData*c->VAEslope/1000;
+
+		//Apparent power or Volt Amps
+		ADEgetRegister(LVAENERGY,&regData);			ERRCHECKRETURN(c);
+		c->VA = regData*c->VAEslope/(c->halfCyclesSample/2*c->periodus/1000);  //Watts
+
+		//Active power or watts
+		ADEgetRegister(LAENERGY,&regData);			ERRCHECKRETURN(c);
+		c->W = regData/(c->halfCyclesSample/2*c->periodus/1000);
+
 		//Power Factor PF
 		if (c->VAEnergy != 0){ 
 			c->PF = (uint16_t)(((((uint64_t)c->WEnergy<<16)-c->WEnergy)-c->WEnergy)/c->VAEnergy);
 		} else {
 			c->PF = 65535;
 		}
-	}//end if (!timeout)
+	} //end if (!timeout)
 
 	CSselectDevice(DEVDISABLE);
 
-	if (timeout){
+	if (timeout) {
 		_retCode = TIMEOUT;
 	}
 }
@@ -211,6 +211,10 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
 	ser->println(c->VA);
 	ser->print("VAEnergy&");
 	ser->println(c->VAEnergy);
+	ser->print("WEnergy&");
+	ser->println(c->WEnergy);
+	ser->print("PF&");
+	ser->println(c->PF);
 }
 
 /*
@@ -231,33 +235,12 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
  Active Power
  Period
  
- Derived or set parameters:
- Switch Status
- Power Factor (W/VA)
- Safety Current limit
- Safety Voltage limit
-
- ADE Setup Parameters:
- CH1OS Integrator switch
- GAIN for channel 2
  LINCYC Cycle half counts before interrupt (should be one or two times the 
 	frequncy so that a measurement occurs after at least 1 second)
  MODE Register:
- CYCMODE 1
- 
 
- ADE Calibration Parameters:
- CH1OS 
- CH2OS
- VRMSOS
- IRMSOS
  LVAENERGY used to get line cycle accumulation energy or energy over a 
 	certain number of line cycles
- 
- Circuit measurement calibration parameters:
- IRMS slope to turn ADE measurements into Amperes
- VRMS slope to turn ADE measurements into Volts
- Energy and power slope?
 */
 
 //Have fault detection code check interrupts for sag detection and frequency variation
