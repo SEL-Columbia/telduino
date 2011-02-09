@@ -262,15 +262,14 @@ void ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val)
 		data = -data;
 		data |= 0x20;
 	}
-
-	data &= ~0x80;
-	if (enableInt && X == 1) {
+	data = data & ~0x80;
+	if (*enableInt && (X == 1)) {
 		data |= 0x80;
 	}
 
 	if (X == 1) {
 		ADEsetRegister(CH1OS, &data);
-	} else if (X == 2){
+	} else if (X == 2) {
 		ADEsetRegister(CH2OS, &data);
 	} else {
 		_retCode = ARGVALUEERR;
@@ -330,7 +329,7 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	Serial1.print("waitforInterrupt endTime(ms):");
 	Serial1.println(endTime);
 	*/
-	Serial1.println("Should indicate timeout");
+	Serial1.println("TIMEOUT in waitForInterrupt");
 	_retCode = TIMEOUT;
 }
 

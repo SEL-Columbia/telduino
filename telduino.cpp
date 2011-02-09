@@ -238,17 +238,21 @@ void parseBerkeley()
 			for (int i = 0; i < NCIRCUITS; i++) {
 				Circuit *c = &(ckts[i]);
 				Cprogram(c);
-				debugPort.println(RCstr(_retCode));
-				debugPort.println("*****");
-				ifnsuccess(_retCode) {
-					break;
+				debugPort.print(i); 
+				debugPort.print(':'); 
+				debugPort.print(RCstr(_retCode));
+				if (i%4 != 3) {
+					debugPort.print('\t');
+				} else {
+					debugPort.println();
 				}
 			}
+			debugPort.println();
 		} else if(incoming == 'p') {		//Measure circuit values and print
 			Circuit *c = &(ckts[_testChannel]);
 			Cmeasure(c);
-			CprintMeas(&debugPort,c);
 			debugPort.println(RCstr(_retCode));
+			CprintMeas(&debugPort,c);
 			Cprint(&debugPort,c);
 			debugPort.println();
 		} else if (incoming == 'L') {		//Run calibration routine on channel

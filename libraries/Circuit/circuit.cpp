@@ -105,9 +105,8 @@ void Cmeasure(Circuit *c)
 
 void Cprogram(Circuit *c)
 {
-
-	_retCode = SUCCESS;
 	int32_t regData;
+	_retCode = SUCCESS;
 	CSselectDevice(c->circuitID);					ERRCHECKRETURN(c);
 
 	ADEreset();
@@ -166,15 +165,15 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 {
 	c->circuitID = circuitID;
 	c->halfCyclesSample = 200;
-	c->chIint = true;
+	c->chIint = false;//TODO true;
 	c->chIos = 0;
-	c->chIgainExp = 4;
-	c->IRMSoffset = -2048;//0x01BC;
-	c->IRMSslope = .0010;//164;
+	c->chIgainExp = 0;//4;
+	c->IRMSoffset = 0;//-2048;//0x01BC;
+	c->IRMSslope = 1;//.0010;//164;
 	c->chVos = 1;//15;
 	c->VRMSoffset = 2047;//0x07FF;
 	c->VRMSslope = .2199;//4700;
-	c->VAEslope = 34.2760;//2014/10000.0;
+	c->VAEslope = 1;//34.2760;//2014/10000.0;
 	c->VAoffset = 0;
 	c->sagDurationCycles = 10;
 	c->minVSag = 100;
@@ -184,19 +183,29 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 	c->VRMS = 0;
 	c->VAEnergy = 0;
 	c->WEnergy = 0;
+	c->PF = 65534;
 }
 
 void Cprint(HardwareSerial *ser, Circuit *c) 
 {
-	ser->print("IRMSOS:");
+
+	ser->print("circuitID&");
+	ser->println(c->circuitID);
+	ser->print("halfCyclesSample&");
+	ser->println(c->halfCyclesSample);
+	ser->print("chIint&");
+	ser->println(c->chIint);
+	ser->print("chIgainExp&");
+	ser->print(c->chIgainExp);
+	ser->print("IRMSOS&");
 	ser->println(c->IRMSoffset);
-	ser->print("VRMSOS:");
+	ser->print("VRMSOS&");
 	ser->println(c->VRMSoffset);
-	ser->print("IRMS slope:");
+	ser->print("IRMS slope&");
 	ser->println(c->IRMSslope,4);
-	ser->print("VRMS slope:");
+	ser->print("VRMS slope&");
 	ser->println(c->VRMSslope,4);
-	ser->print("VAE slope:");
+	ser->print("VAE slope&");
 	ser->println(c->VAEslope,4);
 
 }
@@ -204,7 +213,7 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
 {
 	ser->print("IRMS&");
 	ser->print(c->IRMS);
-	ser->print(" ");
+	ser->println();
 	ser->print("VRMS&");
 	ser->println(c->VRMS);
 	ser->print("VA&");

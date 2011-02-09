@@ -60,7 +60,7 @@ typedef struct {
 	int32_t VA;			//Volt Amps. i.e. Apparent energy
 	int32_t W;
 	//Power factor is a number between 0 and 2**16-1, where 2**16-1 is a PF of 1.0.
-	int16_t PF;			
+	uint16_t PF;			
 	int32_t VAEnergy;	//Apparent energy since last read
 	int32_t WEnergy;	//Active energy since last read
 	/**

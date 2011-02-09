@@ -15,6 +15,7 @@
 #define EXITIFCANCELED(X)		\
 	if ((X) == CANCELED) {		\
 	    CsetOn(&cCal,false);	\
+		dbg.println();			\
 		dbg.println(CANCELEDSTR);\
 		_retCode = CANCELED;	\
 		return false;	}				
