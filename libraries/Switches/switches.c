@@ -50,6 +50,9 @@ void SWallOff()
 	SRsetEnabled(true);
 	_SWsetSwitches();
 }
+/** 
+	Turns all circuits on. This implies that the actual relays are turning off.
+  */
 void SWallOn()
 {
 	int8_t i;

@@ -97,7 +97,7 @@ void turnOnTelit();
 
 void setup()
 {
-	setClockPrescaler(CLOCK_PRESCALER_1);	//prescale of 2 after startup prescale of 8. This ensures that the arduino is running at 8 MHz.
+	setClockPrescaler(CLOCK_PRESCALER_2);	//prescale of 2 after startup prescale of 8. This ensures that the arduino is running at 8 MHz.
 
 	// start up serial ports
 	debugPort.begin(DEBUG_BAUD_RATE);		//Debug serial
@@ -124,6 +124,7 @@ void setup()
 	SPI.begin();				//SPI
 
 	SWallOff(); //switch all off.
+	SWset(20,1);//set mains on
 
 	//Load circuit data from EEPROM
 	uint8_t *addrEEPROM = 0;
