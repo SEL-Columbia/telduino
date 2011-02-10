@@ -46,9 +46,11 @@
 
 #define DEBUG_BAUD_RATE 9600
 #define SHEEVA_BAUD_RATE 9600
-#define TELIT_BAUD_RATE 115200
+#define TELIT_BAUD_RATE 9600
 #define verbose 1
-#define MAXLEN_PLUG_MESSAGE 127
+#define MAXLEN_PLUG_MESSAGE 160
+
+#define VERSION ""
 
 boolean msgWaitLock = false;
 Circuit ckts[NCIRCUITS];
@@ -124,7 +126,6 @@ void setup()
 	SPI.begin();				//SPI
 
 	SWallOff(); //switch all off.
-	SWset(20,1);//set mains on
 
 	//Load circuit data from EEPROM
 	uint8_t *addrEEPROM = 0;
@@ -853,71 +854,68 @@ void jobReadLVA(int icid) {
 	sheevaPort.println(responseString);		
 }
 
+/** dispatch job read function
+ *  power should be returned in units of watt-hours
+ *  time will be returned in units of milliseconds
+ *  icid - circuit id
+ *
+ *  input string: job=read&cid=<cid>;
+ *  output string: job=read&cid=<cid>&power=<power>&time=<time>;
+ */
 void jobReadRVA(int icid) {
-	/**	dispatch job read function
-	 *  power should be returned in units of watt-hours
-	 *	time will be returned in units of milliseconds
-	 *	icid - circuit id
-	 *
-	 *	 input string: cmp=mtr&job=read&cid=<cid>;
-	 *	output string: cmp=mtr&job=read&cid=<cid>&power=<power>&time=<time>;
-	 */
+  unsigned long time;
+  char readings[MAXLEN_PLUG_MESSAGE];
 	
-	debugPort.println("reading circuit energy");
-	// actually do something here soon
-	// read circuit energy or something using icid
-	int32_t regVal = 0;
+  debugPort.println("reading circuit energy");
+  // actually do something here soon
+  // read circuit energy or something using icid
+  int32_t regVal = 0;
 	
-	// select SPI circuit
-	CSselectDevice(icid);
+  // select SPI circuit
+  CSselectDevice(icid);
 	
-	// read current
-	int32_t irms = 0;
-	ADEgetRegister(IRMS, &irms);
-	debugPort.println("reg read IRMS");
-	debugPort.println(irms, HEX);
+  // read current
+  int32_t irms = 0;
+  ADEgetRegister(IRMS, &irms);
+  debugPort.println("reg read IRMS");
+  debugPort.println(irms, HEX);
 	
-	// read voltage
-	int32_t vrms = 0;
-	ADEgetRegister(VRMS, &vrms);
-	debugPort.println("reg read VRMS");
-	debugPort.println(vrms, HEX);
+  // read voltage
+  int32_t vrms = 0;
+  ADEgetRegister(VRMS, &vrms);
+  debugPort.println("reg read VRMS");
+  debugPort.println(vrms, HEX);
 	
-	//read AENERGY
-	ADEgetRegister(AENERGY, &regVal);
-	debugPort.println("reg read AENERGY");
-	debugPort.println(regVal, HEX);
+  //read AENERGY
+  ADEgetRegister(AENERGY, &regVal);
+  debugPort.println("reg read AENERGY");
+  debugPort.println(regVal, HEX);
 	
-	// read VAENERGY
-	ADEgetRegister(VAENERGY, &regVal);
-	debugPort.println("reg read VAENERGY");
-	debugPort.println(regVal, HEX);
+  // read VAENERGY
+  ADEgetRegister(VAENERGY, &regVal);
+  debugPort.println("reg read VAENERGY");
+  debugPort.println(regVal, HEX);
 	
-	// read RVAENERGY value into power
-	int32_t power = 0;
-	ADEgetRegister(RVAENERGY, &power);
-	debugPort.println("reg read RVAENERGY");
-	debugPort.println(power, HEX);
+  // read RVAENERGY value into power
+  int32_t power = 0;
+  ADEgetRegister(RVAENERGY, &power);
+  debugPort.println("reg read RVAENERGY");
+  debugPort.println(power, HEX);
 		
-	// deselect SPI circuit
-	CSselectDevice(DEVDISABLE);
+  // deselect SPI circuit
+  CSselectDevice(DEVDISABLE);
 	
-	// construct and send back response
-	String responseString = "";
-	responseString += "cmp=mtr&";
-	responseString += "job=readRVA&";
-	responseString += "cid=";
-	responseString += icid;
-	responseString += "&power=";
-	responseString += power;
-	responseString += "&irms=";
-	responseString += irms;
-	responseString += "&vrms=";
-	responseString += vrms;
-	responseString += "&time=";
-	responseString += millis();
-	responseString += ";";
-	sheevaPort.println(responseString);	
+  time = millis();
+  debugPort.println("times");
+  debugPort.println(time);
+  debugPort.println(millis());
+  
+  // construct and send back response
+  snprintf(readings, MAXLEN_PLUG_MESSAGE, 
+	   "(job=%s&cid=%d&power=%d&irms=%d&vrms=%d&time=%lu)\r\n", 
+	   "readRVA", icid, power, irms, vrms, time);
+  sheevaPort.println(readings);
+  sheevaPort.println("OK");
 }
 
 String getValueForKey(String key, String commandString) {
@@ -1058,69 +1056,73 @@ void modem(String commandString) {
  */
 void readSheevaPort()
 {
-    int i;
-    unsigned char c;
-    boolean valid_message_streaming, valid_message_received;
-    char s[MAXLEN_PLUG_MESSAGE];
+  int i;
+  unsigned char c;
+  boolean valid_message_streaming, valid_message_received;
+  char s[MAXLEN_PLUG_MESSAGE];
     
-    if (sheevaPort.available()) {
-        debugPort.println("readSheevaPort():start");
+  if (sheevaPort.available()) {
+    debugPort.println("readSheevaPort():start");
 
-        valid_message_streaming = false; 
-        valid_message_received = false;
+    valid_message_streaming = false; 
+    valid_message_received = false;
 
-        i = 0;
-        while (sheevaPort.available() && i < MAXLEN_PLUG_MESSAGE) {
-            if ((c = sheevaPort.read()) != -1) {
-                debugPort.print(c);
-                if (valid_message_streaming) {
-                    if (c == ')') {
-                        valid_message_received =  true;
-                    }
-                    else if ((c != ' ') && (c != '\t')) { // skip whitespace
-                        s[i++] = c;
-                        if (c == '\n') { break; }
-                    }
-                }
-                else if (c == '(') { 
-                    valid_message_streaming = true; 
-                }
-                /* REMOVE WHEN DONE DEBUGGING */
-                else if (c == 26) {
-                    debugPort.println("got ctrl-z");
-                    telitPort.println(c);
-                }
-            }
-        }
-        s[i] = '\0';
-
-        if (i < 3) { // ()
-            debugPort.println("received empty message.");
-        }
-        else if (valid_message_received) {
-            if (msgWaitLock || \
-                ((s[0] == 'a') || (s[0] == 'A')) && \
-                    ((s[1] == 't') || (s[1] == 'T'))) { // modem job
-                debugPort.println("received modem message");
-
-                i = 0;
-                do {
-                    telitPort.print(s[i]);
-                } while (s[++i] != '\0');
-
-                if (msgWaitLock) { msgWaitLock = false; }
-            }
-            else { // meter job
-                debugPort.println("received meter message:");
-                meter_test(s);
-            }
-        }
-        else {
-            debugPort.println("received invalid message.");
-        }
-
-        debugPort.println("readSheevaPort():end");
+    i = 0;
+    while (sheevaPort.available() && i < MAXLEN_PLUG_MESSAGE) {
+      if ((c = sheevaPort.read()) != -1) {
+	debugPort.print(c);
+	if (valid_message_streaming) {
+	  if (c == ')') {
+	    valid_message_received =  true;
+	  }
+	  else if ((c != ' ') && (c != '\t')) { // skip whitespace
+	    s[i++] = c;
+	    if (c == '\n') { break; }
+	  }
+	}
+	else if (c == '(') { 
+	  valid_message_streaming = true; 
+	}
+	/* REMOVE WHEN DONE DEBUGGING */
+	else if (c == 26) {
+	  debugPort.println("got ctrl-z");
+	  telitPort.println(c);
+	}
+      }
     }
+    s[i] = '\0';
+
+    if (i < 3) { // ()
+      debugPort.println("received empty message.");
+    }
+    else if (valid_message_received) {
+      if (!strncmp(s, "version", 7)) { // print s/w version
+	debugPort.print("version:");
+	debugPort.println(VERSION);
+      }
+      else if (msgWaitLock ||					\
+	       ((s[0] == 'a') || (s[0] == 'A')) &&		\
+	       ((s[1] == 't') || (s[1] == 'T'))) { // modem job
+	debugPort.println("received modem message");
+	    
+	i = 0;
+	do {
+	  telitPort.print(s[i]);
+	} while (s[++i] != '\0');
+	    
+	if (msgWaitLock) { msgWaitLock = false; }
+      }
+      else { // meter job
+	debugPort.println("received meter message:");
+	meter_test(s);
+      }
+    }
+    else {
+      debugPort.println("received invalid message.");
+    }
+	
+    debugPort.println("readSheevaPort():end");
+  }
 }
 
 /* Parses &-delimited 'key=val' pairs and stores
@@ -1128,100 +1130,100 @@ void readSheevaPort()
  */
 void get_val(char *s, char *key, char *val)
 {
-    char *substr, *eq, *p, c;
-    int i;
+  char *substr, *eq, *p, c;
+  int i;
 
-    substr = strstr(s, key);
-    if (substr != NULL) {
-        eq = strchr(substr, '=');
-        if (eq != NULL) {
-            p = eq;
-            p++; // skip '='
-            i = 0;
-            c = *p;
-            while ((c != NULL) && (c != '\0') && (c != '&') && \
-                (c != '\n') && (c != '\r')) {
-                val[i++] = *p++;
-                c = *p;
-            }
-            val[i] = '\0';
-        }
+  substr = strstr(s, key);
+  if (substr != NULL) {
+    eq = strchr(substr, '=');
+    if (eq != NULL) {
+      p = eq;
+      p++; // skip separator
+      i = 0;
+      c = *p;
+      while ((c != NULL) && (c != '\0') && (c != '&') && \
+	     (c != '\n') && (c != '\r')) {
+	val[i++] = *p++;
+	c = *p;
+      }
+      val[i] = '\0';
     }
+  }
 }
 
 void meter_test(char *s)
 {
-    char job[8], s_cid[8];
-    int8_t cid;
-
-    // get job
-    get_val(s, "job", job);
-    // get cid
-    get_val(s, "cid", s_cid);
-    cid = atoi(s_cid); // could use strtodyy
-
-    if (verbose > 0) {
-        debugPort.println();
-        debugPort.println("entered void meter()");
-        debugPort.print("executing job type:");
-        debugPort.print(job);
-        debugPort.print(", on circuit id:");
-        debugPort.println(cid);
-        debugPort.println();
+  char job[8], s_cid[8];
+  int8_t cid;
+  
+  // get job
+  get_val(s, "job", job);
+  // get cid
+  get_val(s, "cid", s_cid);
+  cid = atoi(s_cid); // could use strtod
+  
+  if (verbose > 0) {
+    debugPort.println();
+    debugPort.println("entered void meter()");
+    debugPort.print("executing job type:");
+    debugPort.print(job);
+    debugPort.print(", on circuit id:");
+    debugPort.println(cid);
+    debugPort.println();
+  }
+  
+  if (!strncmp(job, "con", 3)) {
+    debugPort.println("execute con job");
+    SWset(cid,1);
+    debugPort.print("switch ");
+    debugPort.print(cid, DEC);
+    if (SWisOn(cid)) {
+      debugPort.println(" is on");
+    } else {
+      debugPort.println(" is off");
     }
-    
-	if (!strncmp(job, "con", 3)) {
-		debugPort.println("execute con job");
-		SWset(cid,1);
-		debugPort.print("switch ");
-		debugPort.print(cid, DEC);
-		if (SWisOn(cid)) {
-			debugPort.println(" is on");
-		} else {
-			debugPort.println(" is off");
-		}
-	}
-	else if (!strncmp(job, "coff", 4)) {
-		debugPort.println("execute coff job");
-		SWset(cid,0);
-		debugPort.print("switch ");
-		debugPort.print(cid, DEC);
-		if (SWisOn(cid)) {
-			debugPort.println(" is on");
-		} else {
-			debugPort.println(" is off");
-		}
-	}
-	else if (!strncmp(job, "readRVA", 7)) {
-		jobReadRVA(cid);
-	}
-	else if (!strncmp(job, "readLVA", 7)) {
-		jobReadLVA(cid);
-	}
-	else if (!strncmp(job, "modeRVA", 7)) {
-		setupRVAMode(cid);
-	}
-	else if (!strncmp(job, "modeLVA", 7)) {
-		int32_t line_cycle = 1000;
-        char s_line_cycle[8];
-        get_val(s, "linecyc", s_line_cycle);
-        line_cycle = atoi(s_line_cycle); // could use strtod
-		setupLVAMode(cid, line_cycle);
-	}
-	else if (!strncmp(job, "modeDefault", 11)) {
-		setupDefaultMode(cid);
-	}
-	else if (!strncmp(job, "c", 1)) {
-		_testChannel = cid;
-		displayChannelInfo();		
-	}
-	else if (!strncmp(job, "T", 1)) {
-		testHardware();
-	}
-	else if (!strncmp(job, "R", 1)) {
-		wdt_enable((WDTO_4S));
-		debugPort.println("resetting in 4s.");
-	}
+  }
+  else if (!strncmp(job, "coff", 4)) {
+    debugPort.println("execute coff job");
+    SWset(cid,0);
+    debugPort.print("switch ");
+    debugPort.print(cid, DEC);
+    if (SWisOn(cid)) {
+      debugPort.println(" is on");
+    } else {
+      debugPort.println(" is off");
+    }
+  }
+  else if (!strncmp(job, "readRVA", 7)) {
+    jobReadRVA(cid);
+  }
+  else if (!strncmp(job, "readLVA", 7)) {
+    jobReadLVA(cid);
+  }
+  else if (!strncmp(job, "modeRVA", 7)) {
+    setupRVAMode(cid);
+  }
+  else if (!strncmp(job, "modeLVA", 7)) {
+    int32_t line_cycle = 1000;
+    char s_line_cycle[8];
+    get_val(s, "linecyc", s_line_cycle);
+    line_cycle = atoi(s_line_cycle); // could use strtod
+    setupLVAMode(cid, line_cycle);
+  }
+  else if (!strncmp(job, "modeDefault", 11)) {
+    setupDefaultMode(cid);
+  }
+  else if (!strncmp(job, "c", 1)) {
+    _testChannel = cid;
+    displayChannelInfo();		
+  }
+  else if (!strncmp(job, "T", 1)) {
+    testHardware();
+  }
+  else if (!strncmp(job, "R", 1)) {
+    wdt_enable((WDTO_4S));
+    debugPort.println("resetting in 4s.");
+  }
 }
 
 /**
@@ -1229,18 +1231,18 @@ void meter_test(char *s)
  *	and returns them as String objects.
  */
 void readTelitPort() {
-	uint32_t startTime = millis();
-    byte b;
-    while (telitPort.available()) {
-        if ((b = telitPort.read()) != -1) {
-            debugPort.print(b);
-            sheevaPort.print(b);
-            if (b == '>') { // modem awaits the content of the sms 
-                msgWaitLock = true;
-                // delay(100);
-            }
-        } 
-    }
+  uint32_t startTime = millis();
+  byte b;
+  while (telitPort.available()) {
+    if ((b = telitPort.read()) != -1) {
+      debugPort.print(b);
+      sheevaPort.print(b);
+      if (b == '>') { // modem awaits the content of the sms 
+	msgWaitLock = true;
+	delay(100);
+      }
+    } 
+  }
 }
 
 void chooseDestination(String destination, String commandString) {
