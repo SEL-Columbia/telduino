@@ -912,10 +912,9 @@ void jobReadRVA(int icid) {
   
   // construct and send back response
   snprintf(readings, MAXLEN_PLUG_MESSAGE, 
-	   "(job=%s&cid=%d&power=%d&irms=%d&vrms=%d&time=%lu)\r\n", 
+	   "(job=%s&cid=%d&power=%d&irms=%d&vrms=%d&time=%lu)", 
 	   "readRVA", icid, power, irms, vrms, time);
   sheevaPort.println(readings);
-  sheevaPort.println("OK");
 }
 
 String getValueForKey(String key, String commandString) {
@@ -1115,6 +1114,7 @@ void readSheevaPort()
       else { // meter job
 	debugPort.println("received meter message:");
 	meter_test(s);
+	sheevaPort.println("\r\nOK"); // send confirmation
       }
     }
     else {
