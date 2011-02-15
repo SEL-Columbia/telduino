@@ -123,8 +123,11 @@ void setup()
 	sd_raw_init();				//SDCard
 	SPI.begin();				//SPI
 
-	SWallOff(); //switch all off.
-	SWset(20,1);//set mains on
+	SWallOn();
+	//The mains is the last line, do not turn it off
+	for (int i = 0; i < NCIRCUITS-1; i++) {
+		SWset(i,false);
+	}
 
 	//Load circuit data from EEPROM
 	uint8_t *addrEEPROM = 0;
@@ -138,8 +141,8 @@ void setup()
 
 void loop()
 {	
-	// parseBerkeley();
-	parseColumbia();
+	parseBerkeley();
+	//parseColumbia();
 } //end of main loop
 
 /**

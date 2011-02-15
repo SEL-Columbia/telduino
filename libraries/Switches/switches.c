@@ -41,6 +41,9 @@ void SWset(int8_t sw, int8_t on)
 		_retCode = ARGVALUEERR;
 	}
 }
+/** 
+	Turns all circuits off. This implies that the actual relays are turning on.
+  */
 void SWallOff()
 {
 	int8_t i = 0;

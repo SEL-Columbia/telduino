@@ -209,6 +209,7 @@ void Cprint(HardwareSerial *ser, Circuit *c)
 	ser->println(c->VAEslope,4);
 
 }
+
 void CprintMeas(HardwareSerial *ser, Circuit *c)
 {
 	ser->print("IRMS&");
@@ -226,30 +227,18 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
 	ser->println(c->PF);
 }
 
-/*
-   To Achintya?
-   What is the appEnergyDiv?
-   */
-
-//Configuration
-//Set gain on current channel to be 2^1 as GAIN is an exponent GAIN is 1.
-//Enable linecycle and lincyccount
-
-// The LINCYC value determines the frequency of power value reads 
-
-/* Measured Parameters of interest are:
- VRMS
- IRMS
- Apparent Power
- Active Power
- Period
- 
- LINCYC Cycle half counts before interrupt (should be one or two times the 
-	frequncy so that a measurement occurs after at least 1 second)
- MODE Register:
-
- LVAENERGY used to get line cycle accumulation energy or energy over a 
-	certain number of line cycles
+/** 
+	Attempts to reestablish communications with the ADE.
+	1) The SS pin is strobed. 
+	2) Then the ADE is reset. 
+	3) Finally the ADE is reprogrammed.
+	@returns true if a communication was successful.
 */
+int8_t CrestoreCommunications(Circuit *c)
+{
+	CSselectDevice(c->circuitID);
+	CSstrobe();
+	
+}
 
 //Have fault detection code check interrupts for sag detection and frequency variation
