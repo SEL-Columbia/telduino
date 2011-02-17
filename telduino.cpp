@@ -69,7 +69,7 @@ void wdt_init(void)
 
 
 
-int _testChannel = 20; //This is the input daughter board channel. The _ implies that it should only be changed by user input.
+int _testChannel = MAINS; //This is the input daughter board channel. The _ implies that it should only be changed by user input.
 
 
 void setup();
@@ -83,6 +83,7 @@ void jobReadRVA(int icid);
 void displayChannelInfo(); 
 void displayEnabled(const int8_t enabledC[WIDTH]);
 int8_t getChannelID();
+void testSwitch(int8_t swID);
 void testHardware();
 void parseBerkeley();
 void parseColumbia();
@@ -125,9 +126,10 @@ void setup()
 	sd_raw_init();				//SDCard
 	SPI.begin();				//SPI
 
-	SWallOn();
 	//The mains is the last line, do not turn it off
-	for (int i = 0; i < NCIRCUITS-1; i++) {
+	SWallOn();
+	for (int i = 0; i < WIDTH; i++) {
+		if (i == MAINS) continue;
 		SWset(i,false);
 	}
 
@@ -149,6 +151,11 @@ void loop()
 
 /**
  *	single character serial interface for interaction with telduino
+ *  Capital letters are usually writes and lower case letters are usually reads
+ *  
+ *  A
+ *  a
+ *  
  */
 void parseBerkeley() 
 {
@@ -233,8 +240,10 @@ void parseBerkeley()
 			SWset(ID,!SWisOn(ID));
 		} else if (incoming == 's') {		//Display switch state
 			displayEnabled(SWgetSwitchState());	
-		} else if (incoming == 'T') {		//Test basic functionality
+		} else if (incoming == 't') {		//Test basic functionality
 			testHardware();
+		} else if (incoming == 'T') {		//Test switch aggresively
+			testSwitch(_testChannel);
 		} else if (incoming == 'R') {		//Hard Reset using watchdog timer
 			wdt_enable((WDTO_4S));			
 			Serial1.println("resetting in 4s.");
@@ -509,17 +518,46 @@ int8_t getChannelID()
 	return (int8_t)ID;
 }
 
+/**
+	Tests the switch for 5 seconds on each of 4 different switch speeds.
+  */
+void testSwitch(int8_t swID)
+{
+	int times[]      = {2500,1000, 500, 200,  10};
+	int switchings[] = {   2,   5,  10,  50, 500};
+	for (int i=0; i < sizeof(times)/sizeof(times[0]); i++) {
+		for (int j=0; j < switchings[i]; j++){
+			SWset(swID, true);
+			delay(times[i]/2);
+			SWset(swID, false);
+			delay(times[i]/2);
+		}
+	}
+}
+
+/** 
+	Quickly turns on all circuits.
+	Then turns off all of them as fast as possible except for MAINS.
+	Then tries to communicate with the ADEs.
+  */
 void testHardware() {
 	int8_t enabledC[WIDTH] = {0};
 	int32_t val;
 
 	debugPort.print("\n\rTest switches\n\r");
 	//Shut off/on all circuits
-	for (int i =0; i < 1; i++){
+	/*for (int i =0; i < 1; i++){
 		SWallOn();
 		delay(50);
 		SWallOff();
 		delay(50);
+	}*/
+	SWallOn();
+	//Start turning each switch off as fast as possible, but for MAINS
+	for (int i = 0; i < WIDTH; i++) {
+		if (i == MAINS) continue;
+		enabledC[i] = 0;
+		SWsetSwitches(enabledC);
 	}
 	//Start turning each switch on with 1 second in between
 	for (int i = 0; i < WIDTH; i++) {

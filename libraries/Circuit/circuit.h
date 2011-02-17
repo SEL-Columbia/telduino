@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "arduino/HardwareSerial.h"
+#define MAINS 20
 
 static const uint32_t COMM	  = 0x00010000;
 
