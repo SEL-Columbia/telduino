@@ -523,8 +523,8 @@ int8_t getChannelID()
   */
 void testSwitch(int8_t swID)
 {
-	int times[]      = {2500,1000, 500, 200,  10};
-	int switchings[] = {   2,   5,  10,  50, 500};
+	int times[]      = {5000,2500,1000, 500, 200};
+	int switchings[] = {  10,   2,   5,  10,  50};
 	for (int i=0; i < sizeof(times)/sizeof(times[0]); i++) {
 		for (int j=0; j < switchings[i]; j++){
 			SWset(swID, true);
