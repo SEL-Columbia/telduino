@@ -32,7 +32,33 @@ The optimal test points are listed below:
 2. Current: .0125 amps and .625 amps
 3. Power: 3 watts and 75 watts
 
-So with the ideal test points from above, the loads that we want are going to be 9600 Ohm, 1.5 watt load and a 192 Ohm, 75 watt load. Both of these points can be done with a voltage of 120 volts because this will ensure that the amount of power that we dissipate is less a factor of 2 over 240 volts.
+So with the ideal test points from above, the loads that we want are going to be 4800 Ohm, 3 watt load and a 192 Ohm, 75 watt load. Both of these points can be done with a voltage of 120 volts because this will ensure that the amount of power that we dissipate is less a factor of 2 over 240 volts.
+
+The loads for the lower gain setting of 2 would have to meter a .1 Amp 12.5 Watt load and a 5 Amp 600 watt load. So here 6 100 watt lightbulbs would be accurate for the necessary job.
+
+Parts List
+-----------
+
+1. 2x Gain high amp: 12x 300 Ohm 50 Watt 1% resistors in parallel = 25 Ohm 600 Watt load that will draw 4.8 Amps.  
+	The digikey part number associated with this load are: TMC50-300-ND, KAL50FB300R-ND, RHRD-300-ND.
+2. 2x Gain low amp: 1x 1.0k ohm 50 Watt Watt 1% resistor = draw of .12 Amps.  
+	Digikey parts associated: KAL50FB1K00-ND, RHRD-1.0K-ND, TMC50-1.0K-ND, 850F1K0E-ND.
+3. 16x Gain high amp: 3x 500 Ohm 50 Watt 1% resistors in parallel = 167 ohm 150 watt load that will draw 0.72 Amps. 
+	Digikey parts associated: RHRD-500-ND, TMC50-500-ND
+4. 16x Gain low amp: 1x 5.0k Ohm 50 Watt 1% resistor = draw of 0.024 Amps.  
+	Digikey parts associated: TMC50-5.0K-ND, 850F5K0E-ND.  
+
+We would also like to have the option of using real loads such as lightbulbs to test out the effectiveness of the calibration. So the combination of incandescent lightbulbs below is desired:
+
+1. 12.5-25 Watt x 4
+2. 100 Watt x 12
+
+To make connecting the various components easier, I would recommend terminal blocks:
+
+1. 12 connector 0.437" pitch terminal block: Digikey= A98522-ND. Recommended quantity 6-10.
+2. Around block terminal 0.437 pitch connectors: Digikey= 5-1437644-4-ND. Recommended quantity 60-100.
+
+
 
 Test Setup
 ----------
