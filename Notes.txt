@@ -1,8 +1,12 @@
 OVERALL TODO:
+- get switches working with new arch, need to switch properly and update pin mapping
+- get select working with new arch, need to get correct mapping, and HIGH,LOW
+- Power offset fix
+- Active power isn't working
 - make initialization naming conventions sane
-- Write code to lighup mount light
+- Write code to lightup mount light
 - Verify microsecond timing for SPI
-
+- Create passthrough routines for SPI and Modem control
 
 ReturnValues
 - refactor RC to be more like errno
