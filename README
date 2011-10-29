@@ -1,0 +1,17 @@
+Dependencies
+- avr-gcc
+- avr-dude
+- make
+- avr-libc 1.7.1 
+
+Compiling
+make compile
+
+Programming Fuses
+make programfuses
+
+Read Fuses
+make readfuses
+
+Programming
+make program
