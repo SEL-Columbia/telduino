@@ -11,8 +11,6 @@
 enum {UNSIGN=0,SIGNMAG=1,TWOS=2};
 //NOTE: We can recover memory (3*41= 124 bytes) by just using a single, data buffer
 
-
-
 typedef struct {
 	const char* name;
 	const uint8_t addr;
@@ -21,8 +19,9 @@ typedef struct {
 	//uint8_t data[3]; 
 } ADEReg;
 
-//register defines -AM
-//These are effectively constant as the struct has constant members
+/** register definitions 
+These are effectively constant as the struct has constant members
+*/
 extern const ADEReg WAVEFORM;	//= {"WAVEFORM",0x01,24,TWOS};
 extern const ADEReg AENERGY;	//= {"AENERGY",0x02,24,TWOS};
 extern const ADEReg RAENERGY;//	= {"RAENERGY",0x03,24,TWOS};

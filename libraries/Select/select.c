@@ -4,7 +4,6 @@
 #include <inttypes.h>
 #include "arduino/wiring.h"
 #include "select.h"
-#include "Demux/demux.h"
 #include "ReturnCode/returncode.h"
 
 static int _device;
@@ -15,7 +14,6 @@ void initSelect()
 {
     //SD SS
     pinMode(SDSS,OUTPUT);
-    initDemux();
 	CSselectDevice(DEVDISABLE);
 }
 
@@ -26,20 +24,16 @@ void initSelect()
 void CSselectDevice(int device) 
 {
     if (device == SDCARD) {
-        muxSetEnabled(false);   
         digitalWrite(SDSS,LOW);
 		_device = device;
     } else if ( 0 <= device && device < NCIRCUITS) {
         digitalWrite(SDSS,HIGH);
-        muxSelect(device);
-        muxSetEnabled(true);
 		_device = device;
     } else if ( device == DEVDISABLE ) {
-        muxSetEnabled(false);
         digitalWrite(SDSS,HIGH);
-		_device = device;
+        _device = device;
     } else {			//error
-		_retCode = ARGVALUEERR;
+        _retCode = ARGVALUEERR;
 	}
 }
 
@@ -57,14 +51,14 @@ void CSstrobe()
 
 int CSgetDevice()
 {
-	return _device;
+    return _device;
 }
 
 void CSsetEnable(int8_t enabled)
-{
-	if (enabled) {
-		CSselectDevice(_device);
-	} else {
-		CSselectDevice(DEVDISABLE);
+{   
+    if (enabled) {
+        CSselectDevice(_device);
+    } else {
+        CSselectDevice(DEVDISABLE);
 	}
 }

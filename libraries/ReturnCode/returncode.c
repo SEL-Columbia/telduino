@@ -24,6 +24,6 @@ const char* RCstr(int8_t retCode)
 	return _RCstr(retCode);
 }
 
-uint8_t success(int8_t X) { return X == SUCCESS;}
+uint8_t success(int8_t X) {return X == SUCCESS;}
 uint8_t nsuccess(int8_t X) {return X != SUCCESS;}
 

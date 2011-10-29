@@ -2,23 +2,27 @@
 #define SWITCHES_H
 
 #include <inttypes.h>
-#include "ShiftRegister/shiftregister.h"
+#include "arduino/wiring.h"
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define NSWITCHES 2
 
 /**
-      This mapping from shift register positions to circuit IDs is its own inverse.
-	        */
-static const int8_t mapRegToSw[] = {0,1,2,3,7,6,5,4,8,9,10,11,15,14,13,12,19,18,17,16,20,21,22,23};
+    Mapping from switch number to pins.
+*/
+static const int8_t mapSWtoPinON[] = {11,56};
+static const int8_t mapSWtoPinOFF[] = {55,54};
+static const int8_t mapCtoPinCS[] = {62,57};
 
 //Enabled circuits
-static int8_t _enabledC[WIDTH];
+static int8_t _enabledC[NSWITCHES] = {1};
 
-void SWsetSwitches(int8_t enabledC[WIDTH]);
+void SWinit();
+void SWsetSwitches(int8_t enabledC[NSWITCHES]);
 void SWset(int8_t sw, int8_t on);
 void SWallOff();
 void SWallOn();

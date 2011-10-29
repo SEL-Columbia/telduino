@@ -27,8 +27,6 @@
 #include "SPI/SPI.h"
 #include "DbgTel/DbgTel.h"
 #include "ADE7753/ADE7753.h"
-#include "ShiftRegister/shiftregister.h"
-#include "Demux/demux.h"
 #include "Select/select.h"
 #include "sd-reader/sd_raw.h"
 #include "Switches/switches.h"
@@ -81,7 +79,7 @@ void setupDefaultMode(int icid);
 void jobReadLVA(int icid);
 void jobReadRVA(int icid);
 void displayChannelInfo(); 
-void displayEnabled(const int8_t enabledC[WIDTH]);
+void displayEnabled(const int8_t enabledC[NSWITCHES]);
 int8_t getChannelID();
 void testSwitch(int8_t swID);
 void testHardware();
@@ -120,15 +118,14 @@ void setup()
 	pinMode(37, OUTPUT);		//Level shifters
 	digitalWrite(37,HIGH);		//Level shifters
 	initDbgTel();				//Blink leds
-	SRinit();					//Shift registers
-	initDemux();				//Muxers
 	initSelect();				//Select Circuit
+    SWinit();             //Switches
 	sd_raw_init();				//SDCard
 	SPI.begin();				//SPI
 
 	//The mains is the last line, do not turn it off
 	SWallOn();
-	for (int i = 0; i < WIDTH; i++) {
+	for (int i = 0; i < NSWITCHES; i++) {
 		if (i == MAINS) continue;
 		SWset(i,false);
 	}
@@ -541,7 +538,7 @@ void testSwitch(int8_t swID)
 	Then tries to communicate with the ADEs.
   */
 void testHardware() {
-	int8_t enabledC[WIDTH] = {0};
+	int8_t enabledC[NSWITCHES] = {0};
 	int32_t val;
 
 	debugPort.print("\n\rTest switches\n\r");
@@ -554,13 +551,13 @@ void testHardware() {
 	}*/
 	SWallOn();
 	//Start turning each switch off as fast as possible, but for MAINS
-	for (int i = 0; i < WIDTH; i++) {
+	for (int i = 0; i < NSWITCHES; i++) {
 		if (i == MAINS) continue;
 		enabledC[i] = 0;
 		SWsetSwitches(enabledC);
 	}
 	//Start turning each switch on with 1 second in between
-	for (int i = 0; i < WIDTH; i++) {
+	for (int i = 0; i < NSWITCHES; i++) {
 		enabledC[i] = 1;
 		delay(1000);
 		SWsetSwitches(enabledC);
@@ -591,10 +588,10 @@ void testHardware() {
 /** 
   Lists the state of the circuit switches.
   */
-void displayEnabled(const int8_t enabledC[WIDTH])
+void displayEnabled(const int8_t enabledC[NSWITCHES])
 {
 	debugPort.println("Enabled Channels:");
-	for (int i =0; i < WIDTH; i++) {
+	for (int i =0; i < NSWITCHES; i++) {
 		debugPort.print(i);
 		debugPort.print(":");
 		debugPort.print(enabledC[i],DEC);
