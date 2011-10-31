@@ -4,9 +4,12 @@
 #include <inttypes.h>
 #include "arduino/wiring.h"
 #include "select.h"
+#include "Switches/switches.h"
 #include "ReturnCode/returncode.h"
 
 static int _device;
+static const int8_t mapCtoPinCS[] = {62,57};
+
 /**
 *   Initiallizes the SDSS pin and the muxer. 
 */
@@ -14,27 +17,34 @@ void initSelect()
 {
     //SD SS
     pinMode(SDSS,OUTPUT);
-	CSselectDevice(DEVDISABLE);
+    digitalWrite(SDSS,HIGH); 
+    for (int8_t i=0; i < NCIRCUITS; i++) {
+        pinMode(mapCtoPinCS[i],OUTPUT);
+        //Inverted logic twice as CS LOW means active
+        digitalWrite(mapCtoPinCS[i],LOW); 
+    }
+    CSselectDevice(DEVDISABLE);
 }
 
 /** 
 *   Select SPI device  using SS(CS)
 *   when device == -1 SS(CS) is HIGH (disabled)
 */
-void CSselectDevice(int device) 
+void CSselectDevice(int newDevice) 
 {
-    if (device == SDCARD) {
+    if (newDevice == SDCARD) {
+        digitalWrite(mapCtoPinCS[_device],LOW);
         digitalWrite(SDSS,LOW);
-		_device = device;
-    } else if ( 0 <= device && device < NCIRCUITS) {
+    } else if ( 0 <= newDevice && newDevice < NCIRCUITS) {
         digitalWrite(SDSS,HIGH);
-		_device = device;
-    } else if ( device == DEVDISABLE ) {
+        digitalWrite(mapCtoPinCS[newDevice],HIGH);
+    } else if ( newDevice == DEVDISABLE ) {
         digitalWrite(SDSS,HIGH);
-        _device = device;
-    } else {			//error
+        digitalWrite(mapCtoPinCS[_device],LOW);
+    } else { //error
         _retCode = ARGVALUEERR;
-	}
+    }
+    _device = newDevice;
 }
 
 /**
@@ -49,16 +59,9 @@ void CSstrobe()
 	CSselectDevice(device);
 }
 
+/** Returns the currently selected device. 
+*/
 int CSgetDevice()
 {
     return _device;
-}
-
-void CSsetEnable(int8_t enabled)
-{   
-    if (enabled) {
-        CSselectDevice(_device);
-    } else {
-        CSselectDevice(DEVDISABLE);
-	}
 }

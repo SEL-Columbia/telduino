@@ -1,8 +1,9 @@
 Dependencies
-- avr-gcc
-- avr-dude
-- make
+- avr-gcc 
 - avr-libc 1.7.1 
+- make
+- The above are available in the WinAVR package if you are on a windows system
+- avr-dude
 
 Compiling
 make compile

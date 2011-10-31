@@ -11,13 +11,6 @@ extern "C" {
 
 #define NSWITCHES 2
 
-/**
-    Mapping from switch number to pins.
-*/
-static const int8_t mapSWtoPinON[] = {11,56};
-static const int8_t mapSWtoPinOFF[] = {55,54};
-static const int8_t mapCtoPinCS[] = {62,57};
-
 //Enabled circuits
 static int8_t _enabledC[NSWITCHES] = {1};
 
