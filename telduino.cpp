@@ -121,6 +121,8 @@ void setup()
     SPI.begin();				//SPI
 
     //The mains is the last line, do not turn it off
+    SWallOff();
+    delay(10000);
     SWallOn();
     for (int i = 0; i < NSWITCHES; i++) {
         if (i == MAINS) continue;
