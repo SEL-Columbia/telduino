@@ -111,12 +111,13 @@ void setup()
     debugPort.write(__TIME__);
     debugPort.write("\r\n");
 
-    turnOnTelit();				// set telit pin high
+    //turnOnTelit();				// set telit pin high
 
     initDbgTel();				//Blink leds
     initSelect();				//Select Circuit
     SWinit();         //Switches
-    sd_raw_init();				//SDCard
+    //TODO sd_raw_init() is hanging
+    //sd_raw_init();				//SDCard
     SPI.begin();				//SPI
 
     //The mains is the last line, do not turn it off
@@ -138,9 +139,6 @@ void setup()
 
 void loop()
 {	
-    setDbgLeds(GYRPAT);
-    delay(1000);
-    setDbgLeds(0);
     parseBerkeley();
     //parseColumbia();
 } //end of main loop
@@ -167,6 +165,12 @@ void parseBerkeley()
             delay(10);
         }
         setDbgLeds(0);
+        for (int i=0; i < 100; i++) {
+            if (debugPort.available() != 0) {
+                break;
+            }
+            delay(10);
+        }
     }
 
     // Look for incoming single character command on debugPort line

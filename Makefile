@@ -37,13 +37,13 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_dig
     byteordering.o fat.o partition.o sd_raw.o statistics.o $(PROJECT).o 
 #gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o
 
-all : hex program 
+all : $(PROJECT).hex program 
 
 compile: hex
 
 install: programfuses program
 
-hex : $(OBJECT_FILES)
+%.hex : $(OBJECT_FILES)
 	avr-gcc -Os -Wl,--gc-sections -mmcu=$(MCU) -o $(PROJECT).elf $(OBJECT_FILES) -Llibraries -lm
 	avr-objcopy -j .text -j .data -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
 	@echo 
@@ -63,7 +63,7 @@ program: $(PROJECT).hex
     #Set B to 10 or higher if programming fails or intermittently fails
 	avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -Uflash:w:$(PROJECT).hex -B5 
 
-programfuses:
+programfuses: 
 #	low fuses: set external *FULLSWING* oscillator; startup time=16K clk + 0 ms; BOD enabled; divide clock by 8 initially
 	avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -U lfuse:w:0x57:m -U hfuse:w:0x91:m -U efuse:w:0xf5:m -B10
 

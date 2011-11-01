@@ -5,6 +5,7 @@ OVERALL TODO:
 - Active power isn't working
 - Write code to lightup mount light
 - Verify microsecond timing for SPI
+- SD_raw_init is not working, not sure why.
 
 Cleanup
 - make initialization naming conventions sane

@@ -21,9 +21,9 @@ enum LedPattern { OFFPAT = 0, GPAT = 1,  YPAT = 10, RPAT = 100, GYRPAT = 111, GY
     Arduino pin numbers for the LEDs.
     These are PWM pins.
 */
-const int8_t GRNPIN = 6;
+const int8_t GRNPIN = 5;
 const int8_t YELPIN = NOT_A_PIN;
-const int8_t REDPIN = 3;
+const int8_t REDPIN = 2;
 
 void initDbgTel();
 void setDbgLeds(int8_t pattern);
