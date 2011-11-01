@@ -138,6 +138,9 @@ void setup()
 
 void loop()
 {	
+    setDbgLeds(GYRPAT);
+    delay(1000);
+    setDbgLeds(0);
     parseBerkeley();
     //parseColumbia();
 } //end of main loop
@@ -155,8 +158,16 @@ void parseBerkeley()
     setDbgLeds(GYRPAT);
     debugPort.print(_testChannel,DEC);
     debugPort.print(" $");
-    while (debugPort.available() == 0);
-    debugPort.println();
+    while (debugPort.available() == 0) {
+        setDbgLeds(GYRPAT);
+        for (int i=0; i < 100; i++) {
+            if (debugPort.available() != 0) {
+                break;
+            }
+            delay(10);
+        }
+        setDbgLeds(0);
+    }
 
     // Look for incoming single character command on debugPort line
     // Capital letters denote write operations and lower case letters are reads

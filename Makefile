@@ -59,8 +59,9 @@ clean:
 	rm -f *.o *.elf *.hex
 
 program: $(PROJECT).hex
-#	avrdude -p$(MCU) -cusbtiny -Uflash:w:$(PROJECT).hex
-	avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -Uflash:w:$(PROJECT).hex -B10
+    #avrdude -p$(MCU) -cusbtiny -Uflash:w:$(PROJECT).hex
+    #Set B to 10 or higher if programming fails or intermittently fails
+	avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -Uflash:w:$(PROJECT).hex -B5 
 
 programfuses:
 #	low fuses: set external *FULLSWING* oscillator; startup time=16K clk + 0 ms; BOD enabled; divide clock by 8 initially
