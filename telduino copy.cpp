@@ -38,7 +38,7 @@
 #include "Strings/strings.h"
 
 //definition of serial ports for debug, sheeva communication, and telit communication
-#define debugPort Serial0 // Serial 0 is the 
+#define debugPort Serial1
 #define sheevaPort Serial2
 #define telitPort Serial3
 
@@ -114,7 +114,7 @@ void setup()
     //turnOnTelit();				// set telit pin high
 
     initDbgTel();				//Blink leds
-     ();				//Select Circuit
+    initSelect();				//Select Circuit
     SWinit();         //Switches
     //TODO sd_raw_init() is hanging
     //sd_raw_init();				//SDCard
