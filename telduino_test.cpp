@@ -38,7 +38,7 @@
 #include "Strings/strings.h"
 
 //definition of serial ports for debug, sheeva communication, and telit communication
-#define debugPort Serial1
+#define debugPort Serial
 #define sheevaPort Serial2
 #define telitPort Serial3
 
@@ -250,7 +250,7 @@ void parseBerkeley()
             testSwitch(_testChannel);
         } else if (incoming == 'R') {		//Hard Reset using watchdog timer
             wdt_enable((WDTO_4S));			
-            Serial1.println("resetting in 4s.");
+            debugPort.println("resetting in 4s.");
         } else if (incoming == 'O') {		//soft Reset using the Setup routine
             softSetup();					//Set calibration values for ADE
         } else if (incoming == 'o') {		//Read channel using Achintya's code
