@@ -38,7 +38,7 @@
 #include "Strings/strings.h"
 
 //definition of serial ports for debug, sheeva communication, and telit communication
-#define debugPort Serial0 // Serial 0 is the 
+#define debugPort Serial // Serial 0 is the one hooked to the ftdi chip
 #define sheevaPort Serial2
 #define telitPort Serial3
 
@@ -114,11 +114,11 @@ void setup()
     //turnOnTelit();				// set telit pin high
 
     initDbgTel();				//Blink leds
-     ();				//Select Circuit
+    initSelect();				//Select Circuit
     SWinit();         //Switches
     //TODO sd_raw_init() is hanging
     //sd_raw_init();				//SDCard
-    SPI.begin();				//SPI
+    SPI.begin();				//SPI BUT lets move this into the ADE7753.c
 
     //The mains is the last line, do not turn it off
     SWallOff();
@@ -150,6 +150,14 @@ void loop()
  *  Capital letters are usually writes and lower case letters are usually reads
  *  
  *  A
+ *  a
+ *  x
+ *  C
+ *  S
+ *  s
+ *  t
+ *  T
+ *  R
  *  a
  *  
  */
@@ -250,7 +258,7 @@ void parseBerkeley()
             testSwitch(_testChannel);
         } else if (incoming == 'R') {		//Hard Reset using watchdog timer
             wdt_enable((WDTO_4S));			
-            Serial1.println("resetting in 4s.");
+           debugPort.println("resetting in 4s.");
         } else if (incoming == 'O') {		//soft Reset using the Setup routine
             softSetup();					//Set calibration values for ADE
         } else if (incoming == 'o') {		//Read channel using Achintya's code

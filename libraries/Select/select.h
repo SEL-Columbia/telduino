@@ -1,3 +1,4 @@
+//The Select Library handles the CS for SPI communications
 #ifndef SELECT_H
 #define SELECT_H
 

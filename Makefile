@@ -13,8 +13,8 @@
 # $*
 
 #select the file to run telduino is main, telduino_test is test routines
-#PROJECT = telduino
-PROJECT = telduino_test
+PROJECT = telduino
+#PROJECT = telduino_test
 MCU = atmega1280
 CLOCK = 8000000L
 GCCFLAGS = -c -g -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Ilibraries

@@ -95,8 +95,8 @@ void ADEwriteData(ADEReg reg, uint32_t *data)
 */
 void ADEgetRegister(ADEReg reg, int32_t *regValue)
 {
-	//Serial1.print("GET ");
-	//Serial1.println(reg.name);
+	//Serial.print("GET ");
+	//Serial.println(reg.name);
 	//get raw data, MSB of data is MSB from ADE irrespective of byte length
 	_retCode = SUCCESS;
 	uint32_t rawData = 0;
@@ -104,29 +104,29 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 	uint32_t chksum = 0;
 	int8_t retries = RETRIES;
 
-	//Serial1.print("(int32_t)(&),HEX:");
-	//Serial1.println((int32_t)(&WAVEFORM),HEX);
+	//Serial.print("(int32_t)(&),HEX:");
+	//Serial.println((int32_t)(&WAVEFORM),HEX);
 
 	ADEreadData(reg, &rawData);
 	ADEreadData(CHKSUM,&chksum);
 	if (ADEchksum(rawData) != ((uint8_t*)&chksum)[3]) {
 		_retCode = COMMERR;
-		//Serial1.print("ADE _retCode:");
-		//Serial1.println(RCstr(_retCode));
+		//Serial.print("ADE _retCode:");
+		//Serial.println(RCstr(_retCode));
 	} else {
 		_retCode = SUCCESS;
 	}
-	/*
-	Serial1.print("ADEgetRegister rawData: ");
-	Serial1.println(rawData,BIN);
-	Serial1.print("ADEgetRegister chksum(rawdata): ");
-	Serial1.println((int)ADEchksum(rawData));
-	Serial1.print("ADEgetRegister chksum from ADE: ");
-	Serial1.println(chksum,BIN);
-	Serial1.print("ADEgetRegister chksum from ADE after shift: ");
-	Serial1.println((int)(((uint8_t*)&chksum)[3]),BIN);
-	Serial1.println(RCstr(_retCode));
-	*/
+
+	Serial.print("ADEgetRegister rawData: ");
+	Serial.println(rawData,BIN);
+	Serial.print("ADEgetRegister chksum(rawdata): ");
+	Serial.println((int)ADEchksum(rawData));
+	Serial.print("ADEgetRegister chksum from ADE: ");
+	Serial.println(chksum,BIN);
+	Serial.print("ADEgetRegister chksum from ADE after shift: ");
+	Serial.println((int)(((uint8_t*)&chksum)[3]),BIN);
+	Serial.println(RCstr(_retCode));
+
 	//Push bits into MSB for irregular sizes
 	rawData <<= (nBytes*8-reg.nBits);
 	if (reg.signType == TWOS) {
@@ -135,14 +135,14 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 		//Use signed shift for 8 byte alignment, then to move LSB to 0 byte
 		(*regValue) >>= (nBytes*8-reg.nBits);
 		(*regValue) >>= ((sizeof(*regValue)-nBytes)*8);
-		/*Serial1.print("ADEgetRegister rawData: ");
-		Serial1.println(rawData,HEX);
-		Serial1.print("ADEgetRegister bitshift right: ");
-		Serial1.println((nBytes*8-reg.nBits));
-		Serial1.print("ADEgetRegister byteshift right: ");
-		Serial1.println(((sizeof(*regValue)-nBytes)*8));
-		Serial1.print("ADEgetRegister *value: ");
-		Serial1.println(*regValue,HEX);*/
+		/*Serial.print("ADEgetRegister rawData: ");
+		Serial.println(rawData,HEX);
+		Serial.print("ADEgetRegister bitshift right: ");
+		Serial.println((nBytes*8-reg.nBits));
+		Serial.print("ADEgetRegister byteshift right: ");
+		Serial.println(((sizeof(*regValue)-nBytes)*8));
+		Serial.print("ADEgetRegister *value: ");
+		Serial.println(*regValue,HEX);*/
 
 	} else if (reg.signType == UNSIGN) {
 		//Use unsigned shift for 8 byte alignment, then to move LSB to 0 byte
@@ -164,7 +164,7 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 	
 	
 
-	/*Serial1.println("ADEgetRegister EXIT");*/
+	/*Serial.println("ADEgetRegister EXIT");*/
 }
 
 /**
@@ -174,13 +174,13 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
   */
 void ADEsetRegister(ADEReg reg, int32_t *value)
 {
-	//Serial1.print("SET ");
-	//Serial1.println(reg.name);
+	//Serial.print("SET ");
+	//Serial.println(reg.name);
 	_retCode = SUCCESS;
 	uint32_t writeData;
 	uint8_t nBytes = (reg.nBits+7)/8;
 	uint8_t shiftBits = nBytes*8-reg.nBits;
-	//Serial1.println(shiftBits,DEC);
+	//Serial.println(shiftBits,DEC);
 
 	if (reg.signType == TWOS || reg.signType == UNSIGN) {
 		writeData = *value;
@@ -188,21 +188,21 @@ void ADEsetRegister(ADEReg reg, int32_t *value)
 		writeData <<= ((sizeof(writeData)-nBytes)*8);
 	} else { 
 		//Do nothing this shouldn't happen
-		//Serial1.println("MAJOR PROBLEM");
+		//Serial.println("MAJOR PROBLEM");
 		_retCode = FAILURE;
 	}
 	//write data
-	//Serial1.println("writtenData: ");
-	//Serial1.println(writeData,HEX);
+	//Serial.println("writtenData: ");
+	//Serial.println(writeData,HEX);
 	ADEwriteData(reg, &writeData);
-	//Serial1.println(writeData<<shiftBits,HEX);
+	//Serial.println(writeData<<shiftBits,HEX);
 
 	//read data and verify
 	uint32_t readData;
 	ADEreadData(reg,&readData);
-	//Serial1.println("readData   : ");
-	//Serial1.println(readData,HEX);
-	//Serial1.println(readData<<shiftBits,HEX);
+	//Serial.println("readData   : ");
+	//Serial.println(readData,HEX);
+	//Serial.println(readData<<shiftBits,HEX);
 	if ((writeData<<shiftBits) != (readData<<shiftBits)) {
 		_retCode = COMMERR;
 	}
@@ -283,7 +283,7 @@ int8_t ADEreadInterrupt(uint16_t regMask)
 {
 	int32_t status;
 	ADEgetRegister(RSTSTATUS,&status);
-	//Serial1.println(status);
+	//Serial.println(status);
 	ifsuccess(_retCode) {
 		if (regMask == ZX0) {
 			status = ~status;
@@ -310,7 +310,7 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 		//wait for rollover
 		do {
 			if (ADEreadInterrupt(regMask)) return;
-			ifnsuccess(_retCode) {Serial1.println("COMMERR in waitForInterrupt");}
+			ifnsuccess(_retCode) {Serial.println("COMMERR in waitForInterrupt");}
 		} while (millis() > endTime);
 	}
 	//now time=millis() should be less than endTime unless time 
@@ -318,18 +318,18 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	//where it is more than waitTimems far away
 	do {
 		if (ADEreadInterrupt(regMask)) return;
-		ifnsuccess(_retCode) { Serial1.println("COMMERR in waitForInterrupt");}
+		ifnsuccess(_retCode) { Serial.println("COMMERR in waitForInterrupt");}
 		time = millis();
 	} while ((time <= endTime) && (endTime-time <= waitTimems));
 	/*
-	Serial1.print("waitforInterrupt waiting(ms):");
-	Serial1.println(waitTimems);
-	Serial1.print("waitforInterrupt time(ms):");
-	Serial1.println(time);
-	Serial1.print("waitforInterrupt endTime(ms):");
-	Serial1.println(endTime);
+	Serial.print("waitforInterrupt waiting(ms):");
+	Serial.println(waitTimems);
+	Serial.print("waitforInterrupt time(ms):");
+	Serial.println(time);
+	Serial.print("waitforInterrupt endTime(ms):");
+	Serial.println(endTime);
 	*/
-	Serial1.println("TIMEOUT in waitForInterrupt");
+	Serial.println("TIMEOUT in waitForInterrupt");
 	_retCode = TIMEOUT;
 }
 

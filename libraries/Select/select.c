@@ -7,11 +7,14 @@
 #include "Switches/switches.h"
 #include "ReturnCode/returncode.h"
 
+
+// I know that static auto-initializes to 0, but why isn't it explictly declared? -AM
 static int _device;
 static const int8_t mapCtoPinCS[] = {62,57};
 
 /**
-*   Initiallizes the SDSS pin and the muxer. 
+*   Initiallizes the SDSS pin and sets all other CS pins to high.
+*	All the channels are disable from communication. 
 */
 void initSelect()
 {
@@ -19,9 +22,11 @@ void initSelect()
     pinMode(SDSS,OUTPUT);
     digitalWrite(SDSS,HIGH); 
     for (int8_t i=0; i < NCIRCUITS; i++) {
-        pinMode(mapCtoPinCS[i],OUTPUT);
-        //Inverted logic twice as CS LOW means active
-        digitalWrite(mapCtoPinCS[i],LOW); 
+	//Instead of setting the pins as low impedenece high outputs, let's set them as High-Z
+//        pinMode(mapCtoPinCS[i],OUTPUT);
+//        digitalWrite(mapCtoPinCS[i],HIGH); 
+        pinMode(mapCtoPinCS[i],INPUT);
+        digitalWrite(mapCtoPinCS[i],HIGH); 
     }
     CSselectDevice(DEVDISABLE);
 }
@@ -29,18 +34,24 @@ void initSelect()
 /** 
 *   Select SPI device  using SS(CS)
 *   when device == -1 SS(CS) is HIGH (disabled)
+*	Note: ALL other devices should be held HIGH
+*	and the device desired should be driven LOW
 */
 void CSselectDevice(int newDevice) 
 {
     if (newDevice == SDCARD) {
-        digitalWrite(mapCtoPinCS[_device],LOW);
-        digitalWrite(SDSS,LOW);
+		//disable the old device by setting to HIGH-Z
+		pinMode(mapCtoPinCS[_device], INPUT);
+        digitalWrite(mapCtoPinCS[_device],HIGH);
+        digitalWrite(SDSS,LOW); //SELECT sdss
     } else if ( 0 <= newDevice && newDevice < NCIRCUITS) {
-        digitalWrite(SDSS,HIGH);
-        digitalWrite(mapCtoPinCS[newDevice],HIGH);
+		digitalWrite(SDSS,HIGH);
+		pinMode(mapCtoPinCS[newDevice], OUTPUT);
+        digitalWrite(mapCtoPinCS[newDevice],LOW);
     } else if ( newDevice == DEVDISABLE ) {
         digitalWrite(SDSS,HIGH);
-        digitalWrite(mapCtoPinCS[_device],LOW);
+		pinMode(mapCtoPinCS[newDevice], INPUT);
+        digitalWrite(mapCtoPinCS[_device],HIGH);
     } else { //error
         _retCode = ARGVALUEERR;
     }
