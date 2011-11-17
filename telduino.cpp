@@ -121,14 +121,16 @@ void setup()
     SPI.begin();				//SPI BUT lets move this into the ADE7753.c
 
     //The mains is the last line, do not turn it off
-    SWallOff();
+    /*
+	SWallOff();
     delay(10000);
     SWallOn();
     for (int i = 0; i < NSWITCHES; i++) {
         if (i == MAINS) continue;
         SWset(i,false);
     }
-
+	*/
+	
     //Load circuit data from EEPROM
     uint8_t *addrEEPROM = 0;
     for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
@@ -566,7 +568,8 @@ void testHardware() {
     for (int i = 0; i < NSWITCHES; i++) {
         enabledC[i] = 1;
         delay(1000);
-        SWsetSwitches(enabledC);
+		SWset(enabledC[i], true);
+        //SWsetSwitches(enabledC);
     }
     delay(1000);
     SWallOff();
