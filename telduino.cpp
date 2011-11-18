@@ -312,7 +312,7 @@ void parseBerkeley()
                 addrEEPROM += sizeof(Circuit);
             }
             debugPort.println(COMPLETESTR);
-        } else if (incoming=='w') {
+        } else if (incoming=='w') {			//Wait for interrupt specified by interrupt mask
             int32_t mask = 0;
             debugPort.print("Enter interrupt mask. Will wait for 4sec. $");
             CLgetInt(&debugPort,&mask);
@@ -367,8 +367,8 @@ void softSetup()
 
     CSselectDevice(_testChannel); //start SPI comm with the test device channel
 
-    //Enable Digital Integrator for _testChannel
-    int8_t ch1os=0,enableBit=1;
+    //Disable Digital Integrator for _testChannel
+    int8_t ch1os=0,enableBit=0;
     debugPort.print("set CH1OS:");
     ADEsetCHXOS(1,&enableBit,&ch1os);
     debugPort.println(RCstr(_retCode));
@@ -654,8 +654,8 @@ void setupLVAMode(int icid, int32_t linecycVal) {
     debugPort.println(icid, DEC);
 
     CSselectDevice(icid); //start SPI comm with the test device channel
-    //Enable Digital Integrator for _testChannel
-    int8_t ch1os=0,enableBit=1;
+    //Disable Digital Integrator for _testChannel
+    int8_t ch1os=0,enableBit=0;
 
     debugPort.print("set CH1OS:"); 
     ADEsetCHXOS(1,&enableBit,&ch1os);
@@ -663,14 +663,13 @@ void setupLVAMode(int icid, int32_t linecycVal) {
     debugPort.print("get CH1OS:"); 
     ADEgetCHXOS(1,&enableBit,&ch1os);
     debugPort.println(RCstr(_retCode)); 
-    debugPort.print("enabled: ");
+    debugPort.print("Digital Integrator enabled: ");
     debugPort.println(enableBit,BIN);
     debugPort.print("offset: ");
     debugPort.println(ch1os);
 
-    //set the gain to 2 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
-    int32_t gainVal = 1;
-
+    //Set the Gain to 0x24: This sets the Ch2={Gain to 1} and Ch1={Gain to 16; full range to .125V}
+    int32_t gainVal = 0x24;
     debugPort.print("BIN GAIN (set,get):"); 
     ADEsetRegister(GAIN,&gainVal);
     debugPort.println(RCstr(_retCode));
@@ -678,8 +677,9 @@ void setupLVAMode(int icid, int32_t linecycVal) {
     ADEgetRegister(GAIN,&gainVal);
     debugPort.print(RCstr(_retCode));
     debugPort.print(":");
-    debugPort.println(gainVal,BIN);
+    debugPort.println(gainVal,HEX);
 
+	//!!!!The irms and vrms are not essential for the Energy registers!!!!
     int32_t iRmsOsVal = 0x0000;
     ADEsetRegister(IRMSOS,&iRmsOsVal);
     ADEgetRegister(IRMSOS,&iRmsOsVal);
@@ -767,7 +767,7 @@ void setupRVAMode(int icid) {
 
     CSselectDevice(icid); //start SPI comm with the test device channel
     //Enable Digital Integrator for _testChannel
-    int8_t ch1os=0,enableBit=1;
+    int8_t ch1os=0,enableBit=0;
 
     debugPort.print("set CH1OS:");
     ADEsetCHXOS(1,&enableBit,&ch1os);

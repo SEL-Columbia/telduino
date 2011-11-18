@@ -9,7 +9,6 @@ IGAIN = 0x01
 
 
 Calibration:
-Turn on integrator on MSB for CH1OS
 ENABLE Line Accumulation Mode and Line Accumulation Interrupt
 ENABLE CYCMODE to enable linecycle interrupt and set LINECYC to number of half cycles before interrupt
 For any readings must wait until a zero crossing is detected and then read
