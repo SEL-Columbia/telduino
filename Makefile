@@ -19,7 +19,8 @@ MCU = atmega1280
 CLOCK = 8000000L
 GCCFLAGS = -c -g -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Ilibraries
 G++FLAGS = -c -g -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
-PROGRAMMER = dragon_isp
+PROGRAMMER = dragon_jtag
+#PROGRAMMER = dragon_isp
 
 #-Wa,aln=foo.s
 #GCCFLAGS = -c -g -Os -w -std=c99 -Ilibraries
