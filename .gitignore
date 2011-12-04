@@ -4,3 +4,4 @@ cruft
 *.elf
 *.hex
 *.swp
+.DS_Store
