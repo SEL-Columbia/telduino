@@ -21,8 +21,8 @@ MCU = atmega1280
 CLOCK = 8000000L
 GCCFLAGS = -c -g -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Ilibraries
 G++FLAGS = -c -g -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
-PROGRAMMER = dragon_jtag
-#PROGRAMMER = dragon_isp
+PROGRAMMER = dragon_jtag #dragon_isp
+
 
 #-Wa,aln=foo.s
 #GCCFLAGS = -c -g -Os -w -std=c99 -Ilibraries
@@ -42,7 +42,7 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_dig
     byteordering.o fat.o partition.o sd_raw.o statistics.o $(PROJECT).o 
 #gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o
 
-install: programfuses program
+install: compile program
 all: compile program programfuses readfuses
 compile: $(PROJECT).hex
 
