@@ -21,9 +21,7 @@ inline void _SWset(int8_t sw, int8_t on)
     } else {
         digitalWrite(pinOff,HIGH);
     }
-    //TODO use a real delay function to wait 25ms
-    //This assumes a 8mhz 8-bit cpu
-    //for (int32_t i=0; i<20000; i++);
+    //TODO Wait 10ms, this used to be 25. Why is it 10 now?
 	delay(10);
     digitalWrite(pinOn,LOW);
     digitalWrite(pinOff,LOW);
@@ -33,16 +31,13 @@ inline void _SWset(int8_t sw, int8_t on)
   Normally, this function can just call _SWset. 
   If the switch is controlled by shift registers, that might not be
   optimal.
-  NOTE: Depreciated Function due to lack of shift registers.
 */
-/** 
 inline void _SWsetSwitches() 
 {
     for (int8_t i=0; i < NSWITCHES; i++) {
         _SWset(i,_enabledC[i]);
     }
 }
-*/
 
 /** Configures appropriate pins and sets pins to match _enabledC[].
 */
@@ -63,9 +58,7 @@ void SWinit()
 /**
     There are NSWITCHES switches in the circuit.
     if enabledC[i] == 1 then the circuit is on and off if it is 0.
- 	NOTE: This function is no longer pertinant
-  */
-/*
+*/
 void SWsetSwitches(int8_t enabledC[NSWITCHES]) 
 {
     int8_t i = 0;
@@ -74,7 +67,6 @@ void SWsetSwitches(int8_t enabledC[NSWITCHES])
     }
     _SWsetSwitches();
 }
-*/
 
 /**
   For any non-zero value of on the switch is turned on. 
@@ -90,33 +82,29 @@ void SWset(int8_t sw, int8_t on)
 }
 
 /** 
-	Turns all circuits off. This implies that the actual relays are turning on.
+	Turns all circuits off.
   */
 void SWallOff()
 {
     int8_t i = 0;
     for (i = 0; i < NSWITCHES; i++) {
-         //_enabledC[i] = false;
 		_SWset(i,false);
     }
-    //_SWsetSwitches();
 }
 
 /** 
-	Turns all circuits on. This implies that the actual relays are turning off.
+	Turns all circuits on.
   */
 void SWallOn()
 {
     int8_t i;
     for (i = 0; i < NSWITCHES; i++) {
-        //_enabledC[i] = true;
 		_SWset(i,true);
     }
-    //_SWsetSwitches();
 }
 
 /**
-	Returns an array of size NSWITCHES.	If entry 0 is 1 then switch 0 is on
+	@return an array of size NSWITCHES.	If entry 0 is 1 then switch 0 is on.
   */
 const int8_t* SWgetSwitchState()
 {
