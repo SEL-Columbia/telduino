@@ -12,6 +12,8 @@
 # $@ first name of target of rule
 # $*
 
+.PHONY : clean install programfuses 
+
 #select the file to run telduino is main, telduino_test is test routines
 PROJECT = telduino
 #PROJECT = telduino_test
@@ -40,11 +42,10 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_dig
     byteordering.o fat.o partition.o sd_raw.o statistics.o $(PROJECT).o 
 #gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o
 
-all : $(PROJECT).hex program 
-
-compile: hex
-
 install: programfuses program
+all: compile program programfuses readfuses
+compile: $(PROJECT).hex
+
 
 %.hex : $(OBJECT_FILES)
 	avr-gcc -Os -Wl,--gc-sections -mmcu=$(MCU) -o $(PROJECT).elf $(OBJECT_FILES) -Llibraries -lm
