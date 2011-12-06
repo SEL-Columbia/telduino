@@ -117,6 +117,7 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 		_retCode = SUCCESS;
 	}
 
+    /*
 	Serial.print("ADEgetRegister rawData: ");
 	Serial.println(rawData,BIN);
 	Serial.print("ADEgetRegister chksum(rawdata): ");
@@ -126,6 +127,7 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 	Serial.print("ADEgetRegister chksum from ADE after shift: ");
 	Serial.println((int)(((uint8_t*)&chksum)[3]),BIN);
 	Serial.println(RCstr(_retCode));
+    */
 
 	//Push bits into MSB for irregular sizes
 	rawData <<= (nBytes*8-reg.nBits);
@@ -310,7 +312,7 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 		//wait for rollover
 		do {
 			if (ADEreadInterrupt(regMask)) return;
-			ifnsuccess(_retCode) {Serial.println("COMMERR in waitForInterrupt");}
+			ifnsuccess(_retCode) {/*Serial.println("COMMERR in waitForInterrupt");*/}
 		} while (millis() > endTime);
 	}
 	//now time=millis() should be less than endTime unless time 
@@ -318,7 +320,7 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	//where it is more than waitTimems far away
 	do {
 		if (ADEreadInterrupt(regMask)) return;
-		ifnsuccess(_retCode) { Serial.println("COMMERR in waitForInterrupt");}
+		ifnsuccess(_retCode) { /*Serial.println("COMMERR in waitForInterrupt");*/}
 		time = millis();
 	} while ((time <= endTime) && (endTime-time <= waitTimems));
 	/*
@@ -329,7 +331,7 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	Serial.print("waitforInterrupt endTime(ms):");
 	Serial.println(endTime);
 	*/
-	Serial.println("TIMEOUT in waitForInterrupt");
+	//Serial.println("TIMEOUT in waitForInterrupt");
 	_retCode = TIMEOUT;
 }
 

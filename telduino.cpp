@@ -1,10 +1,10 @@
 /**
  *  \mainpage Telduino
  *
- *	\section Purpose
- *	This code runs on a custom avr board with hardware to control 20 relays and measurement circuits.
+ *    \section Purpose
+ *    This code runs on a custom avr board with hardware to control 20 relays and measurement circuits.
  *
- *	\section Implementation
+ *    \section Implementation
  *  The code is a client to an embedded linux system that sends string commands over the serial port.
  *  These serial commands are executed by the telduino code and sent back to the linux box.
  */
@@ -14,6 +14,8 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/wdt.h>
+#include <avr/eeprom.h>
 
 #include <string.h>
 #include <stdint.h>
@@ -46,8 +48,12 @@
 
 Circuit ckts[NCIRCUITS];
 
-int _testChannel = MAINS; //This is the input daughter board channel. The _ implies that it should only be changed by user input.
+int _testChannel = 1; //This is the input daughter board channel. The _ implies that it should only be changed by user input.
 
+int32_t testingCircuit = 0;
+int32_t switchSec= 0;
+uint8_t *testAddr = 0;
+int32_t RARAA[3] = {0};
 
 void setup();
 void loop();
@@ -63,26 +69,14 @@ int8_t getChannelID();
 void testSwitch(int8_t swID);
 void testHardware();
 void parseBerkeley();
-void parseColumbia();
-String getValueForKey(String key, String commandString);
-void get_val(char *s, char *key, char *val);
-String getSMSText(String commandString);
-void meter(String commandString);
-void meter_test(char *s);
-void modem(String commandString);
-void readSheevaPort();
-void readTelitPort();
-void chooseDestination(String destination, String commandString);
-void turnOnTelit();
+
 
 void setup()
 {
-    setClockPrescaler(CLOCK_PRESCALER_2);	//prescale of 2 after startup prescale of 8. This ensures that the arduino is running at 8 MHz.
+    setClockPrescaler(CLOCK_PRESCALER_2);    //prescale of 2 after startup prescale of 8. This ensures that the arduino is running at 8 MHz.
 
     // start up serial ports
-    debugPort.begin(DEBUG_BAUD_RATE);		//Debug serial
-    telitPort.begin(TELIT_BAUD_RATE);		//Telit serial
-    sheevaPort.begin(SHEEVA_BAUD_RATE);
+    debugPort.begin(DEBUG_BAUD_RATE);        //Debug serial
 
     // write startup message to debug port
     debugPort.write("\r\n\r\ntelduino power up\r\n");
@@ -92,44 +86,78 @@ void setup()
     debugPort.write(__TIME__);
     debugPort.write("\r\n");
 
-    //turnOnTelit();				// set telit pin high
-
-    initDbgTel();				//Blink leds
-    initSelect();				//Select Circuit
+    initDbgTel();                //Blink leds
+    initSelect();                //Select Circuit
     SWinit();         //Switches
-    //TODO sd_raw_init() is hanging
-    //sd_raw_init();				//SDCard
-    SPI.begin();				//SPI BUT lets move this into the ADE7753.c
-
-    //The mains is the last line, do not turn it off
-    /*
-	SWallOff();
-    delay(10000);
-    SWallOn();
-    for (int i = 0; i < NSWITCHES; i++) {
-        if (i == MAINS) continue;
-        SWset(i,false);
-    }
-	*/
-	
-    //Load circuit data from EEPROM
-    uint8_t *addrEEPROM = 0;
-    for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
-        Cload(c,addrEEPROM);
-        addrEEPROM += sizeof(Circuit);
-    }
+    SPI.begin();                //SPI BUT lets move this into the ADE7753.c
 
 } //end of setup section
 
 
+void testCircuitPrint() {
+    int32_t records = 0;
+    int8_t *addrEEPROM = 0;
+
+    //Get number of records from first block
+    eeprom_read_block(&records,addrEEPROM,sizeof(records));
+
+    //Iterate over these records and print in CSV format
+    debugPort.println();
+    debugPort.print("ON: RAENERGY,OFF:RAENERGY,AENERGY");
+    debugPort.println();
+    while (records > 0) {
+        addrEEPROM += sizeof(RARAA);
+        eeprom_read_block(&(RARAA[0]),addrEEPROM,sizeof(RARAA));
+        debugPort.print(RARAA[0]);
+        debugPort.print(",");
+        debugPort.print(RARAA[1]);
+        debugPort.print(",");
+        debugPort.print(RARAA[2]);
+        debugPort.println();
+        records--;
+    }
+
+}
+
+int8_t blinkTime()
+{
+    //Check for comm errors
+    ifnsuccess(_retCode) {
+        //FAILURE
+        for (int i=0; i < 10; i++) {
+            setDbgLeds(GRPAT);
+            delay(100);
+            setDbgLeds(OFFPAT);
+            delay(100);
+        }
+        RCreset();
+        return true;
+    }
+    return false;
+}
+int8_t blinkComm()
+{
+    //Check for comm errors
+    ifnsuccess(_retCode) {
+        //FAILURE
+        for (int i=0; i < 10; i++) {
+            setDbgLeds(GRPAT);
+            delay(100);
+            setDbgLeds(GPAT);
+            delay(100);
+        }
+        return true;
+        RCreset();
+    }
+    return false;
+}
 void loop()
-{	
+{    
     parseBerkeley();
-    //parseColumbia();
 } //end of main loop
 
 /**
- *	single character serial interface for interaction with telduino
+ *    single character serial interface for interaction with telduino
  *  Capital letters are usually writes and lower case letters are usually reads
  *  
  *  A
@@ -146,10 +174,10 @@ void loop()
  */
 void parseBerkeley() 
 {
-    setDbgLeds(GYRPAT);
+    debugPort.println();
     debugPort.print(_testChannel,DEC);
     debugPort.print(" $");
-    while (debugPort.available() == 0) {
+    while (debugPort.available() == 0 && testingCircuit == 0) {
         setDbgLeds(GYRPAT);
         for (int i=0; i < 100; i++) {
             if (debugPort.available() != 0) {
@@ -164,13 +192,131 @@ void parseBerkeley()
             }
             delay(10);
         }
-    }
+    } 
 
+    if (testingCircuit > 0) {
+        uint32_t startTime = millis();
+        uint32_t val = 0;
+        RARAA[0] = RARAA[1] = RARAA[2] = 0;
+        //Switch the channel On
+        SWset(_testChannel,true);
+        //Meter it 
+        ADEreadInterrupt(CYCEND); //Clear interrupt
+        ADEwaitForInterrupt(CYCEND,1200);
+        if (blinkTime()){
+            RARAA[0] = -2000;
+        } else {
+            ADEgetRegister(LAENERGY,&RARAA[0]);
+        }
+        if (blinkComm()) {
+            RARAA[0] = -1000;
+        }
+
+        //Switch the channel Off
+        SWset(_testChannel,false);
+        //Meter it 
+        delay(1000);
+        ADEgetRegister(RAENERGY,&RARAA[1]);
+        if (blinkComm()) {
+            RARAA[1] = -1000;
+        }
+        
+        //Read AENERGY
+        ADEgetRegister(AENERGY,&RARAA[2]);
+        if (blinkComm()) {
+            RARAA[2] = -1000;
+        }
+
+        debugPort.print(RARAA[0]);
+        debugPort.print(",");
+        debugPort.print(RARAA[1]);
+        debugPort.print(",");
+        debugPort.print(RARAA[2]);
+
+        //Write to EEPROM
+        eeprom_update_block(&(RARAA[0]),testAddr,sizeof(RARAA));
+
+        uint32_t duration = (millis()-startTime);
+        if (duration > 1000*switchSec) {
+            duration = 1000*switchSec;
+        }
+        delay(1000*switchSec - duration);
+        if (testingCircuit == 1){
+            debugPort.println();
+            debugPort.print("Testing Complete.");
+            debugPort.println();
+        }
+        testAddr += sizeof(RARAA);
+        testingCircuit--;
+    }
     // Look for incoming single character command on debugPort line
     // Capital letters denote write operations and lower case letters are reads
     if (debugPort.available() > 0) {
         char incoming = debugPort.read(); 
-        if (incoming == 'A') {			//Write to ADE Register
+
+        if (incoming == 'z') {
+            testCircuitPrint();
+        } else if (incoming == 'Z') {
+            if (testingCircuit) {
+                debugPort.print("Test Canceled");
+                testingCircuit = 0;
+                return;
+            }
+
+            int32_t runMin = 0;
+            debugPort.println();
+            debugPort.print("Minutes to run test $");
+            CLgetInt(&debugPort,&runMin);
+            debugPort.println();
+            debugPort.print("Seconds delay between each experiment. $");
+            CLgetInt(&debugPort,&switchSec);
+            if (switchSec < 0) {
+                switchSec = 0;
+            }
+            switchSec += 2;
+            testingCircuit = runMin*60/switchSec;
+
+            debugPort.println();
+            debugPort.print("Total number of experiments is: ");
+            debugPort.print(testingCircuit);
+            debugPort.println();
+            if (testingCircuit > 300) {
+                debugPort.print("Too many experiments to run. Make test shorter or test with a longer period between experiments.");
+                debugPort.println();
+                testingCircuit = 0;
+                return;
+            }
+
+            //Select it
+            CSselectDevice(_testChannel);
+
+            //Configure meter
+            int32_t linecycVal = 120;
+            int32_t gain = 0x24;
+            int32_t phcal = 0x0B;
+            ADEsetRegister(LINECYC,&linecycVal);
+            ADEsetRegister(GAIN,&gain);
+            ADEsetRegister(PHCAL,&phcal);
+            ADEsetModeBit(CYCMODE,1);
+
+            //Initialize storage area for number of results
+            eeprom_update_block(&testingCircuit,0,sizeof(testingCircuit));
+
+            //Initialize bank of results
+            RARAA[0] = RARAA[1] = RARAA[2] = 0;
+            testAddr = 0;
+            testAddr += sizeof(RARAA);//ON:RA,OFF:RA,AENERGY
+            uint8_t *addr = testAddr;
+            for (int i = testingCircuit; 
+                i >0;
+                i--, addr +=sizeof(RARAA)) 
+            {
+                RARAA[2] = i;
+                eeprom_update_block(&RARAA,addr,sizeof(RARAA));
+            }
+            debugPort.print("Test started.");
+
+        } else if (incoming == 'A') {            //Write to ADE Register
             char buff[16] = {0};
             debugPort.print("Register to write $");
             CLgetString(&debugPort,buff,sizeof(buff));
@@ -189,7 +335,7 @@ void parseBerkeley()
                     debugPort.println(regData,BIN);
 
                     debugPort.print("Enter new regData:");
-                    if(CLgetInt(&debugPort,&regData) == CANCELED) break;	
+                    if(CLgetInt(&debugPort,&regData) == CANCELED) break;    
                     debugPort.println();
                     ADEsetRegister(*regList[i],&regData);
                     debugPort.print(RCstr(_retCode));
@@ -201,7 +347,7 @@ void parseBerkeley()
                     break;
                 } 
             }
-        } else if (incoming == 'a') {		//Read ADE reg
+        } else if (incoming == 'a') {        //Read ADE reg
             char buff[16] = {0};
             debugPort.print("Enter name of register to read:");
             CLgetString(&debugPort,buff,sizeof(buff));
@@ -228,25 +374,25 @@ void parseBerkeley()
             CSselectDevice(_testChannel);
             CLwaitForZX10VIRMS();
             CSselectDevice(DEVDISABLE);
-        } else if (incoming == 'C') {		//Change active channel
-            _testChannel = getChannelID();	
-        } else if (incoming == 'S') {		//Toggle channel circuit
-            int8_t ID = getChannelID();		
+        } else if (incoming == 'C') {        //Change active channel
+            _testChannel = getChannelID();    
+        } else if (incoming == 'S') {        //Toggle channel circuit
+            int8_t ID = getChannelID();        
             SWset(ID,!SWisOn(ID));
-        } else if (incoming == 's') {		//Display switch state
-            displayEnabled(SWgetSwitchState());	
-        } else if (incoming == 't') {		//Test basic functionality
+        } else if (incoming == 's') {        //Display switch state
+            displayEnabled(SWgetSwitchState());    
+        } else if (incoming == 't') {        //Test basic functionality
             testHardware();
-        } else if (incoming == 'T') {		//Test switch aggresively
+        } else if (incoming == 'T') {        //Test switch aggresively
             testSwitch(_testChannel);
-        } else if (incoming == 'R') {		//Hard Reset using watchdog timer
-            wdt_enable((WDTO_4S));			
+        } else if (incoming == 'R') {        //Hard Reset using watchdog timer
+            wdt_enable((WDTO_4S));            
            debugPort.println("resetting in 4s.");
-        } else if (incoming == 'O') {		//soft Reset using the Setup routine
-            softSetup();					//Set calibration values for ADE
-        } else if (incoming == 'o') {		//Read channel using Achintya's code
+        } else if (incoming == 'O') {        //soft Reset using the Setup routine
+            softSetup();                    //Set calibration values for ADE
+        } else if (incoming == 'o') {        //Read channel using Achintya's code
             displayChannelInfo();
-        } else if (incoming == 'P') {		//Program values in ckts[] to ADE
+        } else if (incoming == 'P') {        //Program values in ckts[] to ADE
             for (int i = 0; i < NCIRCUITS; i++) {
                 Circuit *c = &(ckts[i]);
                 Cprogram(c);
@@ -260,24 +406,24 @@ void parseBerkeley()
                 }
             }
             debugPort.println();
-        } else if(incoming == 'p') {		//Measure circuit values and print
+        } else if(incoming == 'p') {        //Measure circuit values and print
             Circuit *c = &(ckts[_testChannel]);
             Cmeasure(c);
             debugPort.println(RCstr(_retCode));
             CprintMeas(&debugPort,c);
             Cprint(&debugPort,c);
             debugPort.println();
-        } else if (incoming == 'L') {		//Run calibration routine on channel
+        } else if (incoming == 'L') {        //Run calibration routine on channel
             Circuit *c = &(ckts[_testChannel]);
             calibrateCircuit(c);
             //debugPort.println(RCstr(_retCode));
-        } else if (incoming == 'D') {		//Initialize ckts[] to safe defaults
+        } else if (incoming == 'D') {        //Initialize ckts[] to safe defaults
             for (int i = 0; i < NCIRCUITS; i++) {
                 Circuit *c = &(ckts[i]);
                 CsetDefaults(c,i);
             }
             debugPort.println("Defaults set. Don't forget to program! ('P')");
-        } else if (incoming == 'E') {		//Save data in ckts[] to EEPROM
+        } else if (incoming == 'E') {        //Save data in ckts[] to EEPROM
             debugPort.println("Saving to EEPROM.");
             uint8_t *addrEEPROM = 0;
             for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
@@ -285,7 +431,7 @@ void parseBerkeley()
                 addrEEPROM += sizeof(Circuit);
             }
             debugPort.println(COMPLETESTR);
-        } else if (incoming=='e'){			//Load circuit data from EEPROM
+        } else if (incoming=='e'){            //Load circuit data from EEPROM
             uint8_t *addrEEPROM = 0;
             debugPort.println("Loading from EEPROM.");
             for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
@@ -293,7 +439,7 @@ void parseBerkeley()
                 addrEEPROM += sizeof(Circuit);
             }
             debugPort.println(COMPLETESTR);
-        } else if (incoming=='w') {			//Wait for interrupt specified by interrupt mask
+        } else if (incoming=='w') {            //Wait for interrupt specified by interrupt mask
             int32_t mask = 0;
             debugPort.print("Enter interrupt mask. Will wait for 4sec. $");
             CLgetInt(&debugPort,&mask);
@@ -304,7 +450,7 @@ void parseBerkeley()
             ADEwaitForInterrupt((int16_t)mask,4000);
             debugPort.println(RCstr(_retCode));
             CSselectDevice(DEVDISABLE);
-        } else if (incoming == 'W')	 {
+        } else if (incoming == 'W')     {
             CSselectDevice(_testChannel);
             int32_t regData;
             for (int i =0; i < 80; i++) {
@@ -314,8 +460,8 @@ void parseBerkeley()
             }
             CSselectDevice(DEVDISABLE);
         }
-        else {								//Indicate received character
-            int waiting = 2048;				//Used to eat up junk that follows
+        else {                                //Indicate received character
+            int waiting = 2048;                //Used to eat up junk that follows
             debugPort.print("\n\rNot_Recognized:");
             debugPort.print(incoming,BIN);
             debugPort.print(":'");
@@ -329,7 +475,7 @@ void parseBerkeley()
                     debugPort.print(":'");
                     debugPort.print(incoming);
                     debugPort.println("'");
-                } else 	waiting--;
+                } else     waiting--;
             }
         }
     }
@@ -399,7 +545,7 @@ void softSetup()
     ADEgetRegister(MODE,&modeReg);
     debugPort.print("bin MODE register before setting CYCMODE:");
     debugPort.println(modeReg, BIN);
-    modeReg |= CYCMODE;	 //set the line cycle accumulation mode bit
+    modeReg |= CYCMODE;     //set the line cycle accumulation mode bit
     ADEsetRegister(MODE,&modeReg);
     ADEgetRegister(MODE,&modeReg);
     debugPort.print("bin MODE register after setting CYCMODE:");
@@ -410,7 +556,7 @@ void softSetup()
     debugPort.print("bin Interrupt Status Register:");
     debugPort.println(data, BIN);
 
-    CSselectDevice(DEVDISABLE); //end SPI comm with the selected device	
+    CSselectDevice(DEVDISABLE); //end SPI comm with the selected device    
 }
 
 void displayChannelInfo() {
@@ -434,7 +580,7 @@ void displayChannelInfo() {
     if (0 /*loopCounter%4096*/ ){
         debugPort.print("bin Interrupt Status Register:");
         debugPort.println(interruptStatus, BIN);
-    }	//endif
+    }    //endif
 
     //if the CYCEND bit of the Interrupt Status Registers is flagged
     debugPort.print("\n\n\r");
@@ -499,7 +645,7 @@ int8_t getChannelID()
 {
     int32_t ID = -1;
     while (ID == -1) {
-        debugPort.print("Waiting for ID (0-20):");		
+        debugPort.print("Waiting for ID (0-20):");        
         ifnsuccess(CLgetInt(&debugPort,&ID)) ID = -1;
         debugPort.println();
         if (ID < 0 || 20 < ID ) {
@@ -549,7 +695,7 @@ void testHardware() {
     for (int i = 0; i < NSWITCHES; i++) {
         enabledC[i] = 1;
         delay(1000);
-		SWset(enabledC[i], true);
+        SWset(enabledC[i], true);
         //SWsetSwitches(enabledC);
     }
     delay(1000);
@@ -612,7 +758,6 @@ extern "C" {
 /*  Disables the watchdog timer the first chance the AtMega gets as recommended
     by Atmel.
  */
-#include <avr/wdt.h>
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 void wdt_init(void)
 {
