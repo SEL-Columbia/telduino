@@ -178,7 +178,7 @@ void parseBerkeley()
     debugPort.print(_testChannel,DEC);
     debugPort.print(" $");
     while (debugPort.available() == 0 && testingCircuit == 0) {
-        setDbgLeds(GYRPAT);
+        setDbgLeds(GPAT);
         for (int i=0; i < 100; i++) {
             if (debugPort.available() != 0) {
                 break;
@@ -273,7 +273,7 @@ void parseBerkeley()
             if (switchSec < 0) {
                 switchSec = 0;
             }
-            switchSec += 2;
+            switchSec += 120/60;
             testingCircuit = runMin*60/switchSec;
 
             debugPort.println();
