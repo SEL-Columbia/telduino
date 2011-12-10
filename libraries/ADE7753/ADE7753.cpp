@@ -47,6 +47,11 @@ const ADEReg TMODE   = {"TMODE",0x3D,8,UNSIGN};
 const ADEReg CHKSUM  = {"CHKSUM",0x3E,6,UNSIGN};
 const ADEReg DIEREV  = {"DIEREV",0x3F,8,UNSIGN};
 
+
+const char* intList[] = {"AEHF","SAG","CYCEND","WSMP",
+        "ZX","TEMPREG","RESET","AEOF","PKV","PKI","VAEHF","VAEOF","ZXTO","PPOS","PNEG"};
+const int intListLen = sizeof(intList)/sizeof(intList[0]);
+
 const ADEReg *regList[] = { &WAVEFORM, &AENERGY, &RAENERGY, &LAENERGY, &VAENERGY, &RVAENERGY, &LVAENERGY, &LVARENERGY, &MODE, &IRQEN, &STATUS, &RSTSTATUS, &CH1OS, &CH2OS, &GAIN, &PHCAL, &APOS, &WGAIN, &WDIV, &CFNUM, &CFDEN, &IRMS, &VRMS, &IRMSOS, &VRMSOS, &VAGAIN, &VADIV, &LINECYC, &ZXTOUT, &SAGCYC, &SAGLVL, &IPKLVL, &VPKLVL, &IPEAK, &RSTIPEAK, &VPEAK, &TEMP, &PERIOD, &TMODE, &CHKSUM, &DIEREV };
 const int regListSize = sizeof(regList);
 

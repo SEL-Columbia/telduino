@@ -83,8 +83,8 @@ typedef struct {
 */
 void CsetOn(Circuit *c, int8_t on);
 int8_t CisOn(Circuit *c);
-void Cload(Circuit *c, uint8_t* addrEEPROM);
-void Csave(Circuit *c, uint8_t* addrEEPROM);
+void Cload(Circuit *c, Circuit* addrEEPROM);
+void Csave(Circuit *c, Circuit* addrEEPROM);
 void CsetDefaults(Circuit *c, int8_t circuitID);
 void Cmeasure(Circuit *c);
 void Cprogram(Circuit *c);

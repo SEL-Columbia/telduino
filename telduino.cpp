@@ -52,15 +52,19 @@
 
 #define VERSION ""
 
+
 boolean msgWaitLock = false;
 Circuit ckts[NCIRCUITS];
+Circuit EEMEM cktsSave[NCIRCUITS];
 
-int _testChannel = 1; //This is the input daughter board channel. The _ implies that it should only be changed by user input.
+int _testChannel = 1; //This is the input daughter board channel. This should only be changed by the user.
 
-int32_t testingCircuit = 0;
 int32_t switchSec= 0;
-uint8_t *testAddr = 0;
-int32_t RARAA[3] = {0};
+
+#define RARAASIZE 300
+int32_t testIdx = 0;//Present index into RARAASAVE counts down to 0
+int32_t EEMEM RARAASave[RARAASIZE][3] = {0};
+int32_t EEMEM nRARAASave = 0; //Total number of entries in RARAASave
 
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 void setup();
@@ -127,35 +131,30 @@ void setup()
 	*/
 	
     //Load circuit data from EEPROM
-    uint8_t *addrEEPROM = 0;
-    for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
-        Cload(c,addrEEPROM);
-        addrEEPROM += sizeof(Circuit);
+    for (int i=0; i < NCIRCUITS; i++) {
+        Cload(&ckts[i],&cktsSave[i]);
     }
 } //end of setup section
 
 
 void testCircuitPrint() {
     int32_t records = 0;
-    int8_t *addrEEPROM = 0;
-
+    int32_t RARAA[3] = {0};
     //Get number of records from first block
-    eeprom_read_block(&records,addrEEPROM,sizeof(records));
+    eeprom_read_block(&records,&nRARAASave,sizeof(records));
 
     //Iterate over these records and print in CSV format
     debugPort.println();
     debugPort.print("ON: RAENERGY,OFF:RAENERGY,AENERGY");
     debugPort.println();
-    while (records > 0) {
-        addrEEPROM += sizeof(RARAA);
-        eeprom_read_block(&(RARAA[0]),addrEEPROM,sizeof(RARAA));
+    for (int i = records-1; i >0 ; i--) {
+        eeprom_read_block(RARAA,&RARAASave[i],sizeof(RARAA));
         debugPort.print(RARAA[0]);
         debugPort.print(",");
         debugPort.print(RARAA[1]);
         debugPort.print(",");
         debugPort.print(RARAA[2]);
         debugPort.println();
-        records--;
     }
 }
 
@@ -221,7 +220,7 @@ void parseBerkeley()
     debugPort.println();
     debugPort.print(_testChannel,DEC);
     debugPort.print(" $");
-    while (debugPort.available() == 0 && testingCircuit == 0) {
+    while (debugPort.available() == 0 && testIdx == 0) {
         setDbgLeds(GPAT);
         for (int i=0; i < 100; i++) {
             if (debugPort.available() != 0) {
@@ -238,10 +237,10 @@ void parseBerkeley()
         }
     }
 
-    if (testingCircuit > 0) {
+    if (testIdx > 0) {
         uint32_t startTime = millis();
         uint32_t val = 0;
-        RARAA[0] = RARAA[1] = RARAA[2] = 0;
+        int32_t RARAA[3] = {0};
         //Switch the channel On
         SWset(_testChannel,true);
         //Meter it 
@@ -278,20 +277,19 @@ void parseBerkeley()
         debugPort.print(RARAA[2]);
 
         //Write to EEPROM
-        eeprom_update_block(&(RARAA[0]),testAddr,sizeof(RARAA));
+        eeprom_update_block(RARAA,&RARAASave[testIdx],sizeof(RARAA));
 
         uint32_t duration = (millis()-startTime);
         if (duration > 1000*switchSec) {
             duration = 1000*switchSec;
         }
         delay(1000*switchSec - duration);
-        if (testingCircuit == 1){
+        if (testIdx == 1){
             debugPort.println();
             debugPort.print("Testing Complete.");
             debugPort.println();
         }
-        testAddr += sizeof(RARAA);
-        testingCircuit--;
+        testIdx -= 1;
     }
     // Look for incoming single character command on debugPort line
     // Capital letters denote write operations and lower case letters are reads
@@ -301,9 +299,10 @@ void parseBerkeley()
         if (incoming == 'z') {
             testCircuitPrint();
         } else if (incoming == 'Z') {
-            if (testingCircuit) {
+            int32_t zeros[3] = {0};
+            if (testIdx) {
                 debugPort.print("Test Canceled");
-                testingCircuit = 0;
+                testIdx = 0;
                 return;
             }
 
@@ -318,16 +317,16 @@ void parseBerkeley()
                 switchSec = 0;
             }
             switchSec += 120/60;
-            testingCircuit = runMin*60/switchSec;
+            testIdx = runMin*60/switchSec;
 
             debugPort.println();
             debugPort.print("Total number of experiments is: ");
-            debugPort.print(testingCircuit);
+            debugPort.print(testIdx);
             debugPort.println();
-            if (testingCircuit > 300) {
+            if (testIdx > RARAASIZE) {
                 debugPort.print("Too many experiments to run. Make test shorter or test with a longer period between experiments.");
                 debugPort.println();
-                testingCircuit = 0;
+                testIdx = 0;
                 return;
             }
 
@@ -343,20 +342,11 @@ void parseBerkeley()
             ADEsetRegister(PHCAL,&phcal);
             ADEsetModeBit(CYCMODE,1);
 
-            //Initialize storage area for number of results
-            eeprom_update_block(&testingCircuit,0,sizeof(testingCircuit));
-
-            //Initialize bank of results
-            RARAA[0] = RARAA[1] = RARAA[2] = 0;
-            testAddr = 0;
-            testAddr += sizeof(RARAA);//ON:RA,OFF:RA,AENERGY
-            uint8_t *addr = testAddr;
-            for (int i = testingCircuit; 
-                i >0;
-                i--, addr +=sizeof(RARAA)) 
-            {
-                RARAA[2] = i;
-                eeprom_update_block(&RARAA,addr,sizeof(RARAA));
+            //Initialize storage area for results
+            eeprom_update_block(&testIdx,&nRARAASave,sizeof(testIdx));
+            for (int i=testIdx; i>0; i--) {
+                zeros[2] = i;
+                eeprom_update_block(zeros,RARAASave,sizeof(zeros));
             }
             debugPort.print("Test started.");
 
@@ -463,30 +453,48 @@ void parseBerkeley()
             //debugPort.println(RCstr(_retCode));
         } else if (incoming == 'D') {		//Initialize ckts[] to safe defaults
             for (int i = 0; i < NCIRCUITS; i++) {
-                Circuit *c = &(ckts[i]);
+                Circuit *c = &ckts[i];
                 CsetDefaults(c,i);
             }
             debugPort.println("Defaults set. Don't forget to program! ('P')");
         } else if (incoming == 'E') {        //Save data in ckts[] to EEPROM
             debugPort.println("Saving to EEPROM.");
-            uint8_t *addrEEPROM = 0;
-            for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
-                Csave(c,addrEEPROM);
-                addrEEPROM += sizeof(Circuit);
+            for (int i =0; i < NCIRCUITS; i++) {
+                Csave(&ckts[i],&cktsSave[i]);
             }
             debugPort.println(COMPLETESTR);
-        } else if (incoming=='e'){            //Load circuit data from EEPROM
-            uint8_t *addrEEPROM = 0;
+        } else if (incoming=='e') {           //Load circuit data from EEPROM
             debugPort.println("Loading from EEPROM.");
-            for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
-                Cload(c,addrEEPROM);
-                addrEEPROM += sizeof(Circuit);
+            for (int i =0; i < NCIRCUITS; i++) {
+                Cload(&ckts[i],&cktsSave[i]);
             }
             debugPort.println(COMPLETESTR);
         } else if (incoming=='w') {            //Wait for interrupt specified by interrupt mask
             int32_t mask = 0;
-            debugPort.print("Enter interrupt mask. Will wait for 4sec. $");
-            CLgetInt(&debugPort,&mask);
+            char buff[10] = {0};
+            debugPort.println();
+            debugPort.println("Available interrupt masks:");
+            for (int i =0; i < intListLen; i++){
+                debugPort.print( intList[i]);
+                debugPort.print(" ");
+            }
+            debugPort.println();
+            debugPort.print("Enter interrupt mask name or \"mask\" "
+                    "to enter a mask manually. " 
+                    "Will wait for 4sec for interrupt to fire. $");
+            CLgetString(&debugPort,buff,sizeof(buff));
+            if (!strcmp(buff, "mask")) {
+                debugPort.print("Enter interrupt mask as a number. $");
+                CLgetInt(&debugPort,&mask);
+            } else {
+                mask=1;
+                for (int i =0; i < intListLen; i++){
+                    if (!strcmp(buff, intList[i])) {
+                        break;
+                    }
+                    mask <<= 1;
+                }
+            }
             debugPort.println();
             //debugPort.print("(int32_t)(&),HEX:");
             //debugPort.println((int32_t)(&WAVEFORM),HEX);
@@ -506,7 +514,8 @@ void parseBerkeley()
         }
         else {                                //Indicate received character
             int waiting = 2048;                //Used to eat up junk that follows
-            debugPort.print("\n\rNot_Recognized:");
+            debugPort.println();
+            debugPort.print("Not_Recognized:");
             debugPort.print(incoming,BIN);
             debugPort.print(":'");
             debugPort.print(incoming);
@@ -514,7 +523,8 @@ void parseBerkeley()
             while (debugPort.available() || waiting > 0) {
                 if (debugPort.available()) {
                     incoming = debugPort.read();
-                    debugPort.print("\n\rNot_Recognized:");
+                    debugPort.println();
+                    debugPort.print("Not_Recognized:");
                     debugPort.print(incoming,BIN);
                     debugPort.print(":'");
                     debugPort.print(incoming);

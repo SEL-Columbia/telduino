@@ -84,6 +84,9 @@ static const uint16_t ZXTO		= 0x1000; //bit 12 C
 static const uint16_t PPOS		= 0x2000; //bit 13 D
 static const uint16_t PNEG		= 0x4000; //bit 14 E
 
+extern const char* intList[];
+extern const int intListLen;
+
 
 /**
 	Mode (MODE) Register MASKS

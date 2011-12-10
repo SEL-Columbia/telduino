@@ -148,13 +148,13 @@ int8_t CisOn(Circuit *c)
 	return SWisOn(c->circuitID);
 }
 
-void Cload(Circuit *c, uint8_t* addrEEPROM)
+void Cload(Circuit *c, Circuit* addrEEPROM)
 {
-	eeprom_read_block(c,addrEEPROM,sizeof(Circuit));
+	eeprom_read_block(c,(uint8_t*)addrEEPROM,sizeof(Circuit));
 }
-void Csave(Circuit *c, uint8_t* addrEEPROM) 
+void Csave(Circuit *c, Circuit* addrEEPROM) 
 {
-	eeprom_update_block(c,addrEEPROM,sizeof(Circuit));
+	eeprom_update_block(c,(uint8_t*)addrEEPROM,sizeof(Circuit));
 }
 
 /** 
