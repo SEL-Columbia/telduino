@@ -1,10 +1,10 @@
 /**
  *  \mainpage Telduino
  *
- *	\section Purpose
- *	This code runs on a custom avr board with hardware to control 20 relays and measurement circuits.
+ *  \section Purpose
+ *    This code runs on a custom avr board with hardware to control 20 relays and measurement circuits.
  *
- *	\section Implementation
+ *  \section Implementation
  *  The code is a client to an embedded linux system that sends string commands over the serial port.
  *  These serial commands are executed by the telduino code and sent back to the linux box.
  */
@@ -14,6 +14,8 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/wdt.h>
+#include <avr/eeprom.h>
 
 #include <string.h>
 #include <stdint.h>
@@ -53,21 +55,14 @@
 boolean msgWaitLock = false;
 Circuit ckts[NCIRCUITS];
 
-/*  Disables the watchdog timer the first chance the AtMega gets as recommended
-    by Atmel.
- */
-#include <avr/wdt.h>
+int _testChannel = 1; //This is the input daughter board channel. The _ implies that it should only be changed by user input.
+
+int32_t testingCircuit = 0;
+int32_t switchSec= 0;
+uint8_t *testAddr = 0;
+int32_t RARAA[3] = {0};
+
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
-void wdt_init(void)
-{
-    MCUSR = 0;
-    wdt_disable();
-    return;     
-}
-
-int _testChannel = MAINS; //This is the input daughter board channel. The _ implies that it should only be changed by user input.
-
-
 void setup();
 void loop();
 void softSetup();
@@ -96,7 +91,7 @@ void turnOnTelit();
 
 void setup()
 {
-    setClockPrescaler(CLOCK_PRESCALER_2);	//prescale of 2 after startup prescale of 8. This ensures that the arduino is running at 8 MHz.
+    setClockPrescaler(CLOCK_PRESCALER_2);    //prescale of 2 after startup prescale of 8. This ensures that the arduino is running at 8 MHz.
 
     // start up serial ports
     debugPort.begin(DEBUG_BAUD_RATE);		//Debug serial
@@ -137,18 +132,76 @@ void setup()
         Cload(c,addrEEPROM);
         addrEEPROM += sizeof(Circuit);
     }
-
 } //end of setup section
 
 
+void testCircuitPrint() {
+    int32_t records = 0;
+    int8_t *addrEEPROM = 0;
+
+    //Get number of records from first block
+    eeprom_read_block(&records,addrEEPROM,sizeof(records));
+
+    //Iterate over these records and print in CSV format
+    debugPort.println();
+    debugPort.print("ON: RAENERGY,OFF:RAENERGY,AENERGY");
+    debugPort.println();
+    while (records > 0) {
+        addrEEPROM += sizeof(RARAA);
+        eeprom_read_block(&(RARAA[0]),addrEEPROM,sizeof(RARAA));
+        debugPort.print(RARAA[0]);
+        debugPort.print(",");
+        debugPort.print(RARAA[1]);
+        debugPort.print(",");
+        debugPort.print(RARAA[2]);
+        debugPort.println();
+        records--;
+    }
+}
+
+
+int8_t blinkTime()
+{
+    //Check for comm errors
+    ifnsuccess(_retCode) {
+        //FAILURE
+        for (int i=0; i < 10; i++) {
+            setDbgLeds(GRPAT);
+            delay(100);
+            setDbgLeds(OFFPAT);
+            delay(100);
+        }
+        RCreset();
+        return true;
+    }
+    return false;
+}
+
+int8_t blinkComm()
+{
+    //Check for comm errors
+    ifnsuccess(_retCode) {
+        //FAILURE
+        for (int i=0; i < 10; i++) {
+            setDbgLeds(GRPAT);
+            delay(100);
+            setDbgLeds(GPAT);
+            delay(100);
+        }
+        return true;
+        RCreset();
+    }
+    return false;
+}
+
 void loop()
-{	
+{    
     parseBerkeley();
     //parseColumbia();
 } //end of main loop
 
 /**
- *	single character serial interface for interaction with telduino
+ *  Single character serial interface for interaction with telduino
  *  Capital letters are usually writes and lower case letters are usually reads
  *  
  *  A
@@ -165,11 +218,11 @@ void loop()
  */
 void parseBerkeley() 
 {
-    setDbgLeds(GYRPAT);
+    debugPort.println();
     debugPort.print(_testChannel,DEC);
     debugPort.print(" $");
-    while (debugPort.available() == 0) {
-        setDbgLeds(GYRPAT);
+    while (debugPort.available() == 0 && testingCircuit == 0) {
+        setDbgLeds(GPAT);
         for (int i=0; i < 100; i++) {
             if (debugPort.available() != 0) {
                 break;
@@ -185,11 +238,129 @@ void parseBerkeley()
         }
     }
 
+    if (testingCircuit > 0) {
+        uint32_t startTime = millis();
+        uint32_t val = 0;
+        RARAA[0] = RARAA[1] = RARAA[2] = 0;
+        //Switch the channel On
+        SWset(_testChannel,true);
+        //Meter it 
+        ADEreadInterrupt(CYCEND); //Clear interrupt
+        ADEwaitForInterrupt(CYCEND,1200);
+        if (blinkTime()){
+            RARAA[0] = -2000;
+        } else {
+            ADEgetRegister(LAENERGY,&RARAA[0]);
+        }
+        if (blinkComm()) {
+            RARAA[0] = -1000;
+        }
+
+        //Switch the channel Off
+        SWset(_testChannel,false);
+        //Meter it 
+        delay(1000);
+        ADEgetRegister(RAENERGY,&RARAA[1]);
+        if (blinkComm()) {
+            RARAA[1] = -1000;
+        }
+        
+        //Read AENERGY
+        ADEgetRegister(AENERGY,&RARAA[2]);
+        if (blinkComm()) {
+            RARAA[2] = -1000;
+        }
+
+        debugPort.print(RARAA[0]);
+        debugPort.print(",");
+        debugPort.print(RARAA[1]);
+        debugPort.print(",");
+        debugPort.print(RARAA[2]);
+
+        //Write to EEPROM
+        eeprom_update_block(&(RARAA[0]),testAddr,sizeof(RARAA));
+
+        uint32_t duration = (millis()-startTime);
+        if (duration > 1000*switchSec) {
+            duration = 1000*switchSec;
+        }
+        delay(1000*switchSec - duration);
+        if (testingCircuit == 1){
+            debugPort.println();
+            debugPort.print("Testing Complete.");
+            debugPort.println();
+        }
+        testAddr += sizeof(RARAA);
+        testingCircuit--;
+    }
     // Look for incoming single character command on debugPort line
     // Capital letters denote write operations and lower case letters are reads
     if (debugPort.available() > 0) {
         char incoming = debugPort.read(); 
-        if (incoming == 'A') {			//Write to ADE Register
+
+        if (incoming == 'z') {
+            testCircuitPrint();
+        } else if (incoming == 'Z') {
+            if (testingCircuit) {
+                debugPort.print("Test Canceled");
+                testingCircuit = 0;
+                return;
+            }
+
+            int32_t runMin = 0;
+            debugPort.println();
+            debugPort.print("Minutes to run test $");
+            CLgetInt(&debugPort,&runMin);
+            debugPort.println();
+            debugPort.print("Seconds delay between each experiment. $");
+            CLgetInt(&debugPort,&switchSec);
+            if (switchSec < 0) {
+                switchSec = 0;
+            }
+            switchSec += 120/60;
+            testingCircuit = runMin*60/switchSec;
+
+            debugPort.println();
+            debugPort.print("Total number of experiments is: ");
+            debugPort.print(testingCircuit);
+            debugPort.println();
+            if (testingCircuit > 300) {
+                debugPort.print("Too many experiments to run. Make test shorter or test with a longer period between experiments.");
+                debugPort.println();
+                testingCircuit = 0;
+                return;
+            }
+
+            //Select it
+            CSselectDevice(_testChannel);
+
+            //Configure meter
+            int32_t linecycVal = 120;
+            int32_t gain = 0x24;
+            int32_t phcal = 0x0B;
+            ADEsetRegister(LINECYC,&linecycVal);
+            ADEsetRegister(GAIN,&gain);
+            ADEsetRegister(PHCAL,&phcal);
+            ADEsetModeBit(CYCMODE,1);
+
+            //Initialize storage area for number of results
+            eeprom_update_block(&testingCircuit,0,sizeof(testingCircuit));
+
+            //Initialize bank of results
+            RARAA[0] = RARAA[1] = RARAA[2] = 0;
+            testAddr = 0;
+            testAddr += sizeof(RARAA);//ON:RA,OFF:RA,AENERGY
+            uint8_t *addr = testAddr;
+            for (int i = testingCircuit; 
+                i >0;
+                i--, addr +=sizeof(RARAA)) 
+            {
+                RARAA[2] = i;
+                eeprom_update_block(&RARAA,addr,sizeof(RARAA));
+            }
+            debugPort.print("Test started.");
+
+        } else if (incoming == 'A') {            //Write to ADE Register
             char buff[16] = {0};
             debugPort.print("Register to write $");
             CLgetString(&debugPort,buff,sizeof(buff));
@@ -208,7 +379,7 @@ void parseBerkeley()
                     debugPort.println(regData,BIN);
 
                     debugPort.print("Enter new regData:");
-                    if(CLgetInt(&debugPort,&regData) == CANCELED) break;	
+                    if(CLgetInt(&debugPort,&regData) == CANCELED) break;
                     debugPort.println();
                     ADEsetRegister(*regList[i],&regData);
                     debugPort.print(RCstr(_retCode));
@@ -220,7 +391,7 @@ void parseBerkeley()
                     break;
                 } 
             }
-        } else if (incoming == 'a') {		//Read ADE reg
+        } else if (incoming == 'a') {        //Read ADE reg
             char buff[16] = {0};
             debugPort.print("Enter name of register to read:");
             CLgetString(&debugPort,buff,sizeof(buff));
@@ -247,25 +418,25 @@ void parseBerkeley()
             CSselectDevice(_testChannel);
             CLwaitForZX10VIRMS();
             CSselectDevice(DEVDISABLE);
-        } else if (incoming == 'C') {		//Change active channel
-            _testChannel = getChannelID();	
-        } else if (incoming == 'S') {		//Toggle channel circuit
-            int8_t ID = getChannelID();		
+        } else if (incoming == 'C') {        //Change active channel
+            _testChannel = getChannelID();    
+        } else if (incoming == 'S') {        //Toggle channel circuit
+            int8_t ID = getChannelID();        
             SWset(ID,!SWisOn(ID));
-        } else if (incoming == 's') {		//Display switch state
-            displayEnabled(SWgetSwitchState());	
-        } else if (incoming == 't') {		//Test basic functionality
+        } else if (incoming == 's') {        //Display switch state
+            displayEnabled(SWgetSwitchState());    
+        } else if (incoming == 't') {        //Test basic functionality
             testHardware();
-        } else if (incoming == 'T') {		//Test switch aggresively
+        } else if (incoming == 'T') {        //Test switch aggresively
             testSwitch(_testChannel);
-        } else if (incoming == 'R') {		//Hard Reset using watchdog timer
-            wdt_enable((WDTO_4S));			
+        } else if (incoming == 'R') {        //Hard Reset using watchdog timer
+            wdt_enable((WDTO_4S));            
            debugPort.println("resetting in 4s.");
-        } else if (incoming == 'O') {		//soft Reset using the Setup routine
-            softSetup();					//Set calibration values for ADE
-        } else if (incoming == 'o') {		//Read channel using Achintya's code
+        } else if (incoming == 'O') {        //soft Reset using the Setup routine
+            softSetup();                    //Set calibration values for ADE
+        } else if (incoming == 'o') {        //Read channel using Achintya's code
             displayChannelInfo();
-        } else if (incoming == 'P') {		//Program values in ckts[] to ADE
+        } else if (incoming == 'P') {        //Program values in ckts[] to ADE
             for (int i = 0; i < NCIRCUITS; i++) {
                 Circuit *c = &(ckts[i]);
                 Cprogram(c);
@@ -279,14 +450,14 @@ void parseBerkeley()
                 }
             }
             debugPort.println();
-        } else if(incoming == 'p') {		//Measure circuit values and print
+        } else if(incoming == 'p') {        //Measure circuit values and print
             Circuit *c = &(ckts[_testChannel]);
             Cmeasure(c);
             debugPort.println(RCstr(_retCode));
             CprintMeas(&debugPort,c);
             Cprint(&debugPort,c);
             debugPort.println();
-        } else if (incoming == 'L') {		//Run calibration routine on channel
+        } else if (incoming == 'L') {        //Run calibration routine on channel
             Circuit *c = &(ckts[_testChannel]);
             calibrateCircuit(c);
             //debugPort.println(RCstr(_retCode));
@@ -296,7 +467,7 @@ void parseBerkeley()
                 CsetDefaults(c,i);
             }
             debugPort.println("Defaults set. Don't forget to program! ('P')");
-        } else if (incoming == 'E') {		//Save data in ckts[] to EEPROM
+        } else if (incoming == 'E') {        //Save data in ckts[] to EEPROM
             debugPort.println("Saving to EEPROM.");
             uint8_t *addrEEPROM = 0;
             for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
@@ -304,7 +475,7 @@ void parseBerkeley()
                 addrEEPROM += sizeof(Circuit);
             }
             debugPort.println(COMPLETESTR);
-        } else if (incoming=='e'){			//Load circuit data from EEPROM
+        } else if (incoming=='e'){            //Load circuit data from EEPROM
             uint8_t *addrEEPROM = 0;
             debugPort.println("Loading from EEPROM.");
             for (Circuit *c = ckts; c != &ckts[NCIRCUITS]+1; c++){
@@ -312,7 +483,7 @@ void parseBerkeley()
                 addrEEPROM += sizeof(Circuit);
             }
             debugPort.println(COMPLETESTR);
-        } else if (incoming=='w') {			//Wait for interrupt specified by interrupt mask
+        } else if (incoming=='w') {            //Wait for interrupt specified by interrupt mask
             int32_t mask = 0;
             debugPort.print("Enter interrupt mask. Will wait for 4sec. $");
             CLgetInt(&debugPort,&mask);
@@ -323,7 +494,7 @@ void parseBerkeley()
             ADEwaitForInterrupt((int16_t)mask,4000);
             debugPort.println(RCstr(_retCode));
             CSselectDevice(DEVDISABLE);
-        } else if (incoming == 'W')	 {
+        } else if (incoming == 'W')     {
             CSselectDevice(_testChannel);
             int32_t regData;
             for (int i =0; i < 80; i++) {
@@ -333,8 +504,8 @@ void parseBerkeley()
             }
             CSselectDevice(DEVDISABLE);
         }
-        else {								//Indicate received character
-            int waiting = 2048;				//Used to eat up junk that follows
+        else {                                //Indicate received character
+            int waiting = 2048;                //Used to eat up junk that follows
             debugPort.print("\n\rNot_Recognized:");
             debugPort.print(incoming,BIN);
             debugPort.print(":'");
@@ -348,7 +519,7 @@ void parseBerkeley()
                     debugPort.print(":'");
                     debugPort.print(incoming);
                     debugPort.println("'");
-                } else 	waiting--;
+                } else     waiting--;
             }
         }
     }
@@ -357,8 +528,8 @@ void parseBerkeley()
     setDbgLeds(0);
 }
 
+//resets the test channel (input daughter board) to default parameters and sets the linecycle count up.
 void softSetup()
-    //resets the test channel (input daughter board) to default parameters and sets the linecycle count up.
 {
     int32_t data = 0;
 
@@ -418,7 +589,7 @@ void softSetup()
     ADEgetRegister(MODE,&modeReg);
     debugPort.print("bin MODE register before setting CYCMODE:");
     debugPort.println(modeReg, BIN);
-    modeReg |= CYCMODE;	 //set the line cycle accumulation mode bit
+    modeReg |= CYCMODE;     //set the line cycle accumulation mode bit
     ADEsetRegister(MODE,&modeReg);
     ADEgetRegister(MODE,&modeReg);
     debugPort.print("bin MODE register after setting CYCMODE:");
@@ -429,7 +600,7 @@ void softSetup()
     debugPort.print("bin Interrupt Status Register:");
     debugPort.println(data, BIN);
 
-    CSselectDevice(DEVDISABLE); //end SPI comm with the selected device	
+    CSselectDevice(DEVDISABLE); //end SPI comm with the selected device    
 }
 
 void displayChannelInfo() {
@@ -453,7 +624,7 @@ void displayChannelInfo() {
     if (0 /*loopCounter%4096*/ ){
         debugPort.print("bin Interrupt Status Register:");
         debugPort.println(interruptStatus, BIN);
-    }	//endif
+    }   //endif
 
     //if the CYCEND bit of the Interrupt Status Registers is flagged
     debugPort.print("\n\n\r");
@@ -518,7 +689,7 @@ int8_t getChannelID()
 {
     int32_t ID = -1;
     while (ID == -1) {
-        debugPort.print("Waiting for ID (0-20):");		
+        debugPort.print("Waiting for ID (0-20):");
         ifnsuccess(CLgetInt(&debugPort,&ID)) ID = -1;
         debugPort.println();
         if (ID < 0 || 20 < ID ) {
@@ -568,7 +739,7 @@ void testHardware() {
     for (int i = 0; i < NSWITCHES; i++) {
         enabledC[i] = 1;
         delay(1000);
-		SWset(enabledC[i], true);
+        SWset(enabledC[i], true);
         //SWsetSwitches(enabledC);
     }
     delay(1000);
@@ -628,549 +799,14 @@ extern "C" {
     }
 }
 
-/**
- *	key-value parsing interface for telduino-sheeva communications
+/*  Disables the watchdog timer the first chance the AtMega gets as recommended
+    by Atmel.
  */
-void parseColumbia() {
-    if (verbose > 1) {
-        debugPort.println("top of loop()");
-        debugPort.println(millis());
-    }
-
-    readSheevaPort();
-    readTelitPort();
-}
-
-void setupLVAMode(int icid, int32_t linecycVal) {
-    /**
-     *	this function will setup the registers correctly for the LINECYC
-     *	mode reading of the LVAENERGY register.
-     *	The value for LINECYC is passed in to the function.
-     */
-
-    int32_t data = 0;
-
-    debugPort.print("Setting Channel for LVA Mode:");
-    debugPort.println(icid, DEC);
-
-    CSselectDevice(icid); //start SPI comm with the test device channel
-    //Disable Digital Integrator for _testChannel
-    int8_t ch1os=0,enableBit=0;
-
-    debugPort.print("set CH1OS:"); 
-    ADEsetCHXOS(1,&enableBit,&ch1os);
-    debugPort.println(RCstr(_retCode));
-    debugPort.print("get CH1OS:"); 
-    ADEgetCHXOS(1,&enableBit,&ch1os);
-    debugPort.println(RCstr(_retCode)); 
-    debugPort.print("Digital Integrator enabled: ");
-    debugPort.println(enableBit,BIN);
-    debugPort.print("offset: ");
-    debugPort.println(ch1os);
-
-    //Set the Gain to 0x24: This sets the Ch2={Gain to 1} and Ch1={Gain to 16; full range to .125V}
-    int32_t gainVal = 0x24;
-    debugPort.print("BIN GAIN (set,get):"); 
-    ADEsetRegister(GAIN,&gainVal);
-    debugPort.println(RCstr(_retCode));
-    debugPort.print(",");
-    ADEgetRegister(GAIN,&gainVal);
-    debugPort.print(RCstr(_retCode));
-    debugPort.print(":");
-    debugPort.println(gainVal,HEX);
-
-	//!!!!The irms and vrms are not essential for the Energy registers!!!!
-    int32_t iRmsOsVal = 0x0000;
-    ADEsetRegister(IRMSOS,&iRmsOsVal);
-    ADEgetRegister(IRMSOS,&iRmsOsVal);
-    debugPort.print("hex IRMSOS:");
-    debugPort.println(iRmsOsVal, HEX);
-
-    int32_t vRmsOsVal = 0x0000;
-    ADEsetRegister(VRMSOS,&vRmsOsVal);
-    ADEgetRegister(VRMSOS,&vRmsOsVal);
-    debugPort.print("hex VRMSOS read from register:");
-    debugPort.println(vRmsOsVal, HEX);
-
-    //set the number of cycles to wait before taking a reading
-    // int32_t linecycVal = 200;
-    ADEsetRegister(LINECYC,&linecycVal);
-    ADEgetRegister(LINECYC,&linecycVal);
-    debugPort.print("int linecycVal:");
-    debugPort.println(linecycVal);
-
-    //read and set the CYCMODE bit on the MODE register
-    int32_t modeReg = 0;
-    ADEgetRegister(MODE,&modeReg);
-    debugPort.print("bin MODE register before setting CYCMODE:");
-    debugPort.println(modeReg, BIN);
-    modeReg |= CYCMODE;	 //set the line cycle accumulation mode bit
-    ADEsetRegister(MODE,&modeReg);
-    ADEgetRegister(MODE,&modeReg);
-    debugPort.print("bin MODE register after setting CYCMODE:");
-    debugPort.println(modeReg, BIN);
-
-    //reset the Interrupt status register
-    ADEgetRegister(RSTSTATUS, &data);
-    debugPort.print("bin Interrupt Status Register:");
-    debugPort.println(data, BIN);
-
-    CSselectDevice(DEVDISABLE); //end SPI comm with the selected device	
-
-}
-
-void setupDefaultMode(int icid) {
-    int32_t modeReg = 0;
-    CSselectDevice(icid); 
-
-    // read bits before write
-    ADEgetRegister(MODE,&modeReg);
-    debugPort.print("MODE register before setting default:");
-    debugPort.println(modeReg, BIN);
-
-    // set all MODE bits to default
-    modeReg &= ~DISHPF;
-    modeReg &= ~DISHPF2; 
-    modeReg |=  DISCF;
-    modeReg |=  DISSAG; 
-    modeReg &= ~ASUSPEND;
-    modeReg &= ~TEMPSEL;
-    modeReg &= ~SWRST;
-    modeReg &= ~CYCMODE;	
-    modeReg &= ~DISCH1;
-    modeReg &= ~DISCH2;	
-    modeReg &= ~SWAP;
-    modeReg &= ~DTRT_0;	
-    modeReg &= ~DTRT1_;	
-    modeReg &= ~WAVESEL_0;
-    modeReg &= ~WAVESEL1_;
-
-    // verify bits
-    ADEsetRegister(MODE,&modeReg);
-    ADEgetRegister(MODE,&modeReg);
-    debugPort.print("MODE register after setting default:");
-    debugPort.println(modeReg, BIN);
-
-    CSselectDevice(DEVDISABLE);
-}
-
-void setupRVAMode(int icid) {
-    /**
-     *	this function aspires to setup the registers correctly for the accumulation
-     *	mode reading of the RVAENERGY register.
-     */
-    int32_t data = 0;
-    // debugging value
-
-    debugPort.print("\n\n\rSetting Accumulation Mode for Channel:");
-    debugPort.println(icid, DEC);
-
-    CSselectDevice(icid); //start SPI comm with the test device channel
-    //Enable Digital Integrator for _testChannel
-    int8_t ch1os=0,enableBit=0;
-
-    debugPort.print("set CH1OS:");
-    ADEsetCHXOS(1,&enableBit,&ch1os);
-    debugPort.println(RCstr(_retCode));
-    debugPort.print("get CH1OS:");
-    ADEgetCHXOS(1,&enableBit,&ch1os);
-    debugPort.println(RCstr(_retCode));
-    debugPort.print("enabled: ");
-    debugPort.println(enableBit,BIN);
-    debugPort.print("offset: ");
-    debugPort.println(ch1os);
-
-    //set the gain to 2 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
-    int32_t gainVal = 0;
-
-    debugPort.print("BIN GAIN (set,get):");
-    ADEsetRegister(GAIN,&gainVal);
-    debugPort.print(RCstr(_retCode));
-    debugPort.print(",");
-    ADEgetRegister(GAIN,&gainVal);
-    debugPort.print(RCstr(_retCode));
-    debugPort.print(":");
-    debugPort.println(gainVal,BIN);
-
-    int32_t iRmsOsVal = 0x0000;
-    ADEsetRegister(IRMSOS,&iRmsOsVal);
-    ADEgetRegister(IRMSOS,&iRmsOsVal);
-    debugPort.print("hex IRMSOS:");
-    debugPort.println(iRmsOsVal, HEX);
-
-    int32_t vRmsOsVal = 0x0000;
-    ADEsetRegister(VRMSOS,&vRmsOsVal);
-    ADEgetRegister(VRMSOS,&vRmsOsVal);
-    debugPort.print("hex VRMSOS read from register:");
-    debugPort.println(vRmsOsVal, HEX);
-
-    // set bits in interrupt register
-    int32_t modeReg = 0;
-    ADEgetRegister(IRQEN, &modeReg);
-    modeReg |= WSMP;
-    ADEsetRegister(IRQEN, &modeReg);
-    debugPort.println("register read IRQEN");
-    debugPort.println(modeReg, BIN);
-
-    // set appropriate bits in MODE register
-    // clear CYCMODE, WAVESEL_0, and WAVESEL1_
-    modeReg = 0;
-    ADEgetRegister(MODE, &modeReg);
-    debugPort.print("register read MODE");
-    debugPort.println(modeReg, BIN);
-    debugPort.println("setting bits");
-    modeReg &= ~CYCMODE;			//clear the line cycle accumulation mode bit
-    modeReg &= ~WAVESEL_0;
-    modeReg &= ~WAVESEL1_;
-    ADEsetRegister(MODE, &modeReg);
-    ADEgetRegister(MODE, &modeReg);
-    debugPort.print("register read MODE");
-    debugPort.println(modeReg, BIN);
-
-    CSselectDevice(DEVDISABLE);		//end SPI comm with the selected device		
-}
-
-void jobReadLVA(int icid) {
-    /**	dispatch job readLVA function
-     *  power should be returned in units of watt-hours
-     *	time will be returned in units of milliseconds
-     *	icid - circuit id
-     *
-     *	 input string: cmp=mtr&job=readLVA&cid=<cid>;
-     *	output string: cmp=mtr&job=readLVA&cid=<cid>&power=<power>&time=<time>;
-     */
-
-    debugPort.println("reading circuit energy LVA");
-    // actually do something here soon
-    // read circuit energy or something using icid
-    int32_t regVal = 0;
-
-    // select SPI circuit
-    CSselectDevice(icid);
-
-    // read current
-    int32_t irms = 0;
-    ADEgetRegister(IRMS, &irms);
-    debugPort.println("reg read IRMS");
-    debugPort.println(irms, HEX);
-
-    // read voltage
-    int32_t vrms = 0;
-    ADEgetRegister(VRMS, &vrms);
-    debugPort.println("reg read VRMS");
-    debugPort.println(vrms, HEX);
-
-    //if the CYCEND bit of the Interrupt Status Registers is flagged
-    debugPort.print("Waiting for next cycle: ");
-    ADEwaitForInterrupt(CYCEND, 90000);
-    debugPort.println(RCstr(_retCode));
-
-    // test read of interrupt register
-    ADEgetRegister(RSTSTATUS, &regVal);
-    debugPort.println("reg read RSTSTATUS");
-    debugPort.println(regVal, BIN);
-
-    // read LVAENERGY value into power
-    int32_t power = 0;
-    ADEgetRegister(LVAENERGY, &power);
-    debugPort.println("reg read LVAENERGY");
-    debugPort.println(power, HEX);
-
-    // test read of interrupt register
-    ADEgetRegister(RSTSTATUS, &regVal);
-    debugPort.println("reg read RSTSTATUS");
-    debugPort.println(regVal, BIN);
-
-    // deselect SPI circuit
-    CSselectDevice(DEVDISABLE);
-
-    // construct and send back response
-    String responseString = "";
-    responseString += "cmp=mtr&";
-    responseString += "job=readLVA&";
-    responseString += "cid=";
-    responseString += icid;
-    responseString += "&irms=";
-    responseString += irms;
-    responseString += "&vrms=";
-    responseString += vrms;	
-    responseString += "&power=";
-    responseString += power;
-    responseString += "&time=";
-    responseString += millis();
-    responseString += ";";
-    sheevaPort.println(responseString);		
-}
-
-/** dispatch job read function
- *  power should be returned in units of watt-hours
- *  time will be returned in units of milliseconds
- *  icid - circuit id
- *
- *  input string: job=read&cid=<cid>;
- *  output string: job=read&cid=<cid>&power=<power>&time=<time>;
- */
-void jobReadRVA(int icid) {
-    unsigned long time;
-    char readings[MAXLEN_PLUG_MESSAGE];
-
-    debugPort.println("reading circuit energy");
-    // actually do something here soon
-    // read circuit energy or something using icid
-    int32_t regVal = 0;
-
-    // select SPI circuit
-    CSselectDevice(icid);
-
-    // read current
-    int32_t irms = 0;
-    ADEgetRegister(IRMS, &irms);
-    debugPort.println("reg read IRMS");
-    debugPort.println(irms, HEX);
-
-    // read voltage
-    int32_t vrms = 0;
-    ADEgetRegister(VRMS, &vrms);
-    debugPort.println("reg read VRMS");
-    debugPort.println(vrms, HEX);
-
-    //read AENERGY
-    ADEgetRegister(AENERGY, &regVal);
-    debugPort.println("reg read AENERGY");
-    debugPort.println(regVal, HEX);
-
-    // read VAENERGY
-    ADEgetRegister(VAENERGY, &regVal);
-    debugPort.println("reg read VAENERGY");
-    debugPort.println(regVal, HEX);
-
-    // read RVAENERGY value into power
-    int32_t power = 0;
-    ADEgetRegister(RVAENERGY, &power);
-    debugPort.println("reg read RVAENERGY");
-    debugPort.println(power, HEX);
-
-    // deselect SPI circuit
-    CSselectDevice(DEVDISABLE);
-
-    time = millis();
-    debugPort.println("times");
-    debugPort.println(time);
-    debugPort.println(millis());
-
-    // construct and send back response
-    snprintf(readings, MAXLEN_PLUG_MESSAGE, 
-            "(job=%s&cid=%d&power=%d&irms=%d&vrms=%d&time=%lu)", 
-            "readRVA", icid, power, irms, vrms, time);
-    sheevaPort.println(readings);
-}
-
-String getValueForKey(String key, String commandString) {
-    /**
-     *	given a String for the key value, this function returns the String corresponding
-     *	to the value for the key by reading until the next '&' or the end of the string.
-     */
-    int keyIndex = commandString.indexOf(key);
-    int valIndex = keyIndex + key.length() + 1;
-    int ampersandIndex = commandString.indexOf("&",valIndex);
-    // if ampersand not found, go until end of string
-    if (ampersandIndex == -1) {
-        ampersandIndex = commandString.length();
-    }
-    String val = commandString.substring(valIndex, ampersandIndex);
-    return val;
-}
-
-String getSMSText(String commandString) {
-    /**
-     *	this function is called when a cmp=mdm string is sent to the telduino.  the text 
-     *	surrounded by parenthesis is returned.  this message will be sent to the modem as
-     *	a raw string command.  
-     */
-    int firstDelimiterIndex = commandString.indexOf('(');
-    int secondDelimiterIndex = commandString.indexOf(')', firstDelimiterIndex + 1);
-    String smsText = commandString.substring(firstDelimiterIndex + 1, secondDelimiterIndex);
-    return smsText;
-}
-
-void meter(String commandString) {
-    /**
-     *	this function takes care of parsing commands where cmp=mtr.
-     */
-    String job = getValueForKey("job", commandString);
-    String cid = getValueForKey("cid", commandString);
-
-    // is there a better way to convert the cid string to int?
-    char cidChar[3];
-    cid.toCharArray(cidChar, 3);
-    int icid = atoi(cidChar);
-
-    if (verbose > 0) {
-        debugPort.println();
-        debugPort.println("entered void meter()");
-        debugPort.print("executing job type - ");
-        debugPort.println(job);
-        debugPort.print("on circuit id - ");
-        debugPort.println(cid);
-        debugPort.println();
-    }
-
-    if (job == "con") {
-        debugPort.println("execute con job");
-        SWset(icid,1);
-        debugPort.print("switch ");
-        debugPort.print(icid, DEC);
-        if (SWisOn(icid)) {
-            debugPort.println(" is on");
-        } else {
-            debugPort.println(" is off");
-        }
-    }
-    else if (job == "coff") {
-        debugPort.println("execute coff job");
-        SWset(icid,0);
-        debugPort.print("switch ");
-        debugPort.print(icid, DEC);
-        if (SWisOn(icid)) {
-            debugPort.println(" is on");
-        } else {
-            debugPort.println(" is off");
-        }
-    }
-    else if (job == "readRVA") {
-        jobReadRVA(icid);
-    }
-    else if (job == "readLVA") {
-        jobReadLVA(icid);
-    }
-    else if (job == "modeRVA") {
-        setupRVAMode(icid);
-    }
-    else if (job == "modeLVA") {
-        int32_t linecycVal = 1000;
-        String linecyc = getValueForKey("linecyc", commandString);
-        char linecycChar[8];
-        linecyc.toCharArray(linecycChar, 8);
-        linecycVal = atoi(linecycChar);
-        setupLVAMode(icid, linecycVal);
-    }
-    else if (job == "modeDefault") {
-        setupDefaultMode(icid);
-    }
-    else if (job == "c") {
-        _testChannel = icid;
-        displayChannelInfo();		
-    }
-    else if (job == "T") {
-        testHardware();
-    }
-    else if (job == "R") {
-        wdt_enable((WDTO_4S));
-        debugPort.println("resetting in 4s.");
-    }
-}
-
-void modem(String commandString) {
-    /**
-     *	this function takes care of parsing commands where cmp=mdm.
-     */
-    String smsText = getSMSText(commandString);
-    String job = getValueForKey("job", commandString);
-
-    if (job == "ctrlz") {
-        telitPort.print(26, BYTE);
-        return;
-    }
-
-    if (verbose > 0) {
-        debugPort.println();
-        debugPort.println("entered void modem()");
-        debugPort.print("sms text - ");
-        debugPort.println(smsText);
-        debugPort.println();
-    }
-
-    // send string to telit with a \r\n character appended to the string
-    // todo - is it safer to send the char values for carriage return and linefeed?
-    telitPort.print(smsText);
-    telitPort.print("\r\n");
-
-}
-
-/**
- *	this function reads the sheevaPort (Serial2) for incoming commands
- *	and returns them as String objects.
- */
-void readSheevaPort()
+void wdt_init(void)
 {
-    int i;
-    unsigned char c;
-    boolean valid_message_streaming, valid_message_received;
-    char s[MAXLEN_PLUG_MESSAGE];
-
-    if (sheevaPort.available()) {
-        debugPort.println("readSheevaPort():start");
-
-        valid_message_streaming = false; 
-        valid_message_received = false;
-
-        i = 0;
-        while (sheevaPort.available() && i < MAXLEN_PLUG_MESSAGE) {
-            if ((c = sheevaPort.read()) != -1) {
-                debugPort.print(c);
-                if (valid_message_streaming) {
-                    if (c == ')') {
-                        valid_message_received =  true;
-                    }
-                    else if ((c != ' ') && (c != '\t')) { // skip whitespace
-                        s[i++] = c;
-                        if (c == '\n') { break; }
-                    }
-                }
-                else if (c == '(') { 
-                    valid_message_streaming = true; 
-                }
-                /* REMOVE WHEN DONE DEBUGGING */
-                else if (c == 26) {
-                    debugPort.println("got ctrl-z");
-                    telitPort.println(c);
-                }
-            }
-        }
-        s[i] = '\0';
-
-        if (i < 3) { // ()
-            debugPort.println("received empty message.");
-        }
-        else if (valid_message_received) {
-            if (!strncmp(s, "version", 7)) { // print s/w version
-                debugPort.print("version:");
-                debugPort.println(VERSION);
-            }
-            else if (msgWaitLock ||					\
-                    ((s[0] == 'a') || (s[0] == 'A')) &&		\
-                    ((s[1] == 't') || (s[1] == 'T'))) { // modem job
-                debugPort.println("received modem message");
-
-                i = 0;
-                do {
-                    telitPort.print(s[i]);
-                } while (s[++i] != '\0');
-
-                if (msgWaitLock) { msgWaitLock = false; }
-            }
-            else { // meter job
-                debugPort.println("received meter message:");
-                meter_test(s);
-                sheevaPort.println("\r\nOK"); // send confirmation
-            }
-        }
-        else {
-            debugPort.println("received invalid message.");
-        }
-
-        debugPort.println("readSheevaPort():end");
-    }
+    MCUSR = 0;
+    wdt_disable();
+    return;     
 }
 
 /* Parses &-delimited 'key=val' pairs and stores
