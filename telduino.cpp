@@ -202,6 +202,7 @@ void parseBerkeley()
         //Switch the channel On
         SWset(_testChannel,true);
         //Meter it 
+        ADEwaitForInterrupt(CYCEND,1200);
         ADEreadInterrupt(CYCEND); //Clear interrupt
         ADEwaitForInterrupt(CYCEND,1200);
         if (blinkTime()){
