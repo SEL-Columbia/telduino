@@ -243,8 +243,10 @@ void parseBerkeley()
         int32_t RARAA[3] = {0};
         //Switch the channel On
         SWset(_testChannel,true);
+        ADEwaitForInterrupt(CYCEND,1200);
         //Meter it 
         ADEreadInterrupt(CYCEND); //Clear interrupt
+        ADEwaitForInterrupt(CYCEND,1200);
         ADEwaitForInterrupt(CYCEND,1200);
         if (blinkTime()){
             RARAA[0] = -2000;
