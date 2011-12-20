@@ -1,6 +1,6 @@
 # this is all library object code stuff
 # -c assemble but do not link
-# -g include debug stuff
+# -g include debug symbols
 # -Os optimize for size
 # -w inhibit all warning messages
 # -ffunction-sections and -fdata-sections are for optimization of code location
@@ -18,8 +18,8 @@ PROJECT = telduino
 #PROJECT = telduino_test
 MCU = atmega1280
 CLOCK = 8000000L
-GCCFLAGS = -c -g -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Ilibraries
-G++FLAGS = -c -g -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
+GCCFLAGS = -c -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Ilibraries
+G++FLAGS = -c -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
 PROGRAMMER = dragon_jtag #dragon_isp
 
 
@@ -34,15 +34,15 @@ VPATH = libraries/arduino \
 #libraries/SDRaw 
 #libraries/GSM 
 
-OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o wiring_digital.o \
-	wiring_pulse.o wiring_shift.o main.o \
+OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \
+	wiring_digital.o wiring_pulse.o wiring_shift.o main.o \
 	HardwareSerial.o Print.o WMath.o WString.o SPI.o ADE7753.o \
-	DbgTel.o select.o switches.o returncode.o  circuit.o calibration.o\
-    byteordering.o fat.o partition.o sd_raw.o statistics.o $(PROJECT).o 
-#gsm.o gsmSMS.o gsmGPRS.o gsmMaster.o ioHelper.o
+	DbgTel.o select.o switches.o returncode.o  circuit.o calibration.o \
+    byteordering.o fat.o partition.o sd_raw.o statistics.o interactive.o \
+	$(PROJECT).o 
 
 #TARGETS
-.PHONY : clean install programfuses 
+.PHONY : clean install programfuses
 .DEFAUL_GOAL := install
 install: compile program
 all: compile program programfuses readfuses
