@@ -8,6 +8,7 @@
 #include "arduino/HardwareSerial.h"
 
 
+//TODO make switch wait time a parameter
 #define dbg Serial1
 #define max(X,Y) ((X)>=(Y))?(X):(Y)
 #define	ERRCHECKRETURN(Cptr) if (_shouldReturn(Cptr)) return;
@@ -64,6 +65,14 @@ void Cmeasure(Circuit *c)
 	}
 
 	if (!timeout) {
+		//Apparent power or Volt Amps
+		ADEgetRegister(LVAENERGY,&regData);			ERRCHECKRETURN(c);
+		c->VA = regData*c->VAEslope/(c->halfCyclesSample/2*c->periodus/1000);  //Watts
+
+		//Active power or watts
+		ADEgetRegister(LAENERGY,&regData);			ERRCHECKRETURN(c);
+		c->W = regData/(c->halfCyclesSample/2*c->periodus/1000);
+
 		//IRMS
 		ADEgetRegister(IRMS,&regData);				ERRCHECKRETURN(c);
 		c->IRMS = regData*c->IRMSslope;
@@ -79,14 +88,6 @@ void Cmeasure(Circuit *c)
 		//Actve energy accumulated since last query
 		ADEgetRegister(RAENERGY,&regData);			ERRCHECKRETURN(c);
 		c->WEnergy = regData*c->VAEslope/1000;
-
-		//Apparent power or Volt Amps
-		ADEgetRegister(LVAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->VA = regData*c->VAEslope/(c->halfCyclesSample/2*c->periodus/1000);  //Watts
-
-		//Active power or watts
-		ADEgetRegister(LAENERGY,&regData);			ERRCHECKRETURN(c);
-		c->W = regData/(c->halfCyclesSample/2*c->periodus/1000);
 
 		//Power Factor PF
 		if (c->VAEnergy != 0){ 
@@ -140,6 +141,9 @@ void Cprogram(Circuit *c)
 
 void CsetOn(Circuit *c, int8_t on) 
 {
+    if (CisOn(c) != on) {
+        ADEwaitForInterrupt(ZX0,10);
+    }
 	SWset(c->circuitID,on);
 }
 

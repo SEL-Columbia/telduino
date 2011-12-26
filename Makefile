@@ -35,8 +35,8 @@ VPATH = libraries/arduino \
 #libraries/GSM 
 
 OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \
-	wiring_digital.o wiring_pulse.o wiring_shift.o main.o \
-	HardwareSerial.o Print.o WMath.o WString.o SPI.o ADE7753.o \
+	wiring_digital.o main.o \
+	HardwareSerial.o Print.o SPI.o ADE7753.o \
 	DbgTel.o select.o switches.o returncode.o  circuit.o calibration.o \
     byteordering.o fat.o partition.o sd_raw.o statistics.o interactive.o \
 	$(PROJECT).o 

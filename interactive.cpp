@@ -42,28 +42,27 @@ int _testChannel = 1; //This is the input daughter board channel. This should on
 //Hacked up test
 int32_t switchSec = 0;
 int32_t testIdx = 0;//Present index into RARAASAVE counts down to 0
-int32_t EEMEM RARAASave[RARAASIZE][3] = {0};
+int32_t EEMEM RARAASave[RARAASIZE][2] = {0};
 int32_t EEMEM nRARAASave = 0; //Total number of entries in RARAASave
+int32_t switchings = 0;
 
 
 void testCircuitPrint() 
 {
     int32_t records = 0;
-    int32_t RARAA[3] = {0};
+    int32_t RARAA[2] = {0};
     //Get number of records from first block
     eeprom_read_block(&records,&nRARAASave,sizeof(records));
 
     //Iterate over these records and print in CSV format
     debugPort.println();
-    debugPort.print("ON: RAENERGY,OFF:RAENERGY,AENERGY");
+    debugPort.print("ON: RAENERGY,OFF:RAENERGY");
     debugPort.println();
     for (int i = records-1; i >0 ; i--) {
         eeprom_read_block(RARAA,&RARAASave[i],sizeof(RARAA));
         debugPort.print(RARAA[0]);
         debugPort.print(",");
         debugPort.print(RARAA[1]);
-        debugPort.print(",");
-        debugPort.print(RARAA[2]);
         debugPort.println();
     }
 }
@@ -75,9 +74,9 @@ int8_t blinkTime()
         //FAILURE
         for (int i=0; i < 10; i++) {
             setDbgLeds(GRPAT);
-            delay(100);
+            //delay(100);
             setDbgLeds(OFFPAT);
-            delay(100);
+            //delay(100);
         }
         RCreset();
         return true;
@@ -92,9 +91,9 @@ int8_t blinkComm()
         //FAILURE
         for (int i=0; i < 10; i++) {
             setDbgLeds(GRPAT);
-            delay(100);
+            //delay(100);
             setDbgLeds(GPAT);
-            delay(100);
+            //delay(100);
         }
         return true;
         RCreset();
@@ -143,12 +142,21 @@ void parseBerkeley()
     if (testIdx > 0) {
         uint32_t startTime = millis();
         uint32_t val = 0;
-        int32_t RARAA[3] = {0};
+        int32_t RARAA[2] = {0};
+
+        //Clear AEnergy
+        ADEgetRegister(RAENERGY,&RARAA[1]);
+        RCreset();
+
         //Switch the channel On
+        ADEwaitForInterrupt(ZX0,10);
         SWset(_testChannel,true);
+        switchings += 1;
+
         //Meter it 
-        ADEreadInterrupt(CYCEND); //Clear interrupt
-        ADEwaitForInterrupt(CYCEND,1200);
+        ADEwaitForInterrupt(CYCEND,1100);
+        RCreset();
+        ADEwaitForInterrupt(CYCEND,1100);
         if (blinkTime()){
             RARAA[0] = -2000;
         } else {
@@ -159,37 +167,56 @@ void parseBerkeley()
         }
 
         //Switch the channel Off
+        ADEwaitForInterrupt(ZX0,10);
         SWset(_testChannel,false);
+        RCreset();
+        switchings += 1;
         //Meter it 
-        delay(1000);
+        ADEwaitForInterrupt(CYCEND,1050);
         ADEgetRegister(RAENERGY,&RARAA[1]);
         if (blinkComm()) {
             RARAA[1] = -1000;
         }
         
-        //Read AENERGY
-        ADEgetRegister(AENERGY,&RARAA[2]);
-        if (blinkComm()) {
-            RARAA[2] = -1000;
-        }
-
         debugPort.print(RARAA[0]);
         debugPort.print(",");
         debugPort.print(RARAA[1]);
-        debugPort.print(",");
-        debugPort.print(RARAA[2]);
 
         //Write to EEPROM
         eeprom_update_block(RARAA,&RARAASave[testIdx],sizeof(RARAA));
 
-        uint32_t duration = (millis()-startTime);
-        if (duration > 1000*switchSec) {
-            duration = 1000*switchSec;
+        //Switch during delay between tests so interval is switchSec seconds
+        uint32_t time = millis()-startTime;
+        uint32_t remaining = 1000*switchSec-time;
+        if (time > 1000*switchSec) {
+            remaining = 0;
+        } else {
+            debugPort.println();
         }
-        delay(1000*switchSec - duration);
+
+        const int rate = 6000;
+        uint32_t switchStart = millis();
+        while (remaining > rate) {
+            SWset(_testChannel,true);
+            delay(rate/2-10);
+            SWset(_testChannel,false);
+            delay(rate/2-10);
+            switchings += 1;
+            uint32_t switchTime = millis()-switchStart;
+            if (remaining > switchTime) {
+                remaining -= switchTime;
+            } else {
+                remaining -= rate;
+            }
+            switchStart = millis();
+        }
+        delay(remaining); 
+
         if (testIdx == 1){
             debugPort.println();
             debugPort.print("Testing Complete.");
+            debugPort.print("Switchings:");
+            debugPort.print(switchings);
             debugPort.println();
         }
         testIdx -= 1;
@@ -202,7 +229,7 @@ void parseBerkeley()
         if (incoming == 'z') {
             testCircuitPrint();
         } else if (incoming == 'Z') {
-            int32_t zeros[3] = {0};
+            int32_t zeros[2] = {0};
             if (testIdx) {
                 debugPort.print("Test Canceled");
                 testIdx = 0;
@@ -248,9 +275,10 @@ void parseBerkeley()
             //Initialize storage area for results
             eeprom_update_block(&testIdx,&nRARAASave,sizeof(testIdx));
             for (int i=testIdx; i>0; i--) {
-                zeros[2] = i;
-                eeprom_update_block(zeros,RARAASave,sizeof(zeros));
+                zeros[1] = i;
+                eeprom_update_block(zeros,RARAASave,sizeof(RARAASave[0]));
             }
+            switchings = 0;
             debugPort.print("Test started.");
 
         } else if (incoming == 'A') {            //Write to ADE Register

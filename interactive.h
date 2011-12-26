@@ -13,10 +13,10 @@ void testHardware();
 void softSetup();
 
 //Hacked up test
-#define RARAASIZE 300
+#define RARAASIZE 450
 extern int32_t switchSec;
 extern int32_t testIdx;
-extern int32_t EEMEM RARAASave[RARAASIZE][3];
+extern int32_t EEMEM RARAASave[RARAASIZE][2];
 extern int32_t EEMEM nRARAASave;
 
 void testCircuitPrint();
