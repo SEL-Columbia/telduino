@@ -300,7 +300,6 @@ void CLwaitForZX10VIRMS()
 	_retCode = SUCCESS;
 	ADEwaitForInterrupt(ZX0,waitTime);
 	dbg.println(RCstr(_retCode));
-	//CsetOn(&cCal,false);
 	ADEgetRegister(VRMS,&Vckt);
 	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return;}
 

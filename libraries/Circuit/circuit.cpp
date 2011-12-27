@@ -234,8 +234,8 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
 /** 
 	Attempts to reestablish communications with the ADE.
 	1) The SS pin is strobed. 
-	2) Then the ADE is reset. 
-	3) Finally the ADE is reprogrammed.
+	2) TODO Then the ADE is reset. 
+	3) TODO Finally the ADE is reprogrammed.
 	@returns true if a communication was successful.
 */
 int8_t CrestoreCommunications(Circuit *c)

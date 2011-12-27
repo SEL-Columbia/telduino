@@ -29,7 +29,7 @@
 #include <avr/pgmspace.h>
 #include <stdio.h>
 
-#include "WConstants.h"
+#include "wiring.h"
 #include "wiring_private.h"
 
 volatile static voidFuncPtr intFunc[EXTERNAL_NUM_INTERRUPTS];

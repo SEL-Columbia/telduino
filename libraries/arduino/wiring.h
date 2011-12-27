@@ -27,7 +27,6 @@
 
 #include <avr/io.h>
 #include <stdlib.h>
-#include "binary.h"
 
 #ifdef __cplusplus
 extern "C"{

@@ -1,11 +1,23 @@
-OVERALL TODO:
-- Create passthrough routines for SPI and Modem control
+OVERALL TODO FOR HAITI:
+- Get Circuit up and running with new parameters and outputing reasonable results
+- Get calibration and saving routine working
+- Make Circuit into a real objects
+- Regularize the interactive mode grammer.
+- Add functionality to interactive mode 
+-- to set a reporting period for metering data.
+-- to set number of actual circuits
+-- Meter all as in clear the LINCYC interrupts for all of them and then wait for results
+-- set PMAX
+- Add a metering mode that has the following components
+-- Regular reportinging accord to the above configuration
+-- Switching
+-- Immediate switch-off for violating PMAX
+-- Go to interactive mode
+- Add an escape character or set of characters
 - Fill in values for switch and select mappings for all dbs
 - Power offset fix
 - Active power isn't working
-- Write code to lightup mount light
-- Verify microsecond timing for SPI
-- SD_raw_init is not working, not sure why.
+
 
 Cleanup
 - make initialization naming conventions sane
@@ -17,6 +29,8 @@ ReturnValues
 - Change the Demux and gsm return codes.
 
 SD
+- SD_raw_init is not working, not sure why.
+- Write code to lightup mount light
 - Make use of the available and write protect functionality in the RR library
 - For reliabilty the SD card should be run at a lower speed in the Khz range.
 - The raw library seems to assume availability of the SD card. It is imperative that we make sure that the Ronald Reigel library doesn't cache writes and try to write when we are communicating with the ADE.

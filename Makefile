@@ -13,14 +13,14 @@
 # $*
 
 
-#select the file to run telduino is main, telduino_test is test routines
+#select the file to run. telduino is main, telduino_test is test routines
 PROJECT = telduino
+PROGRAMMER = dragon_jtag #dragon_isp
 #PROJECT = telduino_test
 MCU = atmega1280
 CLOCK = 8000000L
 GCCFLAGS = -c -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Ilibraries
 G++FLAGS = -c -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
-PROGRAMMER = dragon_jtag #dragon_isp
 
 
 #-Wa,aln=foo.s
