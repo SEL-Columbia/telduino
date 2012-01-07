@@ -27,19 +27,22 @@ typedef struct {
 	int8_t chIos;
 	int8_t chIgainExp;
 	int16_t IRMSoffset;
-	float IRMSslope;	//Converts measured units into Amps
+	float IRMSslope;	// Converts measured units into Amps
 
 	/** 
 	  Voltage parameters
 	  See ADE documentation for valid ranges.
 	*/
 	int8_t chVos;
+    int8_t chVgainExp; // ADE page 16
+    int8_t chVscale;
 	int16_t VRMSoffset;
-	float VRMSslope;	//Converts measured units into Volts
+	float VRMSslope;	// Converts measured units into Volts
 
 	/**
 	  Power parameters
 	*/
+    int8_t phcal;
 	float VAEslope;	
 	int32_t VAoffset;	
 	float Wslope;		

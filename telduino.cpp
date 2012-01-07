@@ -44,17 +44,15 @@ void setup()
     setClockPrescaler(CLOCK_PRESCALER_2);    
 
     //Start up serial ports
-    debugPort.begin(DEBUG_BAUD_RATE);
-    telitPort.begin(TELIT_BAUD_RATE);
-    sheevaPort.begin(SHEEVA_BAUD_RATE);
+    dbg.begin(DEBUG_BAUD_RATE);
+    mdm.begin(TELIT_BAUD_RATE);
+    cpu.begin(SHEEVA_BAUD_RATE);
 
     //Write startup message to debug port
-    debugPort.write("\r\n\r\ntelduino power up\r\n");
-    debugPort.write("last compilation\r\n");
-    debugPort.write(__DATE__);
-    debugPort.println();
-    debugPort.write(__TIME__);
-    debugPort.println();
+    dbg.println("\r\n\r\ntelduino power up");
+    dbg.println("last compilation");
+    dbg.println(__DATE__);
+    dbg.println(__TIME__);
 
     initDbgTel();				//Blink leds
     initSelect();				//Select Circuit
@@ -71,7 +69,8 @@ void setup()
 
 
 void loop()
-{    
+{   
+    // TODO switch between modes of operation
     parseBerkeley();
 }
 

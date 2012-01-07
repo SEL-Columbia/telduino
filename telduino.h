@@ -6,10 +6,12 @@
 #include "Select/select.h"
 #include "arduino/WProgram.h"
 
-//definition of serial ports for debug, sheeva communication, and telit communicatio
-#define debugPort Serial
-#define sheevaPort Serial2
-#define telitPort Serial3
+/** Definition of serial ports for debug, cpu communication, and telit communication
+ *  @warning ensure consistence with the print, printD, printC, macros.
+*/
+#define dbg Serial
+#define cpu Serial2
+#define mdm Serial3
 
 #define DEBUG_BAUD_RATE 9600
 #define SHEEVA_BAUD_RATE 9600

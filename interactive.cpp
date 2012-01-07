@@ -55,15 +55,15 @@ void testCircuitPrint()
     eeprom_read_block(&records,&nRARAASave,sizeof(records));
 
     //Iterate over these records and print in CSV format
-    debugPort.println();
-    debugPort.print("ON: RAENERGY,OFF:RAENERGY");
-    debugPort.println();
+    dbg.println();
+    dbg.print("ON: RAENERGY,OFF:RAENERGY");
+    dbg.println();
     for (int i = records-1; i >0 ; i--) {
         eeprom_read_block(RARAA,&RARAASave[i],sizeof(RARAA));
-        debugPort.print(RARAA[0]);
-        debugPort.print(",");
-        debugPort.print(RARAA[1]);
-        debugPort.println();
+        dbg.print(RARAA[0]);
+        dbg.print(",");
+        dbg.print(RARAA[1]);
+        dbg.println();
     }
 }
 
@@ -119,20 +119,20 @@ int8_t blinkComm()
  */
 void parseBerkeley() 
 {
-    debugPort.println();
-    debugPort.print(_testChannel,DEC);
-    debugPort.print(" $");
-    while (debugPort.available() == 0 && testIdx == 0) {
+    dbg.println();
+    dbg.print(_testChannel,DEC);
+    dbg.print(" $");
+    while (dbg.available() == 0 && testIdx == 0) {
         setDbgLeds(GPAT);
         for (int i=0; i < 100; i++) {
-            if (debugPort.available() != 0) {
+            if (dbg.available() != 0) {
                 break;
             }
             delay(10);
         }
         setDbgLeds(0);
         for (int i=0; i < 100; i++) {
-            if (debugPort.available() != 0) {
+            if (dbg.available() != 0) {
                 break;
             }
             delay(10);
@@ -178,9 +178,9 @@ void parseBerkeley()
             RARAA[1] = -1000;
         }
         
-        debugPort.print(RARAA[0]);
-        debugPort.print(",");
-        debugPort.print(RARAA[1]);
+        dbg.print(RARAA[0]);
+        dbg.print(",");
+        dbg.print(RARAA[1]);
 
         //Write to EEPROM
         eeprom_update_block(RARAA,&RARAASave[testIdx],sizeof(RARAA));
@@ -191,7 +191,7 @@ void parseBerkeley()
         if (time > 1000*switchSec) {
             remaining = 0;
         } else {
-            debugPort.println();
+            dbg.println();
         }
 
         const int rate = 6000;
@@ -213,49 +213,49 @@ void parseBerkeley()
         delay(remaining); 
 
         if (testIdx == 1){
-            debugPort.println();
-            debugPort.print("Testing Complete.");
-            debugPort.print("Switchings:");
-            debugPort.print(switchings);
-            debugPort.println();
+            dbg.println();
+            dbg.print("Testing Complete.");
+            dbg.print("Switchings:");
+            dbg.print(switchings);
+            dbg.println();
         }
         testIdx -= 1;
     }
-    // Look for incoming single character command on debugPort line
+    // Look for incoming single character command on dbg line
     // Capital letters denote write operations and lower case letters are reads
-    if (debugPort.available() > 0) {
-        char incoming = debugPort.read(); 
+    if (dbg.available() > 0) {
+        char incoming = dbg.read(); 
 
         if (incoming == 'z') {
             testCircuitPrint();
         } else if (incoming == 'Z') {
             int32_t zeros[2] = {0};
             if (testIdx) {
-                debugPort.print("Test Canceled");
+                dbg.print("Test Canceled");
                 testIdx = 0;
                 return;
             }
 
             int32_t runMin = 0;
-            debugPort.println();
-            debugPort.print("Minutes to run test $");
-            CLgetInt(&debugPort,&runMin);
-            debugPort.println();
-            debugPort.print("Seconds delay between each experiment. $");
-            CLgetInt(&debugPort,&switchSec);
+            dbg.println();
+            dbg.print("Minutes to run test $");
+            CLgetInt(&dbg,&runMin);
+            dbg.println();
+            dbg.print("Seconds delay between each experiment. $");
+            CLgetInt(&dbg,&switchSec);
             if (switchSec < 0) {
                 switchSec = 0;
             }
             switchSec += 120/60;
             testIdx = runMin*60/switchSec;
 
-            debugPort.println();
-            debugPort.print("Total number of experiments is: ");
-            debugPort.print(testIdx);
-            debugPort.println();
+            dbg.println();
+            dbg.print("Total number of experiments is: ");
+            dbg.print(testIdx);
+            dbg.println();
             if (testIdx > RARAASIZE) {
-                debugPort.print("Too many experiments to run. Make test shorter or test with a longer period between experiments.");
-                debugPort.println();
+                dbg.print("Too many experiments to run. Make test shorter or test with a longer period between experiments.");
+                dbg.println();
                 testIdx = 0;
                 return;
             }
@@ -279,58 +279,58 @@ void parseBerkeley()
                 eeprom_update_block(zeros,RARAASave,sizeof(RARAASave[0]));
             }
             switchings = 0;
-            debugPort.print("Test started.");
+            dbg.print("Test started.");
 
         } else if (incoming == 'A') {            //Write to ADE Register
             char buff[16] = {0};
-            debugPort.print("Register to write $");
-            CLgetString(&debugPort,buff,sizeof(buff));
-            debugPort.println();
+            dbg.print("Register to write $");
+            CLgetString(&dbg,buff,sizeof(buff));
+            dbg.println();
 
             int32_t regData = 0;
             for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
                 if (strcmp(regList[i]->name,buff) == 0){
                     CSselectDevice(_testChannel);
-                    debugPort.print("Current regData:");
+                    dbg.print("Current regData:");
                     ADEgetRegister(*regList[i],&regData);
-                    debugPort.print(RCstr(_retCode));
-                    debugPort.print(":0x");
-                    debugPort.print(regData,HEX);
-                    debugPort.print(":");
-                    debugPort.println(regData,BIN);
+                    dbg.print(RCstr(_retCode));
+                    dbg.print(":0x");
+                    dbg.print(regData,HEX);
+                    dbg.print(":");
+                    dbg.println(regData,BIN);
 
-                    debugPort.print("Enter new regData:");
-                    if(CLgetInt(&debugPort,&regData) == CANCELED) break;
-                    debugPort.println();
+                    dbg.print("Enter new regData:");
+                    if(CLgetInt(&dbg,&regData) == CANCELED) break;
+                    dbg.println();
                     ADEsetRegister(*regList[i],&regData);
-                    debugPort.print(RCstr(_retCode));
-                    debugPort.print(":0x");
-                    debugPort.print(regData,HEX);
-                    debugPort.print(":");
-                    debugPort.println(regData,DEC);
+                    dbg.print(RCstr(_retCode));
+                    dbg.print(":0x");
+                    dbg.print(regData,HEX);
+                    dbg.print(":");
+                    dbg.println(regData,DEC);
                     CSselectDevice(DEVDISABLE);
                     break;
                 } 
             }
         } else if (incoming == 'a') {        //Read ADE reg
             char buff[16] = {0};
-            debugPort.print("Enter name of register to read:");
-            CLgetString(&debugPort,buff,sizeof(buff));
-            debugPort.println();
+            dbg.print("Enter name of register to read:");
+            CLgetString(&dbg,buff,sizeof(buff));
+            dbg.println();
 
-            //debugPort.print("(int32_t)(&),HEX:");
-            //debugPort.println((int32_t)(&WAVEFORM),HEX);
+            //dbg.print("(int32_t)(&),HEX:");
+            //dbg.println((int32_t)(&WAVEFORM),HEX);
             int32_t regData = 0;
             for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
                 if (strcmp(regList[i]->name,buff) == 0){
                     CSselectDevice(_testChannel);
                     ADEgetRegister(*regList[i],&regData);
-                    debugPort.print("regData:");
-                    debugPort.print(RCstr(_retCode));
-                    debugPort.print(":0x");
-                    debugPort.print(regData,HEX);
-                    debugPort.print(":");
-                    debugPort.println(regData,DEC);
+                    dbg.print("regData:");
+                    dbg.print(RCstr(_retCode));
+                    dbg.print(":0x");
+                    dbg.print(regData,HEX);
+                    dbg.print(":");
+                    dbg.println(regData,DEC);
                     CSselectDevice(DEVDISABLE);
                     break;
                 } 
@@ -352,7 +352,7 @@ void parseBerkeley()
             testSwitch(_testChannel);
         } else if (incoming == 'R') {        //Hard Reset using watchdog timer
             wdt_enable((WDTO_4S));            
-           debugPort.println("resetting in 4s.");
+           dbg.println("resetting in 4s.");
         } else if (incoming == 'O') {        //soft Reset using the Setup routine
             softSetup();                    //Set calibration values for ADE
         } else if (incoming == 'o') {        //Read channel using Achintya's code
@@ -361,62 +361,62 @@ void parseBerkeley()
             for (int i = 0; i < NCIRCUITS; i++) {
                 Circuit *c = &(ckts[i]);
                 Cprogram(c);
-                debugPort.print(i); 
-                debugPort.print(':'); 
-                debugPort.print(RCstr(_retCode));
+                dbg.print(i); 
+                dbg.print(':'); 
+                dbg.print(RCstr(_retCode));
                 if (i%4 != 3) {
-                    debugPort.print('\t');
+                    dbg.print('\t');
                 } else {
-                    debugPort.println();
+                    dbg.println();
                 }
             }
-            debugPort.println();
+            dbg.println();
         } else if(incoming == 'p') {        //Measure circuit values and print
             Circuit *c = &(ckts[_testChannel]);
             Cmeasure(c);
-            debugPort.println(RCstr(_retCode));
-            CprintMeas(&debugPort,c);
-            Cprint(&debugPort,c);
-            debugPort.println();
+            dbg.println(RCstr(_retCode));
+            CprintMeas(&dbg,c);
+            Cprint(&dbg,c);
+            dbg.println();
         } else if (incoming == 'L') {        //Run calibration routine on channel
             Circuit *c = &(ckts[_testChannel]);
             calibrateCircuit(c);
-            //debugPort.println(RCstr(_retCode));
+            //dbg.println(RCstr(_retCode));
         } else if (incoming == 'D') {		//Initialize ckts[] to safe defaults
             for (int i = 0; i < NCIRCUITS; i++) {
                 Circuit *c = &ckts[i];
                 CsetDefaults(c,i);
             }
-            debugPort.println("Defaults set. Don't forget to program! ('P')");
+            dbg.println("Defaults set. Don't forget to program! ('P')");
         } else if (incoming == 'E') {        //Save data in ckts[] to EEPROM
-            debugPort.println("Saving to EEPROM.");
+            dbg.println("Saving to EEPROM.");
             for (int i =0; i < NCIRCUITS; i++) {
                 Csave(&ckts[i],&cktsSave[i]);
             }
-            debugPort.println(COMPLETESTR);
+            dbg.println(COMPLETESTR);
         } else if (incoming=='e') {           //Load circuit data from EEPROM
-            debugPort.println("Loading from EEPROM.");
+            dbg.println("Loading from EEPROM.");
             for (int i =0; i < NCIRCUITS; i++) {
                 Cload(&ckts[i],&cktsSave[i]);
             }
-            debugPort.println(COMPLETESTR);
+            dbg.println(COMPLETESTR);
         } else if (incoming=='w') {            //Wait for interrupt specified by interrupt mask
             int32_t mask = 0;
             char buff[10] = {0};
-            debugPort.println();
-            debugPort.println("Available interrupt masks:");
+            dbg.println();
+            dbg.println("Available interrupt masks:");
             for (int i =0; i < intListLen; i++){
-                debugPort.print( intList[i]);
-                debugPort.print(" ");
+                dbg.print( intList[i]);
+                dbg.print(" ");
             }
-            debugPort.println();
-            debugPort.print("Enter interrupt mask name or \"mask\" "
+            dbg.println();
+            dbg.print("Enter interrupt mask name or \"mask\" "
                     "to enter a mask manually. " 
                     "Will wait for 4sec for interrupt to fire. $");
-            CLgetString(&debugPort,buff,sizeof(buff));
+            CLgetString(&dbg,buff,sizeof(buff));
             if (!strcmp(buff, "mask")) {
-                debugPort.print("Enter interrupt mask as a number. $");
-                CLgetInt(&debugPort,&mask);
+                dbg.print("Enter interrupt mask as a number. $");
+                CLgetInt(&dbg,&mask);
             } else {
                 mask=1;
                 for (int i =0; i < intListLen; i++){
@@ -426,40 +426,40 @@ void parseBerkeley()
                     mask <<= 1;
                 }
             }
-            debugPort.println();
-            //debugPort.print("(int32_t)(&),HEX:");
-            //debugPort.println((int32_t)(&WAVEFORM),HEX);
+            dbg.println();
+            //dbg.print("(int32_t)(&),HEX:");
+            //dbg.println((int32_t)(&WAVEFORM),HEX);
             CSselectDevice(_testChannel);
             ADEwaitForInterrupt((int16_t)mask,4000);
-            debugPort.println(RCstr(_retCode));
+            dbg.println(RCstr(_retCode));
             CSselectDevice(DEVDISABLE);
         } else if (incoming == 'W')     {
             CSselectDevice(_testChannel);
             int32_t regData;
             for (int i =0; i < 80; i++) {
                 ADEgetRegister(WAVEFORM,&regData);
-                debugPort.print(regData);
-                debugPort.print(" ");
+                dbg.print(regData);
+                dbg.print(" ");
             }
             CSselectDevice(DEVDISABLE);
         }
         else {                                //Indicate received character
             int waiting = 2048;                //Used to eat up junk that follows
-            debugPort.println();
-            debugPort.print("Not_Recognized:");
-            debugPort.print(incoming,BIN);
-            debugPort.print(":'");
-            debugPort.print(incoming);
-            debugPort.println("'");
-            while (debugPort.available() || waiting > 0) {
-                if (debugPort.available()) {
-                    incoming = debugPort.read();
-                    debugPort.println();
-                    debugPort.print("Not_Recognized:");
-                    debugPort.print(incoming,BIN);
-                    debugPort.print(":'");
-                    debugPort.print(incoming);
-                    debugPort.println("'");
+            dbg.println();
+            dbg.print("Not_Recognized:");
+            dbg.print(incoming,BIN);
+            dbg.print(":'");
+            dbg.print(incoming);
+            dbg.println("'");
+            while (dbg.available() || waiting > 0) {
+                if (dbg.available()) {
+                    incoming = dbg.read();
+                    dbg.println();
+                    dbg.print("Not_Recognized:");
+                    dbg.print(incoming,BIN);
+                    dbg.print(":'");
+                    dbg.print(incoming);
+                    dbg.println("'");
                 } else     waiting--;
             }
         }
@@ -475,72 +475,72 @@ void softSetup()
 {
     int32_t data = 0;
 
-    debugPort.print("\n\n\rSetting Channel:");
-    debugPort.println(_testChannel,DEC);
+    dbg.print("\n\n\rSetting Channel:");
+    dbg.println(_testChannel,DEC);
 
     CSselectDevice(_testChannel); //start SPI comm with the test device channel
 
     //Disable Digital Integrator for _testChannel
     int8_t ch1os=0,enableBit=0;
-    debugPort.print("set CH1OS:");
+    dbg.print("set CH1OS:");
     ADEsetCHXOS(1,&enableBit,&ch1os);
-    debugPort.println(RCstr(_retCode));
-    debugPort.print("get CH1OS:");
+    dbg.println(RCstr(_retCode));
+    dbg.print("get CH1OS:");
     ADEgetCHXOS(1,&enableBit,&ch1os);
-    debugPort.println(RCstr(_retCode));
-    debugPort.print("enabled: ");
-    debugPort.println(enableBit,BIN);
-    debugPort.print("offset: ");
-    debugPort.println(ch1os);
+    dbg.println(RCstr(_retCode));
+    dbg.print("enabled: ");
+    dbg.println(enableBit,BIN);
+    dbg.print("offset: ");
+    dbg.println(ch1os);
 
     //set the gain to 16 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
     int32_t gainVal = 0x4;
-    debugPort.print("BIN GAIN (set,get):");
+    dbg.print("BIN GAIN (set,get):");
     ADEsetRegister(GAIN,&gainVal);
-    debugPort.print(RCstr(_retCode));
-    debugPort.print(",");
+    dbg.print(RCstr(_retCode));
+    dbg.print(",");
     ADEgetRegister(GAIN,&gainVal);
-    debugPort.print(RCstr(_retCode));
-    debugPort.print(":");
-    debugPort.println(gainVal,BIN);
+    dbg.print(RCstr(_retCode));
+    dbg.print(":");
+    dbg.println(gainVal,BIN);
 
     //NOTE*****  I am using zeros right now because we are going to up the gain and see if this is the same
     //Set the IRMSOS to 0d444 or 0x01BC. This is the measured offset value.
     int32_t iRmsOsVal = 0x0;//0x01BC;
     ADEsetRegister(IRMSOS,&iRmsOsVal);
     ADEgetRegister(IRMSOS,&iRmsOsVal);
-    debugPort.print("hex IRMSOS:");
-    debugPort.println(iRmsOsVal, HEX);
+    dbg.print("hex IRMSOS:");
+    dbg.println(iRmsOsVal, HEX);
 
     //Set the VRMSOS to -0d549. This is the measured offset value.
     int32_t vRmsOsVal = 0x0;//0x07FF;//F800
     ADEsetRegister(VRMSOS,&vRmsOsVal);
     ADEgetRegister(VRMSOS,&vRmsOsVal);
-    debugPort.print("hex VRMSOS read from register:");
-    debugPort.println(vRmsOsVal, HEX);
+    dbg.print("hex VRMSOS read from register:");
+    dbg.println(vRmsOsVal, HEX);
 
     //set the number of cycles to wait before taking a reading
     int32_t linecycVal = 200;
     ADEsetRegister(LINECYC,&linecycVal);
     ADEgetRegister(LINECYC,&linecycVal);
-    debugPort.print("int linecycVal:");
-    debugPort.println(linecycVal);
+    dbg.print("int linecycVal:");
+    dbg.println(linecycVal);
 
     //read and set the CYCMODE bit on the MODE register
     int32_t modeReg = 0;
     ADEgetRegister(MODE,&modeReg);
-    debugPort.print("bin MODE register before setting CYCMODE:");
-    debugPort.println(modeReg, BIN);
+    dbg.print("bin MODE register before setting CYCMODE:");
+    dbg.println(modeReg, BIN);
     modeReg |= CYCMODE;     //set the line cycle accumulation mode bit
     ADEsetRegister(MODE,&modeReg);
     ADEgetRegister(MODE,&modeReg);
-    debugPort.print("bin MODE register after setting CYCMODE:");
-    debugPort.println(modeReg, BIN);
+    dbg.print("bin MODE register after setting CYCMODE:");
+    dbg.println(modeReg, BIN);
 
     //reset the Interrupt status register
     ADEgetRegister(RSTSTATUS, &data);
-    debugPort.print("bin Interrupt Status Register:");
-    debugPort.println(data, BIN);
+    dbg.print("bin Interrupt Status Register:");
+    dbg.println(data, BIN);
 
     CSselectDevice(DEVDISABLE); //end SPI comm with the selected device    
 }
@@ -565,63 +565,63 @@ void displayChannelInfo()
     ADEgetRegister(RSTSTATUS, &interruptStatus);
 
     if (0 /*loopCounter%4096*/ ){
-        debugPort.print("bin Interrupt Status Register:");
-        debugPort.println(interruptStatus, BIN);
+        dbg.print("bin Interrupt Status Register:");
+        dbg.println(interruptStatus, BIN);
     }   //endif
 
     //if the CYCEND bit of the Interrupt Status Registers is flagged
-    debugPort.print("\n\n\r");
-    debugPort.print("Waiting for next cycle: ");
+    dbg.print("\n\n\r");
+    dbg.print("Waiting for next cycle: ");
     ADEwaitForInterrupt(CYCEND,4000);
-    debugPort.println(RCstr(_retCode));
+    dbg.println(RCstr(_retCode));
 
     ifsuccess(_retCode) {
         setDbgLeds(GYRPAT);
 
-        debugPort.print("_testChannel:");
-        debugPort.println(_testChannel,DEC);
+        dbg.print("_testChannel:");
+        dbg.println(_testChannel,DEC);
 
-        debugPort.print("bin Interrupt Status Register:");
-        debugPort.println(interruptStatus, BIN);
+        dbg.print("bin Interrupt Status Register:");
+        dbg.println(interruptStatus, BIN);
 
         //IRMS SECTION
-        debugPort.print("IRMS:");
+        dbg.print("IRMS:");
         ADEgetRegister(IRMS,&val);
-        debugPort.println( RCstr(_retCode) );
-        debugPort.print("Counts:");
-        debugPort.println(val);
-        debugPort.print("mAmps:");
+        dbg.println( RCstr(_retCode) );
+        dbg.print("Counts:");
+        dbg.println(val);
+        dbg.print("mAmps:");
         iRMS = val/iRMSSlope;//data*1000/40172/4;
-        debugPort.println(iRMS);
+        dbg.println(iRMS);
 
         //VRMS SECTION
-        debugPort.print("VRMS:");
+        dbg.print("VRMS:");
         ADEgetRegister(VRMS,&val);
-        debugPort.println(RCstr(_retCode));
-        debugPort.print("Counts:");
-        debugPort.println(val);
+        dbg.println(RCstr(_retCode));
+        dbg.print("Counts:");
+        dbg.println(val);
         vRMS = val/vRMSSlope; //old value:9142
-        debugPort.print("Volts:");
-        debugPort.println(vRMS);
+        dbg.print("Volts:");
+        dbg.println(vRMS);
 
 
         //APPARENT ENERGY SECTION
         ADEgetRegister(LVAENERGY,&val);
-        debugPort.print("int Line Cycle Apparent Energy after 200 half-cycles:");
-        debugPort.println(val);
+        dbg.print("int Line Cycle Apparent Energy after 200 half-cycles:");
+        dbg.println(val);
         energyJoules = val*2014/10000;
-        debugPort.print("Apparent Energy in Joules over the past 2 seconds:");
-        debugPort.println(energyJoules);
-        debugPort.print("Calculated apparent power usage:");
-        debugPort.println(energyJoules/2);
+        dbg.print("Apparent Energy in Joules over the past 2 seconds:");
+        dbg.println(energyJoules);
+        dbg.print("Calculated apparent power usage:");
+        dbg.println(energyJoules/2);
 
         //ACTIVE ENERGY SECTION
         ADEgetRegister(LAENERGY,&val);
         ifsuccess(_retCode) {
-            debugPort.print("int Line Cycle Active Energy after 200 half-cycles:");
-            debugPort.println(val);
+            dbg.print("int Line Cycle Active Energy after 200 half-cycles:");
+            dbg.println(val);
         } else {
-            debugPort.println("Line Cycle Active Energy read failed.");
+            dbg.println("Line Cycle Active Energy read failed.");
         }// end ifsuccess
     } //end ifsuccess
 
@@ -632,15 +632,15 @@ int8_t getChannelID()
 {
     int32_t ID = -1;
     while (ID == -1) {
-        debugPort.print("Waiting for ID (0-20):");
-        ifnsuccess(CLgetInt(&debugPort,&ID)) ID = -1;
-        debugPort.println();
+        dbg.print("Waiting for ID (0-20):");
+        ifnsuccess(CLgetInt(&dbg,&ID)) ID = -1;
+        dbg.println();
         if (ID < 0 || 20 < ID ) {
-            debugPort.print("Incorrect ID:");
-            debugPort.println(ID,DEC);
+            dbg.print("Incorrect ID:");
+            dbg.println(ID,DEC);
             ID = -1;
         } else {
-            debugPort.println((int8_t)ID,DEC);
+            dbg.println((int8_t)ID,DEC);
         }
     }
     return (int8_t)ID;
@@ -673,7 +673,7 @@ void testHardware()
     int8_t enabledC[NSWITCHES] = {0};
     int32_t val;
 
-    debugPort.print("\n\rTest switches\n\r");
+    dbg.print("\n\rTest switches\n\r");
 
     SWallOn();
     delay(1000);
@@ -693,17 +693,17 @@ void testHardware()
     for (int i = 0; i < NCIRCUITS; i++) {
         CSselectDevice(i);
 
-        debugPort.print("Can communicate with channel ");
-        debugPort.print(i,DEC);
-        debugPort.print(": ");
+        dbg.print("Can communicate with channel ");
+        dbg.print(i,DEC);
+        dbg.print(": ");
 
         ADEgetRegister(DIEREV,&val);
         ifnsuccess(_retCode) {
-            debugPort.print("NO-");
-            debugPort.println(RCstr(_retCode));
+            dbg.print("NO-");
+            dbg.println(RCstr(_retCode));
         } else {
-            debugPort.print("YES-DIEREV:");
-            debugPort.println(val,DEC);
+            dbg.print("YES-DIEREV:");
+            dbg.println(val,DEC);
         }
         CSselectDevice(DEVDISABLE);
     }
@@ -714,16 +714,16 @@ void testHardware()
  */
 void displayEnabled(const int8_t enabledC[NSWITCHES])
 {
-    debugPort.println("Enabled Channels:");
+    dbg.println("Enabled Channels:");
     for (int i =0; i < NSWITCHES; i++) {
-        debugPort.print(i);
-        debugPort.print(":");
-        debugPort.print(enabledC[i],DEC);
+        dbg.print(i);
+        dbg.print(":");
+        dbg.print(enabledC[i],DEC);
         if (i%4 == 3) {
-            debugPort.println();
+            dbg.println();
         } else {
-            debugPort.print('\t');
+            dbg.print('\t');
         }
     }
-    debugPort.println();
+    dbg.println();
 }
