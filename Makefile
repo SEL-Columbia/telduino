@@ -13,7 +13,7 @@
 # $*
 
 
-#select the file to run. telduino is main, telduino_test is test routines
+#select the file to run. telduino is main, telduino_test is going to be the test routines
 PROJECT = telduino
 PROGRAMMER = dragon_jtag #dragon_isp
 #PROJECT = telduino_test
@@ -74,7 +74,8 @@ program: $(PROJECT).hex
 
 programfuses: 
 #	low fuses: set external *FULLSWING* oscillator; startup time=16K clk + 0 ms; BOD enabled; divide clock by 8 initially
-	avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -U lfuse:w:0x57:m -U hfuse:w:0x91:m -U efuse:w:0xf5:m -B10
+#	high fuses: enabled on chip debugging, jtag enabled, on reset start at 0000
+	avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -U lfuse:w:0x57:m -U hfuse:w:0x11:m -U efuse:w:0xf5:m -B10
 
 readfuses:
 	@avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -U hfuse:r:high.txt:r -U lfuse:r:low.txt:r -U efuse:r:ext.txt:r
