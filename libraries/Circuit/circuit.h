@@ -15,10 +15,12 @@ typedef struct {
 	  @warning halfCyclesSample/frequency should be an integer. HalfCyclesSample must be less than 1400.
 	  */
 	int8_t circuitID;
+
 	/** 
 	  Measurement parameters
 	*/
 	uint16_t halfCyclesSample;
+    int8_t phcal;
 
 	/** 
 	  Current parameters
@@ -42,7 +44,6 @@ typedef struct {
 	/**
 	  Power parameters
 	*/
-    int8_t phcal;
 	float VAEslope;	
 	int32_t VAoffset;	
 	float Wslope;		
@@ -54,6 +55,7 @@ typedef struct {
 	int16_t sagDurationCycles;
 	int16_t minVSag;
 	int8_t expectedFrequency; 
+    int32_t VAPowerMax;
 
 	/**
 	  Measured variables

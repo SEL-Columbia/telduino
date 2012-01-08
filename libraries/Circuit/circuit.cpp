@@ -189,6 +189,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->VRMSslope = .2199;//4700;
     c->sagDurationCycles = 10;
     c->minVSag = 100;
+    c->VAPowerMax = 2000;
 
     // Power Parameters
     c->phcal = 11; //Ox0B
