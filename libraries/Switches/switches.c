@@ -11,7 +11,7 @@ static const int8_t mapSWtoPinOFF[] = {55,54};
   The workhorse of the Switches library. This function along with 
   _SWsetSwitches(), SWinit, and _enabledC is used to implement the actual switching.
 */
-inline void _SWset(int8_t sw, int8_t on) 
+void _SWset(int8_t sw, int8_t on) 
 {
     _enabledC[sw] = on;
     int8_t pinOn = mapSWtoPinON[sw];
@@ -32,7 +32,7 @@ inline void _SWset(int8_t sw, int8_t on)
   If the switch is controlled by shift registers, that might not be
   optimal.
 */
-inline void _SWsetSwitches() 
+void _SWsetSwitches() 
 {
     for (int8_t i=0; i < NSWITCHES; i++) {
         _SWset(i,_enabledC[i]);

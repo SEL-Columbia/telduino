@@ -24,14 +24,15 @@ G++FLAGS = -c -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -
 
 
 #-Wa,aln=foo.s
-#GCCFLAGS = -c -g -Os -w -std=c99 -Ilibraries
-#G++FLAGS = -c -g -Os -w -fno-exceptions -Ilibraries
+#No Codesize optimizations
+#GCCFLAGS = -c -g -w -std=c99 -Ilibraries
+#G++FLAGS = -c -g -w -fno-exceptions -Ilibraries
 VPATH = libraries/arduino \
     libraries/SPI libraries/DbgTel libraries/Select \
     libraries/ADE7753 libraries/Switches \
 	libraries/ReturnCode \
 	libraries/Circuit libraries/sd-reader libraries/Statistics
-#libraries/SDRaw 
+#	libraries/SDRaw 
 #libraries/GSM 
 
 OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \

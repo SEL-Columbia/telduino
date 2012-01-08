@@ -16,52 +16,52 @@
 
 #include "telduino.h"
 
-//Helper functions
+// Helper functions
 #include "prescaler.h"
 #include "arduino/WProgram.h"
 
-//Metering Hardware
+// Metering Hardware
 #include "SPI/SPI.h"
 #include "DbgTel/DbgTel.h"
 #include "Select/select.h"
 #include "sd-reader/sd_raw.h"
 #include "Switches/switches.h"
 
-//Metering logic
+// Metering logic
 #include "Circuit/circuit.h"
 
-//Meter modes
+// Meter modes
 #include "interactive.h"
 
-//In memory and in EEPROM storage for circuit configuration
+// In memory and in EEPROM storage for circuit configuration
 Circuit ckts[NCIRCUITS];
 Circuit EEMEM cktsSave[NCIRCUITS];
 
 void setup()
 {
-    //prescale of 2 after startup prescale of 8. 
-    //This ensures that the atmega is running at 8 MHz assuming a 16Mhz clock.
+    // prescale of 2 after startup prescale of 8. 
+    // This ensures that the atmega is running at 8 MHz assuming a 16Mhz clock.
     setClockPrescaler(CLOCK_PRESCALER_2);    
 
-    //Start up serial ports
+    // Start up serial ports
     dbg.begin(DEBUG_BAUD_RATE);
     mdm.begin(TELIT_BAUD_RATE);
     cpu.begin(SHEEVA_BAUD_RATE);
 
-    //Write startup message to debug port
+    // Write startup message to debug port
     dbg.println("\r\n\r\ntelduino power up");
     dbg.println("last compilation");
     dbg.println(__DATE__);
     dbg.println(__TIME__);
 
-    initDbgTel();				//Blink leds
-    initSelect();				//Select Circuit
-    SWinit();                   //Switches
-    SPI.begin();				//SPI
-    //TODO sd_raw_init() is hanging
-    //sd_raw_init();			//SDCard
+    initDbgTel();				// Blink leds
+    initSelect();				// Select Circuit
+    SWinit();                   // Switches
+    SPI.begin();				// SPI
+    // TODO sd_raw_init() is hanging
+    // sd_raw_init();			//SDCard
 
-    //Load circuit data from EEPROM
+    // Load circuit data from EEPROM
     for (int i=0; i < NCIRCUITS; i++) {
         Cload(&ckts[i],&cktsSave[i]);
     }
