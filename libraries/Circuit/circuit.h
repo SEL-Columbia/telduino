@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 #include "arduino/HardwareSerial.h"
-#define MAINS 20
 
 static const uint32_t COMM	  = 0x00010000;
 
@@ -54,8 +53,9 @@ typedef struct {
 	*/
 	int16_t sagDurationCycles;
 	int16_t minVSag;
-	int8_t expectedFrequency; 
     int32_t VAPowerMax;
+    int32_t ipeakMax;
+    int32_t vpeakMax;
 
 	/**
 	  Measured variables
@@ -69,6 +69,8 @@ typedef struct {
 	uint16_t PF;			
 	int32_t VAEnergy;	//Apparent energy since last read
 	int32_t WEnergy;	//Active energy since last read
+    int32_t ipeak;
+    int32_t vpeak;
 	/**
 	  Status indicates if a safety fault was detected
 	  The first 16bits are directly from the ADE.

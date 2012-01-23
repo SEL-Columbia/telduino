@@ -13,6 +13,7 @@
 
 // TODO make switch wait time a parameter
 // TODO Have fault detection code check interrupts for sag detection and frequency variation
+// ipeak is RMS or what basically should I multiple by root2?
 
 int8_t _shouldReturn(Circuit *c) 
 {
@@ -89,6 +90,13 @@ void Cmeasure(Circuit *c)
         //Actve energy accumulated since last query
         ADEgetRegister(RAENERGY,&regData);              ERRCHECKRETURN(c);
         c->WEnergy = regData*c->VAEslope/1000;
+
+        //Current and Voltage Peaks
+        ADEgetRegister(RSTIPEAK,&regData);              ERRCHECKRETURN(c);
+        c->ipeak = regData*c->IRMSslope;
+
+        ADEgetRegister(RSTVPEAK,&regData);              ERRCHECKRETURN(c);
+        c->vpeak = regData*c->VRMSslope;
 
         //Power Factor PF
         if (c->VAEnergy != 0){ 
@@ -172,31 +180,37 @@ void Csave(Circuit *c, Circuit* addrEEPROM)
 void CsetDefaults(Circuit *c, int8_t circuitID) 
 {
     c->circuitID = circuitID;
-    c->halfCyclesSample = 120;
 
-    // Current Parameters
+    /** Measurement Parameters */
+    c->halfCyclesSample = 120;
+    c->phcal = 11; //Ox0B
+
+    /** Current Parameters  */
     c->chIint = false;//TODO true;
     c->chIos = 0;
     c->chIgainExp = 1;
     c->IRMSoffset = 0;//-2048;//0x01BC;
     c->IRMSslope = 1;//.0010;//164;
 
-    // Voltage Parameters
+    /** Voltage Parameters */
     c->chVos = 1;//15;
     c->chVgainExp = 4;
     c->chVscale = 0;
     c->VRMSoffset = 2047;//0x07FF;
     c->VRMSslope = .2199;//4700;
-    c->sagDurationCycles = 10;
-    c->minVSag = 100;
-    c->VAPowerMax = 2000;
 
     // Power Parameters
-    c->phcal = 11; //Ox0B
     c->VAEslope = 1;//34.2760;//2014/10000.0;
     c->VAoffset = 0;// TODO not used yet
     c->Wslope=1; // TODO not used yet
     c->Woffset=0;// TODO not used yet
+
+    /** Software Saftey Parameters */
+    c->sagDurationCycles = 10;
+    c->minVSag = 100;
+    c->VAPowerMax = 2000;
+    c->ipeakMax = 16000;
+    c->vpeakMax = 400;
 
     // Current and Voltage
     // Measured
@@ -208,6 +222,8 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->PF = 65534;
     c->VAEnergy = 0;
     c->WEnergy = 0;
+    c->ipeak = 1000;
+    c->vpeak = 240;
 
 }
 
@@ -232,25 +248,42 @@ void Cprint(HardwareSerial *ser, Circuit *c)
     ser->println(c->VRMSslope,4);
     ser->print("VAE slope&");
     ser->println(c->VAEslope,4);
-
 }
 
 void CprintMeas(HardwareSerial *ser, Circuit *c)
 {
-    ser->print("IRMS&");
-    ser->println(c->IRMS);
-    ser->print("VRMS&");
+    ser->print(c->circuitID);
+    ser->print(",");
+    ser->print(CisOn(c));
+    ser->print(",");
     ser->println(c->VRMS);
-    ser->print("VA&");
-    ser->println(c->VA);
-    ser->print("VAEnergy&");
-    ser->println(c->VAEnergy);
-    ser->print("WEnergy&");
-    ser->println(c->WEnergy);
-    ser->print("PF&");
-    ser->println(c->PF);
-    ser->print("periodus&");
-    ser->println(c->periodus);
+    ser->print(",");
+    ser->print(c->IRMS);
+    ser->print(",");
+    ser->print(c->vpeak);
+    ser->print(",");
+    ser->print(c->ipeak);
+    ser->print(",");
+    ser->print(c->periodus);
+    ser->print(",");
+    ser->print(c->VA);
+    ser->print(",");
+    ser->print(c->W);
+    ser->print(",");
+    ser->print(c->VAEnergy);
+    ser->print(",");
+    ser->print(c->WEnergy);
+    ser->print(",");
+    ser->print(c->PF);
+    ser->print(",");
+    // TODO VA ACCUM
+    ser->println(0);
+    ser->print(",");
+    // TODO W ACCUM
+    ser->print(0);
+    ser->print(",");
+    // TODO IMAX
+    ser->print(c->IRMS);
 }
 
 /** 

@@ -35,6 +35,7 @@
 
 #include "interactive.h"
 #include "telduino.h"
+#include "cfg.h"
 
 //For interactive mode
 int _testChannel = 1; //This is the input daughter board channel. This should only b
@@ -442,6 +443,13 @@ void parseBerkeley()
                 dbg.print(" ");
             }
             CSselectDevice(DEVDISABLE);
+        } else if (incoming == 'I') {
+            int32_t secs = 0;
+            ifsuccess(CLgetInt(&dbg,&secs)) {
+                if (secs < 32768 && secs >= 0) {
+                    reportInterval = secs;
+                }
+            }
         }
         else {                                //Indicate received character
             int waiting = 2048;                //Used to eat up junk that follows
