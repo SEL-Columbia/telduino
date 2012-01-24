@@ -68,8 +68,21 @@ void setup()
 void loop()
 {   
     if (mode == METERMODE) {
-
-        parseMeterMode("\r");
+        if (cpu.available()) {
+            char c = cpu.read();
+            if (buffCursor < (serBuffSize-1)) {
+                serBuff[buffCursor] = c;
+                if (c == '\r') {
+                    serBuff[buffCursor+1] = '\0';
+                    buffCursor = 0;
+                    parseMeterMode(serBuff);
+                }
+            } else {
+                //TODO handle overflow better
+                buffCursor = 0;
+            }
+        }
+        meterAll();
     } else {
         parseBerkeley();
     }

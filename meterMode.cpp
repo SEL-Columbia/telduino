@@ -2,6 +2,7 @@
 #include "cfg.h"
 #include "Circuit/circuit.h"
 
+long nextMeter = 0;
 const char *FMTSTRINGI = "%c %d %d\r";
 
 /** Command packet format (every packet has these fields)
@@ -71,7 +72,10 @@ void parseMeterMode(char *cmd) {
 
 void meterAll() {
     //Is it time?
-    //Resett all ADE LINCYCs
+    if (nextMeter <= 0) {
+        nextMeter = reportInterval;
+    }
+    //Reset all ADE LINCYCs
     //Print ckt value
     //Print out sequence values
     //Print out time stamp

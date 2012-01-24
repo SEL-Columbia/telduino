@@ -22,6 +22,9 @@
 
 
 #define MAINS 0
+#define serBuffSize 128
+extern int8_t buffCursor;
+extern char serBuff[serBuffSize];
 extern int16_t reportInterval;  /** How often to report in seconds */
 extern int8_t mode;             /** 0 emergency, 1 interactive, 2 meter */
 #define EMERGENCYMODE 0
