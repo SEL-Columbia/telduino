@@ -242,43 +242,41 @@ int8_t CLgetString(HardwareSerial *ser,char *buff, size_t bSize)
 }
 /** 
 	Gets a float from the user.
-	@returns retCode CANCELED if user cancels input, or SUCCESS.
+	@returns retCode CANCELED if user cancels input, FAILURE,or SUCCESS.
   */
 int8_t CLgetFloat(HardwareSerial *ser,float *f)
 {
 	char buff[32] = {'\0'};
-	do {
-		while(nsuccess(CLgetString(ser,buff,sizeof(buff)))) {
-			ser->println("Buffer overflow: command too long.");
-		}
-		if (sscanf(buff,"%f",f)) {
-			return SUCCESS;
-		}
-		if (!strcmp(buff,"cancel")) {
-			return CANCELED;
-		}
-	} while(true);
+    if (!CLgetString(ser,buff,sizeof(buff))) {
+        return FAILURE;
+    }
+    if (!strcmp(buff,"cancel")) {
+        return CANCELED;
+    }
+    if (sscanf(buff,"%f",f)) {
+        return SUCCESS;
+    }
+    return FAILURE;
 }
 /** 
 	Gets a long int from the user. Hex (e.g. 0xdeadbeef) is also permitted.
-	@returns retCode CANCELED if user cancels input, or SUCCESS.
+	@returns retCode CANCELED if user cancels input, FAILURE, or SUCCESS.
   */
 int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
 {
-	char buff[32] = {'\0'};
-	do {
-		while(nsuccess(CLgetString(ser,buff,sizeof(buff)))) {
-			ser->println("Buffer overflow: command too long.");
-		}
-		if (buff[0] == '0' && (buff[1] == 'x' || buff[1] == 'X')){
-			if (sscanf(buff,"%lx",d)) return SUCCESS;
-		} else { 
-			if (sscanf(buff,"%ld",d)) return SUCCESS;
-		}
-		if (!strcmp(buff,"cancel")) {
-			return CANCELED;
-		}
-	} while(true);
+    char buff[32] = {'\0'};
+    if (!CLgetString(ser,buff,sizeof(buff))) {
+        return FAILURE;
+    }
+    if (buff[0] == '0' && (buff[1] == 'x' || buff[1] == 'X')){
+        if (sscanf(buff,"%lx",d)) return SUCCESS;
+    } else { 
+        if (sscanf(buff,"%ld",d)) return SUCCESS;
+    }
+    if (!strcmp(buff,"cancel")) {
+        return CANCELED;
+    } 
+    return FAILURE;
 }
 
 /**

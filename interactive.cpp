@@ -453,23 +453,17 @@ void parseBerkeley()
         }
         else {                                //Indicate received character
             int waiting = 2048;                //Used to eat up junk that follows
-            dbg.println();
-            dbg.print("Not_Recognized:");
-            dbg.print(incoming,BIN);
-            dbg.print(":'");
-            dbg.print(incoming);
-            dbg.println("'");
-            while (dbg.available() || waiting > 0) {
+            do {
+                dbg.println();
+                dbg.print("Not_Recognized:");
+                dbg.print(incoming,BIN);
+                dbg.print(":'");
+                dbg.print(incoming);
+                dbg.println("'");
                 if (dbg.available()) {
                     incoming = dbg.read();
-                    dbg.println();
-                    dbg.print("Not_Recognized:");
-                    dbg.print(incoming,BIN);
-                    dbg.print(":'");
-                    dbg.print(incoming);
-                    dbg.println("'");
                 } else     waiting--;
-            }
+            } while (dbg.available() || waiting > 0);
         }
     }
 
