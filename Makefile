@@ -40,7 +40,7 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \
 	HardwareSerial.o Print.o SPI.o ADE7753.o \
 	DbgTel.o select.o switches.o returncode.o  circuit.o calibration.o \
     byteordering.o fat.o partition.o sd_raw.o statistics.o interactive.o \
-	cfg.o $(PROJECT).o 
+	meterMode.o cfg.o $(PROJECT).o 
 
 #TARGETS
 .PHONY : clean install programfuses

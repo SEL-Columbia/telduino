@@ -1,8 +1,21 @@
+Directions on getting the board up and running
+
+The EEPROM needs to be programed with circuit default values. We can make this happen automatically later on.
+There are two copies of the configuration state at any point in time on in ram and another in EEPROM.
+First set the defaults of the RAM circuit configuration using the D command
+Then save them into memory. You can now just resart the board using R or program them manually using P.
+
+Set the reporting interval using I in seconds. Then enter meter mode using M.
+
+
+HALTON
+- Make sure that deployment meters all use one serial port or mirror output to both for monitoring.
+- Consistency in newlines
+
 OVERALL TODO FOR HAITI:
 - Get Circuit up and running with new parameters and outputing reasonable results
 - Get calibration and saving routine working
 - Make Circuit into a real objects
-- Regularize the interactive mode grammer.
 - Add functionality to interactive mode 
 -- to set a reporting period for metering data.
 -- to set number of actual circuits
@@ -17,6 +30,8 @@ OVERALL TODO FOR HAITI:
 - Fill in values for switch and select mappings for all dbs
 - Power offset fix
 - Active power isn't working
+
+- Regularize the interactive mode grammer.
 
 
 Cleanup

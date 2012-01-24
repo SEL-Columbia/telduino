@@ -347,9 +347,9 @@ void parseBerkeley()
             SWset(ID,!SWisOn(ID));
         } else if (incoming == 's') {        //Display switch state
             displayEnabled(SWgetSwitchState());    
-        } else if (incoming == 't') {        //Test basic functionality
+        } else if (incoming == 'f') {        //Test basic functionality
             testHardware();
-        } else if (incoming == 'T') {        //Test switch aggresively
+        } else if (incoming == 'F') {        //Test switch aggresively
             testSwitch(_testChannel);
         } else if (incoming == 'R') {        //Hard Reset using watchdog timer
             wdt_enable((WDTO_4S));            
@@ -443,14 +443,23 @@ void parseBerkeley()
                 dbg.print(" ");
             }
             CSselectDevice(DEVDISABLE);
-        } else if (incoming == 'I') {
+        } else if (incoming == 'T') {
             int32_t secs = 0;
             ifsuccess(CLgetInt(&dbg,&secs)) {
                 if (secs < 32768 && secs >= 0) {
                     reportInterval = secs;
                 }
             }
-        }
+        } else if (incoming == 'M') {
+            dbg.println("2 for meter mode, 1 for interactive mode:"); 
+            int32_t retVal = 0;
+            ifsuccess(CLgetInt(&dbg,&retVal) && 
+                    (retVal == INTERACTIVEMODE || retVal == METERMODE)) {
+                mode = (int8_t)retVal;
+            } else {
+                dbg.println("Bad Input.");
+            }
+        } 
         else {                                //Indicate received character
             int waiting = 2048;                //Used to eat up junk that follows
             do {

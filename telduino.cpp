@@ -32,10 +32,7 @@
 
 // Meter modes
 #include "interactive.h"
-
-// In memory and in EEPROM storage for circuit configuration
-Circuit ckts[NCIRCUITS];
-Circuit EEMEM cktsSave[NCIRCUITS];
+#include "meterMode.h"
 
 void setup()
 {
@@ -70,8 +67,12 @@ void setup()
 
 void loop()
 {   
-    // TODO switch between modes of operation
-    parseBerkeley();
+    if (mode == METERMODE) {
+
+        parseMeterMode("\r");
+    } else {
+        parseBerkeley();
+    }
 }
 
 extern "C" 
