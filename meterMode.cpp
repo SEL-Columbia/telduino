@@ -21,21 +21,24 @@ const char *FMTSTRINGI = "%c %d %d\r";
 //(S)witch set
 //(M)ode
 //(R)eport Interval in seconds
+//(W)atts meter circuit
 
 //GET
 //(s)witch status
 //(m)ode status 
 //(r)eport Interval in seconds
+//(w)atts meter circuit
 
 //! do nothing NOP
 
-void parseMeterMode(char *cmd) {
+void parseMeterMode(char *cmd) 
+{
     char action = '\r';
     int8_t cktID = NCIRCUITS + 1;
     int32_t arg = 0;
 
     //TODO Sanitize input
-    if ( sscanf(cmd,FMTSTRINGI,&action, &cktID, &arg) != 3){
+    if ( sscanf(cmd,FMTSTRINGI,&action, &cktID, &arg) != 3) {
         printResults('!',21,-1);
         return;
     }
@@ -55,6 +58,10 @@ void parseMeterMode(char *cmd) {
             break;
         case 'R':
             reportInterval = arg;
+            break;
+        case 'W':
+        case 'w':
+            meter(&ckts[cktID]);
             break;
         case 's':
             arg = CisOn(&ckts[cktID]);
@@ -82,6 +89,10 @@ void meterAll() {
     
 }
 
+void meter(Circuit *ckt) {
+
+}
+
 void printResults(char action, int8_t cktID, int32_t arg) {
     cpu.print(action);
     cpu.print(" ");
@@ -89,5 +100,4 @@ void printResults(char action, int8_t cktID, int32_t arg) {
     cpu.print(" ");
     cpu.println(arg);
 }
-
 

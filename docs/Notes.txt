@@ -11,30 +11,36 @@ Set the reporting interval using I in seconds. Then enter meter mode using M.
 HALTON
 - Make sure that deployment meters all use one serial port or mirror output to both for monitoring.
 - Consistency in newlines
+- Hald race where meter outputs after a \r has been read
 
-OVERALL TODO FOR HAITI:
-- Get Circuit up and running with new parameters and outputing reasonable results
+Awaiting Test:
+- Get Circuit up and running with new parameters and outputing reasonable results awaiting tests
 - Get calibration and saving routine working
-- Make Circuit into a real objects
 - Add functionality to interactive mode 
 -- to set a reporting period for metering data.
+- Add a metering mode that has the following components
+-- Regular reporting accord to the above configuration
+-- Switching
+-- Go to interactive mode
+
+OVERALL TODO FOR HAITI:
+- Circuits code fills in obvious junk values if there is a comm error
+- Add functionality to interactive mode 
+-- Autodetect number of active circuits
 -- to set number of actual circuits
 -- Meter all as in clear the LINCYC interrupts for all of them and then wait for results
 -- set PMAX
 - Add a metering mode that has the following components
--- Regular reportinging accord to the above configuration
--- Switching
 -- Immediate switch-off for violating PMAX
--- Go to interactive mode
-- Add an escape character or set of characters
 - Fill in values for switch and select mappings for all dbs
 - Power offset fix
+- Add an escape character or set of characters
 - Active power isn't working
-
 - Regularize the interactive mode grammer.
 
-
 Cleanup
+- Separate all printing from processing 
+- Make Circuit into a real objects
 - make initialization naming conventions sane
 - Create a constants file to initialize switch data so that all constants are in one place.
 

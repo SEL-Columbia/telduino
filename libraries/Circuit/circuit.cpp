@@ -280,10 +280,7 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
     ser->println(0);
     ser->print(",");
     // TODO W ACCUM
-    ser->print(0);
-    ser->print(",");
-    // TODO IMAX
-    ser->print(c->IRMS);
+    ser->println(0);
 }
 
 /** 

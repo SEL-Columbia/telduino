@@ -105,18 +105,6 @@ int8_t blinkComm()
 /**
  *  Single character serial interface for interaction with telduino
  *  Capital letters are usually writes and lower case letters are usually reads
- *  
- *  A
- *  a
- *  x
- *  C
- *  S
- *  s
- *  t
- *  T
- *  R
- *  a
- *  
  */
 void parseBerkeley() 
 {
@@ -226,256 +214,267 @@ void parseBerkeley()
     // Capital letters denote write operations and lower case letters are reads
     if (dbg.available() > 0) {
         char incoming = dbg.read(); 
-
-        if (incoming == 'z') {
-            testCircuitPrint();
-        } else if (incoming == 'Z') {
-            int32_t zeros[2] = {0};
-            if (testIdx) {
-                dbg.print("Test Canceled");
-                testIdx = 0;
-                return;
-            }
-
-            int32_t runMin = 0;
-            dbg.println();
-            dbg.print("Minutes to run test $");
-            CLgetInt(&dbg,&runMin);
-            dbg.println();
-            dbg.print("Seconds delay between each experiment. $");
-            CLgetInt(&dbg,&switchSec);
-            if (switchSec < 0) {
-                switchSec = 0;
-            }
-            switchSec += 120/60;
-            testIdx = runMin*60/switchSec;
-
-            dbg.println();
-            dbg.print("Total number of experiments is: ");
-            dbg.print(testIdx);
-            dbg.println();
-            if (testIdx > RARAASIZE) {
-                dbg.print("Too many experiments to run. Make test shorter or test with a longer period between experiments.");
+        // TODO Make functions for each case instead of dumping code
+        char buff[16] = {0};
+        int32_t regData = 0;
+        const char * codes[NCIRCUITS] = {};
+        Circuit *c;
+        int8_t ID;
+        int32_t secs = 0;
+        int32_t retVal = 0;
+        int32_t mask = 0;
+        int32_t linecycVal = 120;
+        int32_t gain = 0x24;
+        int32_t phcal = 0x0B;
+        int32_t zeros[2] = {0};
+        int32_t runMin = 0;
+        switch (incoming) {
+            case 'A':                       //Write to ADE Register
+                dbg.print("Register to write $");
+                CLgetString(&dbg,buff,sizeof(buff));
                 dbg.println();
-                testIdx = 0;
-                return;
-            }
 
-            //Select it
-            CSselectDevice(_testChannel);
+                for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
+                    if (strcmp(regList[i]->name,buff) == 0){
+                        CSselectDevice(_testChannel);
+                        dbg.print("Current regData:");
+                        ADEgetRegister(*regList[i],&regData);
+                        dbg.print(RCstr(_retCode));
+                        dbg.print(":0x");
+                        dbg.print(regData,HEX);
+                        dbg.print(":");
+                        dbg.println(regData,BIN);
 
-            //Configure meter
-            int32_t linecycVal = 120;
-            int32_t gain = 0x24;
-            int32_t phcal = 0x0B;
-            ADEsetRegister(LINECYC,&linecycVal);
-            ADEsetRegister(GAIN,&gain);
-            ADEsetRegister(PHCAL,&phcal);
-            ADEsetModeBit(CYCMODE,1);
-
-            //Initialize storage area for results
-            eeprom_update_block(&testIdx,&nRARAASave,sizeof(testIdx));
-            for (int i=testIdx; i>0; i--) {
-                zeros[1] = i;
-                eeprom_update_block(zeros,RARAASave,sizeof(RARAASave[0]));
-            }
-            switchings = 0;
-            dbg.print("Test started.");
-
-        } else if (incoming == 'A') {            //Write to ADE Register
-            char buff[16] = {0};
-            dbg.print("Register to write $");
-            CLgetString(&dbg,buff,sizeof(buff));
-            dbg.println();
-
-            int32_t regData = 0;
-            for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
-                if (strcmp(regList[i]->name,buff) == 0){
-                    CSselectDevice(_testChannel);
-                    dbg.print("Current regData:");
-                    ADEgetRegister(*regList[i],&regData);
-                    dbg.print(RCstr(_retCode));
-                    dbg.print(":0x");
-                    dbg.print(regData,HEX);
-                    dbg.print(":");
-                    dbg.println(regData,BIN);
-
-                    dbg.print("Enter new regData:");
-                    if(CLgetInt(&dbg,&regData) == CANCELED) break;
-                    dbg.println();
-                    ADEsetRegister(*regList[i],&regData);
-                    dbg.print(RCstr(_retCode));
-                    dbg.print(":0x");
-                    dbg.print(regData,HEX);
-                    dbg.print(":");
-                    dbg.println(regData,DEC);
-                    CSselectDevice(DEVDISABLE);
-                    break;
-                } 
-            }
-        } else if (incoming == 'a') {        //Read ADE reg
-            char buff[16] = {0};
-            dbg.print("Enter name of register to read:");
-            CLgetString(&dbg,buff,sizeof(buff));
-            dbg.println();
-
-            //dbg.print("(int32_t)(&),HEX:");
-            //dbg.println((int32_t)(&WAVEFORM),HEX);
-            int32_t regData = 0;
-            for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
-                if (strcmp(regList[i]->name,buff) == 0){
-                    CSselectDevice(_testChannel);
-                    ADEgetRegister(*regList[i],&regData);
-                    dbg.print("regData:");
-                    dbg.print(RCstr(_retCode));
-                    dbg.print(":0x");
-                    dbg.print(regData,HEX);
-                    dbg.print(":");
-                    dbg.println(regData,DEC);
-                    CSselectDevice(DEVDISABLE);
-                    break;
-                } 
-            }
-        } else if (incoming == 'x') {
-            CSselectDevice(_testChannel);
-            CLwaitForZX10VIRMS();
-            CSselectDevice(DEVDISABLE);
-        } else if (incoming == 'C') {        //Change active channel
-            _testChannel = getChannelID();    
-        } else if (incoming == 'S') {        //Toggle channel circuit
-            int8_t ID = getChannelID();        
-            SWset(ID,!SWisOn(ID));
-        } else if (incoming == 's') {        //Display switch state
-            displayEnabled(SWgetSwitchState());    
-        } else if (incoming == 'f') {        //Test basic functionality
-            testHardware();
-        } else if (incoming == 'F') {        //Test switch aggresively
-            testSwitch(_testChannel);
-        } else if (incoming == 'R') {        //Hard Reset using watchdog timer
-            wdt_enable((WDTO_4S));            
-           dbg.println("resetting in 4s.");
-        } else if (incoming == 'O') {        //soft Reset using the Setup routine
-            softSetup();                    //Set calibration values for ADE
-        } else if (incoming == 'o') {        //Read channel using Achintya's code
-            displayChannelInfo();
-        } else if (incoming == 'P') {        //Program values in ckts[] to ADE
-            for (int i = 0; i < NCIRCUITS; i++) {
-                Circuit *c = &(ckts[i]);
-                Cprogram(c);
-                dbg.print(i); 
-                dbg.print(':'); 
-                dbg.print(RCstr(_retCode));
-                if (i%4 != 3) {
-                    dbg.print('\t');
-                } else {
-                    dbg.println();
-                }
-            }
-            dbg.println();
-        } else if(incoming == 'p') {        //Measure circuit values and print
-            Circuit *c = &(ckts[_testChannel]);
-            Cmeasure(c);
-            dbg.println(RCstr(_retCode));
-            CprintMeas(&dbg,c);
-            Cprint(&dbg,c);
-            dbg.println();
-        } else if (incoming == 'L') {        //Run calibration routine on channel
-            Circuit *c = &(ckts[_testChannel]);
-            calibrateCircuit(c);
-            //dbg.println(RCstr(_retCode));
-        } else if (incoming == 'D') {		//Initialize ckts[] to safe defaults
-            for (int i = 0; i < NCIRCUITS; i++) {
-                Circuit *c = &ckts[i];
-                CsetDefaults(c,i);
-            }
-            dbg.println("Defaults set. Don't forget to program! ('P')");
-        } else if (incoming == 'E') {        //Save data in ckts[] to EEPROM
-            dbg.println("Saving to EEPROM.");
-            for (int i =0; i < NCIRCUITS; i++) {
-                Csave(&ckts[i],&cktsSave[i]);
-            }
-            dbg.println(COMPLETESTR);
-        } else if (incoming=='e') {           //Load circuit data from EEPROM
-            dbg.println("Loading from EEPROM.");
-            for (int i =0; i < NCIRCUITS; i++) {
-                Cload(&ckts[i],&cktsSave[i]);
-            }
-            dbg.println(COMPLETESTR);
-        } else if (incoming=='w') {            //Wait for interrupt specified by interrupt mask
-            int32_t mask = 0;
-            char buff[10] = {0};
-            dbg.println();
-            dbg.println("Available interrupt masks:");
-            for (int i =0; i < intListLen; i++){
-                dbg.print( intList[i]);
-                dbg.print(" ");
-            }
-            dbg.println();
-            dbg.print("Enter interrupt mask name or \"mask\" "
-                    "to enter a mask manually. " 
-                    "Will wait for 4sec for interrupt to fire. $");
-            CLgetString(&dbg,buff,sizeof(buff));
-            if (!strcmp(buff, "mask")) {
-                dbg.print("Enter interrupt mask as a number. $");
-                CLgetInt(&dbg,&mask);
-            } else {
-                mask=1;
-                for (int i =0; i < intListLen; i++){
-                    if (!strcmp(buff, intList[i])) {
+                        dbg.print("Enter new regData:");
+                        if(CLgetInt(&dbg,&regData) == CANCELED) break;
+                        dbg.println();
+                        ADEsetRegister(*regList[i],&regData);
+                        dbg.print(RCstr(_retCode));
+                        dbg.print(":0x");
+                        dbg.print(regData,HEX);
+                        dbg.print(":");
+                        dbg.println(regData,DEC);
+                        CSselectDevice(DEVDISABLE);
                         break;
                     }
-                    mask <<= 1;
                 }
-            }
-            dbg.println();
-            //dbg.print("(int32_t)(&),HEX:");
-            //dbg.println((int32_t)(&WAVEFORM),HEX);
-            CSselectDevice(_testChannel);
-            ADEwaitForInterrupt((int16_t)mask,4000);
-            dbg.println(RCstr(_retCode));
-            CSselectDevice(DEVDISABLE);
-        } else if (incoming == 'W')     {
-            CSselectDevice(_testChannel);
-            int32_t regData;
-            for (int i =0; i < 80; i++) {
-                ADEgetRegister(WAVEFORM,&regData);
-                dbg.print(regData);
-                dbg.print(" ");
-            }
-            CSselectDevice(DEVDISABLE);
-        } else if (incoming == 'T') {
-            int32_t secs = 0;
-            ifsuccess(CLgetInt(&dbg,&secs)) {
-                if (secs < 32768 && secs >= 0) {
-                    reportInterval = secs;
-                }
-            }
-        } else if (incoming == 'M') {
-            dbg.println("2 for meter mode, 1 for interactive mode:"); 
-            int32_t retVal = 0;
-            ifsuccess(CLgetInt(&dbg,&retVal) && 
-                    (retVal == INTERACTIVEMODE || retVal == METERMODE)) {
-                mode = (int8_t)retVal;
-            } else {
-                dbg.println("Bad Input.");
-            }
-        } 
-        else {                                //Indicate received character
-            int waiting = 2048;                //Used to eat up junk that follows
-            do {
+                break;
+            case 'a':                       //Read ADE reg
+                dbg.print("Enter name of register to read:");
+                CLgetString(&dbg,buff,sizeof(buff));
                 dbg.println();
-                dbg.print("Not_Recognized:");
-                dbg.print(incoming,BIN);
-                dbg.print(":'");
-                dbg.print(incoming);
-                dbg.println("'");
-                if (dbg.available()) {
-                    incoming = dbg.read();
-                } else     waiting--;
-            } while (dbg.available() || waiting > 0);
+
+                //dbg.print("(int32_t)(&),HEX:");
+                //dbg.println((int32_t)(&WAVEFORM),HEX);
+                for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
+                    if (strcmp(regList[i]->name,buff) == 0){
+                        CSselectDevice(_testChannel);
+                        ADEgetRegister(*regList[i],&regData);
+                        dbg.print("regData:");
+                        dbg.print(RCstr(_retCode));
+                        dbg.print(":0x");
+                        dbg.print(regData,HEX);
+                        dbg.print(":");
+                        dbg.println(regData,DEC);
+                        CSselectDevice(DEVDISABLE);
+                        break;
+                    } 
+                }
+                break;
+            case 'C':                       //Change active channel for ADE, switching, and metering
+                _testChannel = getChannelID();    
+                break;
+            case 'D':                       //Initialize ckts[] to safe defaults
+                for (int i = 0; i < NCIRCUITS; i++) {
+                    c = &ckts[i];
+                    CsetDefaults(c,i);
+                }
+                dbg.println("Defaults set. Don't forget to program! ('P')");
+                break;
+            case 'E':                       //Save data in ckts[] to EEPROM
+                dbg.println("Saving to EEPROM.");
+                for (int i =0; i < NCIRCUITS; i++) {
+                    Csave(&ckts[i],&cktsSave[i]);
+                }
+                dbg.println(COMPLETESTR);
+                break;
+            case 'e':                       //Load circuit data from EEPROM
+                dbg.println("Loading from EEPROM.");
+                for (int i =0; i < NCIRCUITS; i++) {
+                    Cload(&ckts[i],&cktsSave[i]);
+                }
+                dbg.println(COMPLETESTR);
+                break;
+            case 'F':                       //Test switch aggresively
+                testSwitch(_testChannel);
+                break;
+            case 'f':                       //Quick diagnostic test of basic functionality
+                testHardware();
+                break;
+            case 'L':                       //Run calibration routine on channel
+                c = &(ckts[_testChannel]);
+                calibrateCircuit(c);
+                break;
+            case 'P':                       //Program values in ckts[] to ADE
+                for (int i = 0; i < NCIRCUITS; i++) {
+                    c = &ckts[i];
+                    Cprogram(c);
+                    codes[i] = RCstr(_retCode);
+                }
+                printTableStrings(codes,NCIRCUITS);
+                break;
+            case 'p':                       //Measure circuit values and print
+                c = &(ckts[_testChannel]);
+                Cmeasure(c);
+                dbg.println(RCstr(_retCode));
+                CprintMeas(&dbg,c);
+                Cprint(&dbg,c);
+                dbg.println();
+                break;
+            case 'R':                       //Hard Reset using watchdog timer
+               wdt_enable((WDTO_4S));            
+               dbg.println("resetting in 4s.");
+               break;
+            case 'S':                       //Toggle channel switch
+                ID = getChannelID();        
+                SWset(ID,!SWisOn(ID));
+                break;
+            case 's':                       //Display switch state
+                displayEnabled(SWgetSwitchState());
+                break;
+            case'T':                        //Change reporting interval
+                dbg.print("New Reporting Interval:");
+                ifsuccess(CLgetInt(&dbg,&secs)) {
+                    if (secs < 32768 && secs >= 0) {
+                        reportInterval = secs;
+                    }
+                }
+                break;
+            case 'M':                       //Change Interaction Mode
+                dbg.println("2 for meter mode, 1 for interactive mode:"); 
+                ifsuccess(CLgetInt(&dbg,&retVal) && 
+                        (retVal == INTERACTIVEMODE || retVal == METERMODE)) {
+                    mode = (int8_t)retVal;
+                } else {
+                    dbg.println("Bad Input.");
+                }
+                break;
+            case 'o':                       //Wait for zero-crossing
+                CSselectDevice(_testChannel);
+                CLwaitForZX10VIRMS();
+                CSselectDevice(DEVDISABLE);
+                break;
+            case 'x':                       //Wait for interrupt specified by interrupt mask
+                dbg.println();
+                dbg.println("Available interrupt masks:");
+                for (int i =0; i < intListLen; i++){
+                    dbg.print( intList[i]);
+                    dbg.print(" ");
+                }
+                dbg.println();
+                dbg.print("Enter interrupt mask name or \"mask\" "
+                        "to enter a mask manually. " 
+                        "Will wait for 4sec for interrupt to fire. $");
+                CLgetString(&dbg,buff,sizeof(buff));
+                if (!strcmp(buff, "mask")) {
+                    dbg.print("Enter interrupt mask as a number. $");
+                    CLgetInt(&dbg,&mask);
+                } else {
+                    mask=1;
+                    for (int i =0; i < intListLen; i++){
+                        if (!strcmp(buff, intList[i])) {
+                            break;
+                        }
+                        mask <<= 1;
+                    }
+                }
+                dbg.println();
+                //dbg.print("(int32_t)(&),HEX:");
+                //dbg.println((int32_t)(&WAVEFORM),HEX);
+                CSselectDevice(_testChannel);
+                ADEwaitForInterrupt((int16_t)mask,4000);
+                dbg.println(RCstr(_retCode));
+                CSselectDevice(DEVDISABLE);
+                break;
+            case 'X':                       // Read WAVEFORM Data
+                CSselectDevice(_testChannel);
+                int32_t regData;
+                for (int i =0; i < 80; i++) {
+                    ADEgetRegister(WAVEFORM,&regData);
+                    dbg.print(regData);
+                    dbg.print(" ");
+                }
+                CSselectDevice(DEVDISABLE);
+                break;
+            case 'z':                       // Print long-run test results
+                testCircuitPrint();
+                break;
+            case 'Z':                       // Long-run test with metering 
+                                            // at regular intervals 
+                                            // and constant switching inbetween
+                if (testIdx) {
+                    dbg.print("Test Canceled");
+                    testIdx = 0;
+                    return;
+                }
+
+                dbg.println();
+                dbg.print("Minutes to run test $");
+                CLgetInt(&dbg,&runMin);
+                dbg.println();
+                dbg.print("Seconds delay between each experiment. $");
+                CLgetInt(&dbg,&switchSec);
+                if (switchSec < 0) {
+                    switchSec = 0;
+                }
+                switchSec += 120/60;
+                testIdx = runMin*60/switchSec;
+
+                dbg.println();
+                dbg.print("Total number of experiments is: ");
+                dbg.print(testIdx);
+                dbg.println();
+                if (testIdx > RARAASIZE) {
+                    dbg.print("Too many experiments to run. Make test shorter or test with a longer period between experiments.");
+                    dbg.println();
+                    testIdx = 0;
+                    return;
+                }
+
+                //Select it
+                CSselectDevice(_testChannel);
+
+                //Configure meter
+                ADEsetRegister(LINECYC,&linecycVal);
+                ADEsetRegister(GAIN,&gain);
+                ADEsetRegister(PHCAL,&phcal);
+                ADEsetModeBit(CYCMODE,1);
+
+                //Initialize storage area for results
+                eeprom_update_block(&testIdx,&nRARAASave,sizeof(testIdx));
+                for (int i=testIdx; i>0; i--) {
+                    zeros[1] = i;
+                    eeprom_update_block(zeros,RARAASave,sizeof(RARAASave[0]));
+                }
+                switchings = 0;
+                dbg.print("Test started.");
+                break;
+            default:                        //Indicate received character
+                int waiting = 2048;             //Used to eat up junk that follows
+                do {
+                    dbg.println();
+                    dbg.print("Not_Recognized:");
+                    dbg.print(incoming,BIN);
+                    dbg.print(":'");
+                    dbg.print(incoming);
+                    dbg.println("'");
+                    if (dbg.available()) {
+                        incoming = dbg.read();
+                    } else     waiting--;
+                } while (dbg.available() || waiting > 0);
+                break;
         }
     }
-
 
     setDbgLeds(0);
 }
@@ -737,4 +736,18 @@ void displayEnabled(const int8_t enabledC[NSWITCHES])
         }
     }
     dbg.println();
+}
+
+void printTableStrings(const char *strs[], int8_t len)
+{
+    for (int i=0; i < len; i++) {
+        dbg.print(i); 
+        dbg.print(':'); 
+        dbg.print(strs[i]);
+        if (i%4 != 3) {
+            dbg.print('\t');
+        } else {
+            dbg.println();
+        }
+    }
 }

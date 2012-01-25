@@ -1,24 +1,27 @@
+INTERACTIVE MODE
 D 	      //Initialize ckts[] to safe defaults
 M         //Change mode
 s         //Display switch state
 E         //Save data in ckts[] to EEPROM
 e         //Load circuit data from EEPROM
 P         //Program values in EEPROM ckts[] to ADE
-
+T         //Set report interval in seconds
 R         //Hard Reset using watchdog timer
 S         //Toggle channel circuit
+L         //Run calibration routine on channel
+
+C         //Change active channel for ADE, switching, and metering
+p         //Measure circuit values and print
+
+Debugging and Testing
 A         //Write to ADE Register
 a         //Read ADE reg
-x         //
-C         //Change active channel
-f         //Test basic functionality
+f         //Quick diagnostic test of basic functionality
 F         //Test switch aggresively
-O         //soft Reset using the Setup routine
-o         //Read channel using Achintyas code
-p         //Measure circuit values and print
-L         //Run calibration routine on channel
-w         //Wait for interrupt specied by interrupt mask
-W         //Read waveform data 
-T         //Set report interval in seconds
+o         //Wait for zero-crossing
+x         //Wait for interrupt specied by interrupt mask
+X         //Read waveform data 
 z         //Read out results from test
 Z         //Start switch and metering test
+
+METER MODE

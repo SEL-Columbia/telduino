@@ -23,4 +23,6 @@ void testCircuitPrint();
 int8_t blinkTime();
 int8_t blinkComm();
 
+//IO
+void printTableStrings(const char *strs[], int8_t len);
 #endif
