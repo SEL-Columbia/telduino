@@ -343,13 +343,12 @@ void parseBerkeley()
                 displayEnabled(SWgetSwitchState());
                 break;
             case'T':                        //Change reporting interval
-                dbg.print("New Reporting Interval:");
-                ifsuccess(CLgetInt(&dbg,&secs)) {
-                    if (secs < 32768 && secs >= 0) {
-                        reportInterval = secs;
-                    }
-                }
+                dbg.print(" New Reporting Interval:");
+                dbg.println(reportInterval);
                 break;
+            case 't':
+                dbg.print(" Reporting Interval:");
+
             case 'M':                       //Change Interaction Mode
                 dbg.print(" 2 for meter mode, 1 for interactive mode:"); 
                 ifsuccess(CLgetInt(&dbg,&retVal)) {

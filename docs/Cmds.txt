@@ -6,6 +6,7 @@ E         //Save data in ckts[] to EEPROM
 e         //Load circuit data from EEPROM
 P         //Program values in EEPROM ckts[] to ADE
 T         //Set report interval in seconds
+t         //Read report interval in seconds
 R         //Hard Reset using watchdog timer
 S         //Toggle channel circuit
 L         //Run calibration routine on channel
