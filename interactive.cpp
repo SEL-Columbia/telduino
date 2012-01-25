@@ -357,9 +357,11 @@ void parseBerkeley()
                 ifsuccess(CLgetInt(&dbg,&retVal)) {
                     if ( retVal == INTERACTIVEMODE || retVal == METERMODE) {
                         mode = retVal;
+                        dbg.println();
                         return;
                     }
                 }
+                dbg.println();
                 dbg.println("Bad Input.");
                 break;
             case 'o':                       //Wait for zero-crossing
