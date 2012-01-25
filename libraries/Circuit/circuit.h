@@ -93,6 +93,7 @@ int8_t CisOn(Circuit *c);
 void Cload(Circuit *c, Circuit* addrEEPROM);
 void Csave(Circuit *c, Circuit* addrEEPROM);
 void CsetDefaults(Circuit *c, int8_t circuitID);
+void Cclear(Circuit *c);
 void Cmeasure(Circuit *c);
 void Cprogram(Circuit *c);
 void Cprint(HardwareSerial *ser, Circuit *c);

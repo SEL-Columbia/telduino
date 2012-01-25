@@ -389,8 +389,6 @@ void parseBerkeley()
                     }
                 }
                 dbg.println();
-                //dbg.print("(int32_t)(&),HEX:");
-                //dbg.println((int32_t)(&WAVEFORM),HEX);
                 CSselectDevice(_testChannel);
                 ADEwaitForInterrupt((int16_t)mask,4000);
                 dbg.println(RCstr(_retCode));

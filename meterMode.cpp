@@ -1,8 +1,11 @@
+#include <stdint.h>
 #include "meterMode.h"
 #include "cfg.h"
 #include "Circuit/circuit.h"
+#include "arduino/wiring.h"
 
-long nextMeter = 0;
+uint64_t lastMeter = 0;
+int32_t sequenceNum = 0;
 const char *FMTSTRINGI = "%c %d %d\r";
 
 /** Command packet format (every packet has these fields)
@@ -21,7 +24,7 @@ const char *FMTSTRINGI = "%c %d %d\r";
 //(S)witch set
 //(M)ode
 //(R)eport Interval in seconds
-//(W)atts meter circuit
+//(W)atts meter ALL circuits
 
 //GET
 //(s)witch status
@@ -60,6 +63,8 @@ void parseMeterMode(char *cmd)
             reportInterval = arg;
             break;
         case 'W':
+            meterAll();
+            break;
         case 'w':
             meter(&ckts[cktID]);
             break;
@@ -77,20 +82,48 @@ void parseMeterMode(char *cmd)
 
 }
 
-void meterAll() {
-    //Is it time?
-    if (nextMeter <= 0) {
-        nextMeter = reportInterval;
+void meterAuto() 
+{   
+
+    //TODO assumes millis returns an unsigned long
+    //TODO save data regularly in nonvolitile memory
+    uint64_t timeNow = millis();
+    if (timeNow < lastMeter) {
+        timeNow = (uint32_t(-1))-(lastMeter-timeNow); //Now time diference
+    } else {
+        timeNow = timeNow - lastMeter; //Now time diference
     }
-    //Reset all ADE LINCYCs
-    //Print ckt value
-    //Print out sequence values
-    //Print out time stamp
-    
+    if (reportInterval > 0 && timeNow/1000 > reportInterval) {
+        return;
+    }
+    lastMeter = millis();
+    meterAll();
 }
 
-void meter(Circuit *ckt) {
+void meter(Circuit *ckt)
+{
+    Cmeasure(ckt);
+    printMeter(ckt);
+}
+void meterAll() 
+{
+    //Prepare all ckts for reading. If the code starts to rely on LINCYC, this can become counterproductive.
+    //TODO should I buffer all measurements then dump all at once?
+    for (int i=0; i < NCIRCUITS; i++) {
+        Cclear(&ckts[i]);
+    }
+    for (int i=0; i < NCIRCUITS; i++) {
+        meter(&ckts[i]);
+    }
+}
 
+void printMeter(Circuit *ckt) {
+    cpu.print(millis());
+    cpu.print(",");
+    cpu.print(sequenceNum++);
+    cpu.print(",");
+    CprintMeas(&cpu,ckt);
+    cpu.println();
 }
 
 void printResults(char action, int8_t cktID, int32_t arg) {

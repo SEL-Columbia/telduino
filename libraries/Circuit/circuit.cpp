@@ -31,8 +31,28 @@ int8_t _shouldReturn(Circuit *c)
     }
     return false;
 }
+
+/**
+ * Clears circuit interrupts
+ * */
+void Cclear(Circuit *c) 
+{
+    RCreset();
+    int32_t regData;
+    int8_t timeout = false;
+    CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
+
+    //Check for presence and clears the interrupt register
+    //Comm errors is stored in c->status
+    ADEgetRegister(RSTSTATUS,&regData);                 ERRCHECKRETURN(c);
+    c->status &= ~COMM;
+    c->status &= 0xFFFF0000;
+    c->status |= (0x0000FFFF&regData);
+}
+
 /** 
   Updates circuit measured parameters
+  @warning As a prerequisite Cclear should be called first.
   @warning a communications error may leave Circuit *c in an inconsisent state.
   @warning The completion time of this function is dependent on the frequency of the line as well as halfCyclesSample. At worst the function will take one minute to return if halfCyclesSample is 1400 and the frequency drops below 40hz.
   @return ARGVALUEERR if the circuitID is invalid
@@ -44,8 +64,8 @@ void Cmeasure(Circuit *c)
     int8_t timeout = false;
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
 
-    //Check for presence and clear the interrupt register
-    ADEgetRegister(RSTSTATUS,&regData);                 ERRCHECKRETURN(c);
+    //Check for presence 
+    ADEgetRegister(STATUS,&regData);                 ERRCHECKRETURN(c);
     c->status &= ~COMM;
     c->status &= 0xFFFF0000;
     c->status |= (0x0000FFFF&regData);

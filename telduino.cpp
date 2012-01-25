@@ -82,7 +82,7 @@ void loop()
                 buffCursor = 0;
             }
         }
-        meterAll();
+        meterAuto();
     } else {
         parseBerkeley();
     }
