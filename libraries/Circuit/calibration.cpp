@@ -265,7 +265,7 @@ int8_t CLgetFloat(HardwareSerial *ser,float *f)
 int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
 {
     char buff[32] = {'\0'};
-    if (!CLgetString(ser,buff,sizeof(buff))) {
+    if (CLgetString(ser,buff,sizeof(buff))) {
         return FAILURE;
     }
     if (buff[0] == '0' && (buff[1] == 'x' || buff[1] == 'X')){

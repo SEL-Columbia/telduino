@@ -1,11 +1,13 @@
 Directions on getting the board up and running
+See Cmds.txt for a command reference
 
 The EEPROM needs to be programed with circuit default values. We can make this happen automatically later on.
 There are two copies of the configuration state at any point in time on in ram and another in EEPROM.
-First set the defaults of the RAM circuit configuration using the D command
-Then save them into memory. You can now just resart the board using R or program them manually using P.
+First set the defaults of the RAM circuit configuration using the D command. Verify they are set using e.
+Then save them into memory using E. 
+Program them manually using P. (This is just for testing purposes now. Later on the programming will happen every startup and communications failure or reset.)
 
-Set the reporting interval using I in seconds. Then enter meter mode using M.
+Set the reporting interval using T in seconds. Then enter meter mode using M.
 
 
 HALTON

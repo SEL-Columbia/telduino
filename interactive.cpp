@@ -351,13 +351,14 @@ void parseBerkeley()
                 }
                 break;
             case 'M':                       //Change Interaction Mode
-                dbg.println("2 for meter mode, 1 for interactive mode:"); 
-                ifsuccess(CLgetInt(&dbg,&retVal) && 
-                        (retVal == INTERACTIVEMODE || retVal == METERMODE)) {
-                    mode = (int8_t)retVal;
-                } else {
-                    dbg.println("Bad Input.");
+                dbg.print(" 2 for meter mode, 1 for interactive mode:"); 
+                ifsuccess(CLgetInt(&dbg,&retVal)) {
+                    if ( retVal == INTERACTIVEMODE || retVal == METERMODE) {
+                        mode = retVal;
+                        return;
+                    }
                 }
+                dbg.println("Bad Input.");
                 break;
             case 'o':                       //Wait for zero-crossing
                 CSselectDevice(_testChannel);
@@ -458,7 +459,7 @@ void parseBerkeley()
                 dbg.print("Test started.");
                 break;
             default:                        //Indicate received character
-                int waiting = 2048;             //Used to eat up junk that follows
+                int waiting = 128;             //Used to eat up junk that follows
                 do {
                     dbg.println();
                     dbg.print("Not_Recognized:");
@@ -466,10 +467,12 @@ void parseBerkeley()
                     dbg.print(":'");
                     dbg.print(incoming);
                     dbg.println("'");
+
                     if (dbg.available()) {
                         incoming = dbg.read();
-                    } else     waiting--;
-                } while (dbg.available() || waiting > 0);
+                    }
+                    waiting--;
+                } while (dbg.available() && waiting > 0);
                 break;
         }
     }

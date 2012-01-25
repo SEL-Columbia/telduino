@@ -31,6 +31,7 @@
 #include "Circuit/circuit.h"
 
 // Meter modes
+#include "cfg.h"
 #include "interactive.h"
 #include "meterMode.h"
 
@@ -83,8 +84,11 @@ void loop()
             }
         }
         meterAuto();
-    } else {
+    } else if (mode == INTERACTIVEMODE) {
         parseBerkeley();
+    } else {
+        dbg.println("Invalid Mode setting to interactive mode");
+        mode = INTERACTIVEMODE;
     }
 }
 

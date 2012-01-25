@@ -254,6 +254,8 @@ void Cprint(HardwareSerial *ser, Circuit *c)
     ser->println(c->circuitID);
     ser->print("halfCyclesSample&");
     ser->println(c->halfCyclesSample);
+    ser->print("phcal&");
+    ser->println(c->phcal);
     ser->print("chIint&");
     ser->println(c->chIint);
     ser->print("chIgainExp&");
@@ -276,7 +278,7 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
     ser->print(",");
     ser->print(CisOn(c));
     ser->print(",");
-    ser->println(c->VRMS);
+    ser->print(c->VRMS);
     ser->print(",");
     ser->print(c->IRMS);
     ser->print(",");
@@ -297,10 +299,10 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
     ser->print(c->PF);
     ser->print(",");
     // TODO VA ACCUM
-    ser->println(0);
+    ser->print(0);
     ser->print(",");
     // TODO W ACCUM
-    ser->println(0);
+    ser->print(0);
 }
 
 /** 

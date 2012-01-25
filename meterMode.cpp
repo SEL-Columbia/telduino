@@ -36,11 +36,15 @@ const char *FMTSTRINGI = "%c %d %d\r";
 
 void parseMeterMode(char *cmd) 
 {
-    char action = '\r';
+    char action = '!';
     int8_t cktID = NCIRCUITS + 1;
     int32_t arg = 0;
 
     //TODO Sanitize input
+    dbg.print("scanf:");
+    dbg.println(sscanf(cmd,FMTSTRINGI,&action, &cktID, &arg));
+    printResults(action,cktID,arg);
+
     if ( sscanf(cmd,FMTSTRINGI,&action, &cktID, &arg) != 3) {
         printResults('!',21,-1);
         return;
@@ -77,6 +81,9 @@ void parseMeterMode(char *cmd)
         case 'r':
             arg = reportInterval;
             break;
+        default:
+            action = '!';
+            break;
     }
     printResults(action,cktID,arg);
 
@@ -88,12 +95,13 @@ void meterAuto()
     //TODO assumes millis returns an unsigned long
     //TODO save data regularly in nonvolitile memory
     uint64_t timeNow = millis();
-    if (timeNow < lastMeter) {
-        timeNow = (uint32_t(-1))-(lastMeter-timeNow); //Now time diference
-    } else {
-        timeNow = timeNow - lastMeter; //Now time diference
-    }
-    if (reportInterval > 0 && timeNow/1000 > reportInterval) {
+    // TODO overflow case
+    //if (timeNow < lastMeter) {
+    //    timeNow = (uint32_t(-1))-(lastMeter-timeNow); //Now time diference
+    //} else {
+    timeNow = timeNow - lastMeter; //Now time diference
+    //}
+    if (reportInterval > 0 && (timeNow/1000 < reportInterval)) {
         return;
     }
     lastMeter = millis();
