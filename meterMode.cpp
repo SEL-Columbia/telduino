@@ -3,6 +3,7 @@
 #include "cfg.h"
 #include "Circuit/circuit.h"
 #include "arduino/wiring.h"
+#include "ReturnCode/returncode.h"
 
 uint64_t lastMeter = 0;
 int32_t sequenceNum = 0;
@@ -43,6 +44,8 @@ void parseMeterMode(char *cmd)
     //TODO Sanitize input
     dbg.print("scanf:");
     dbg.println(sscanf(cmd,FMTSTRINGI,&action, &cktID, &arg));
+    dbg.println();
+    dbg.print("printResults:");
     printResults(action,cktID,arg);
 
     if ( sscanf(cmd,FMTSTRINGI,&action, &cktID, &arg) != 3) {
@@ -126,11 +129,14 @@ void meterAll()
 }
 
 void printMeter(Circuit *ckt) {
+    RCreset();
     cpu.print(millis());
     cpu.print(",");
     cpu.print(sequenceNum++);
     cpu.print(",");
     CprintMeas(&cpu,ckt);
+    cpu.print(",");
+    cpu.print(_retCode);
     cpu.println();
 }
 

@@ -344,11 +344,14 @@ void parseBerkeley()
                 break;
             case'T':                        //Change reporting interval
                 dbg.print(" New Reporting Interval:");
-                dbg.println(reportInterval);
+                ifsuccess(CLgetInt(&dbg,&retVal)) {
+                    reportInterval = retVal;
+                }
                 break;
             case 't':
                 dbg.print(" Reporting Interval:");
-
+                dbg.println(reportInterval);
+                break;
             case 'M':                       //Change Interaction Mode
                 dbg.print(" 2 for meter mode, 1 for interactive mode:"); 
                 ifsuccess(CLgetInt(&dbg,&retVal)) {
