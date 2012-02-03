@@ -1,7 +1,6 @@
 /** @file DbgTel.cpp */
 #include "DbgTel.h"
 
-/**Must be called before setDbgLeds.*/
 void initDbgTel()
 {
 	pinMode(GRNPIN,OUTPUT);
@@ -9,12 +8,8 @@ void initDbgTel()
 	pinMode(REDPIN,OUTPUT);
 }
 
-/**
-    Bit 0,1,2 in pattern is G,Y,R.
-*/
 void setDbgLeds(int8_t pattern) 
 {
-	/*Just light up the LEDS for now.*/
 	if (pattern & RPAT) {
 		digitalWrite(REDPIN, HIGH);
 	} else {

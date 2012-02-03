@@ -44,11 +44,11 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \
 	meterMode.o cfg.o $(PROJECT).o 
 
 #TARGETS
-.PHONY : clean install programfuses
+.PHONY : clean install programfuses readfuses docs
 .DEFAUL_GOAL := install
 install: compile program
-all: compile program programfuses readfuses
-compile: app/$(PROJECT).hex
+all: compile program programfuses readfuses docs
+compile: $(PROJECT).hex
 
 
 %.hex : $(OBJECT_FILES)
@@ -68,6 +68,7 @@ size : $(PROJECT).elf
 
 clean:
 	@rm -f *.o *.elf *.hex
+	@rm -rf html/
 
 program: $(PROJECT).hex
     #avrdude -p$(MCU) -c $(PROGRAMMER) -Uflash:w:$(PROJECT).hex
@@ -85,7 +86,8 @@ readfuses:
 	@echo -n "high :" && hexdump high.txt
 	@echo -n "efuse:" && hexdump ext.txt
 	@rm -f low.txt high.txt ext.txt
-docs:
+
+docs :
 	doxygen
 #testBoard:
 #	sudo screen /dev/ttyUSB0 9600 logfile $(date +%Y-%b-%d-%m-%S) logfile flush 1
