@@ -1,0 +1,50 @@
+\documentclass[]{article}
+\begin{document}
+
+\section{Meter Output}
+The meter outputs a comma-delimited packet of values.
+
+\begin{tabular}{ c l c l l }
+Order & Title          & Units     & Code Variable  & ADE Variable \\
+0     & uCTime         &           &                & ---          \\
+1     & sequenceNumber &           &                & ---          \\
+2     & circuitID      &           &                & ---          \\
+3     & isOn           &           &                & ---          \\
+4     & VRMS           &           & c--$>$VRMS     &              \\
+5     & IRMS           &           & c--$>$IRMS     &              \\
+6     & VPEAK          &           & c--$>$vpeak    & RSTVPEAK     \\
+7     & IPEAK          &           & c--$>$ipeak    & RSTIPEAK     \\
+8     & PERIODUS       &           & c--$>$periodus &              \\
+9     & VA             &           & c--$>$VA       & LVAENERGY    \\
+10    & W              &           & c--$>$W        & LAENERGY     \\
+11    & VAEnergy       & Joules?   & c--$>$VAEnergy & RVAENERGY     \\
+12    & WEnergy        & Joules?   & c--$>$WEnergy  & RAENERGY     \\
+13    & PFactor        &           & c--$>$PF       &              \\
+14    & VA ACCUM       &           & TODO        \\
+15    & W ACCUM        &           & TODO        \\
+16    & errorNum       &           &             \\
+\end{tabular}
+
+\section{Measurements}
+This section details the measurement of calibrated loads and the
+measured values resulting.
+
+\subsection{Maximum Load}
+
+\subsection{Minimum Detectable Load}
+
+\subsection{Power Factor Measurements}
+
+
+\section{Meter DC Consumption}
+
+\subsection{Motherboard DC Consumption}
+
+\subsubsection{Measurement Method}
+\subsubsection{Measurement Result}
+
+\subsection{Daughterboard DC Consumption}
+
+\subsubsection{Measurement Method}
+\subsubsection{Measurement Result}
+\end{document}
