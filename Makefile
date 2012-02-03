@@ -85,6 +85,7 @@ readfuses:
 	@echo -n "high :" && hexdump high.txt
 	@echo -n "efuse:" && hexdump ext.txt
 	@rm -f low.txt high.txt ext.txt
-
+docs:
+	doxygen
 #testBoard:
 #	sudo screen /dev/ttyUSB0 9600 logfile $(date +%Y-%b-%d-%m-%S) logfile flush 1
