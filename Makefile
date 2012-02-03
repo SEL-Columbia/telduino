@@ -19,21 +19,22 @@ PROGRAMMER = dragon_jtag #dragon_isp
 #PROJECT = telduino_test
 MCU = atmega1280
 CLOCK = 8000000L
-GCCFLAGS = -c -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Ilibraries
-G++FLAGS = -c -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -Ilibraries
+GCCFLAGS = -c -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Icore
+G++FLAGS = -c -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -Icore
 
 
 #-Wa,aln=foo.s
 #No Codesize optimizations
-#GCCFLAGS = -c -g -w -std=c99 -Ilibraries
-#G++FLAGS = -c -g -w -fno-exceptions -Ilibraries
-VPATH = libraries/arduino \
-    libraries/SPI libraries/DbgTel libraries/Select \
-    libraries/ADE7753 libraries/Switches \
-	libraries/ReturnCode \
-	libraries/Circuit libraries/sd-reader libraries/Statistics
-#	libraries/SDRaw 
-#libraries/GSM 
+#GCCFLAGS = -c -g -w -std=c99 -Icore
+#G++FLAGS = -c -g -w -fno-exceptions -Icore
+VPATH = core/arduino \
+    core/SPI core/DbgTel core/Select \
+    core/ADE7753 core/Switches \
+	core/ReturnCode \
+	core/Circuit core/sd-reader core/Statistics \
+	core app
+#	core/SDRaw 
+#core/GSM 
 
 OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \
 	wiring_digital.o main.o \
@@ -47,11 +48,11 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \
 .DEFAUL_GOAL := install
 install: compile program
 all: compile program programfuses readfuses
-compile: $(PROJECT).hex
+compile: app/$(PROJECT).hex
 
 
 %.hex : $(OBJECT_FILES)
-	@avr-gcc -Os -Wl,--gc-sections -mmcu=$(MCU) -o $(PROJECT).elf $(OBJECT_FILES) -Llibraries -lm
+	@avr-gcc -Os -Wl,--gc-sections -mmcu=$(MCU) -o $(PROJECT).elf $(OBJECT_FILES) -Lcore -lm
 	@avr-objcopy -j .text -j .data -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex
 	@echo 
 	@avr-size -C --mcu=$(MCU) $(PROJECT).elf 
@@ -69,7 +70,7 @@ clean:
 	@rm -f *.o *.elf *.hex
 
 program: $(PROJECT).hex
-    #avrdude -p$(MCU) -cusbtiny -Uflash:w:$(PROJECT).hex
+    #avrdude -p$(MCU) -c $(PROGRAMMER) -Uflash:w:$(PROJECT).hex
     #Set B to 10 or higher if programming fails or intermittently fails
 	avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -Uflash:w:$< -B5 
 

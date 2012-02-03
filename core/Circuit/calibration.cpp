@@ -7,8 +7,8 @@
 #include "ADE7753/ADE7753.h"
 #include "Strings/strings.h"
 #include "Statistics/statistics.h"
+#include "cfg.h"
 
-#define dbg Serial1
 #define waitTime 8000
 #define NAVG 10
 
@@ -113,7 +113,7 @@ void calibrateCircuit(Circuit *c)
 	CSselectDevice(cCal.circuitID);
 	//CsetOn(&cCal,false);
 	
-	dbg.print("Ground both lines on circuit \'");
+	dbg.print("Ground both input lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 

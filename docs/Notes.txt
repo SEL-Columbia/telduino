@@ -10,12 +10,14 @@ Program them manually using P. (This is just for testing purposes now. Later on 
 Set the reporting interval using T in seconds. Then enter meter mode using M.
 
 
+CHANGELIST
+
 HALTON
 - Make sure that deployment meters all use one serial port or mirror output to both for monitoring.
 - Consistency in newlines
 - Hald race where meter outputs after a \r has been read
 
-Awaiting Test:
+AWAITING TEST:
 - Get Circuit up and running with new parameters and outputing reasonable results awaiting tests
 - Get calibration and saving routine working
 - Add functionality to interactive mode 
@@ -26,7 +28,11 @@ Awaiting Test:
 -- Go to interactive mode
 
 OVERALL TODO FOR HAITI:
-- Circuits code fills in obvious junk values if there is a comm error
+- Circuits code should fill in obvious junk values if there is a comm error
+- Fix issue with inconsistent state after reading something
+- Fix issue with scanf on metermode
+- Regularize input/output for Metermode and interactivemode
+
 - Add functionality to interactive mode 
 -- Autodetect number of active circuits
 -- to set number of actual circuits
@@ -38,9 +44,8 @@ OVERALL TODO FOR HAITI:
 - Power offset fix
 - Add an escape character or set of characters
 - Active power isn't working
-- Regularize the interactive mode grammer.
 
-Cleanup
+CLEANUP
 - Separate all printing from processing 
 - Make Circuit into a real objects
 - make initialization naming conventions sane
