@@ -13,7 +13,9 @@ Set the reporting interval using T in seconds. Then enter meter mode using M.
 HALTON
 - Make sure that deployment meters all use one serial port or mirror output to both for monitoring.
 - Consistency in newlines
-- Hald race where meter outputs after a \r has been read
+- Have race where meter outputs after a \r has been read
+- Need to reset flags after reading a value in meter mode
+- Fix meter mode parsing
 
 Awaiting Test:
 - Get Circuit up and running with new parameters and outputing reasonable results awaiting tests

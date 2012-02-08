@@ -74,8 +74,9 @@ void loop()
             if (buffCursor < (serBuffSize-1)) {
                 serBuff[buffCursor] = c;
                 if (c == '\r') {
-                    serBuff[buffCursor+1] = '\0';
+                    serBuff[buffCursor] = '\0';
                     buffCursor = 0;
+                    dbg.println(serBuff);
                     parseMeterMode(serBuff);
                 }
             } else {

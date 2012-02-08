@@ -5,9 +5,6 @@
 #include "arduino/wiring.h"
 #include "ReturnCode/returncode.h"
 
-uint64_t lastMeter = 0;
-int32_t sequenceNum = 0;
-const char *FMTSTRINGI = "%c %d %d\r";
 
 /** Command packet format (every packet has these fields)
  * COMMANDCHAR CIRCUIT NUMBER\r
@@ -34,6 +31,9 @@ const char *FMTSTRINGI = "%c %d %d\r";
 //(w)atts meter circuit
 
 //! do nothing NOP
+uint64_t lastMeter = 0;
+int32_t sequenceNum = 0;
+const char *FMTSTRINGI = "%c %hd %ld";
 
 void parseMeterMode(char *cmd) 
 {
@@ -119,11 +119,12 @@ void meter(Circuit *ckt)
 void meterAll() 
 {
     //Prepare all ckts for reading. If the code starts to rely on LINCYC, this can become counterproductive.
-    //TODO should I buffer all measurements then dump all at once?
+    dbg.println("ts,seq,#ID,S,V,I,Vp,Ip,per,VA,W,VAE,WE,PF");
     for (int i=0; i < NCIRCUITS; i++) {
         Cclear(&ckts[i]);
     }
     for (int i=0; i < NCIRCUITS; i++) {
+        RCreset();
         meter(&ckts[i]);
     }
 }

@@ -73,11 +73,11 @@ void Cmeasure(Circuit *c)
     //Start measuring
     ADEgetRegister(PERIOD,&regData);                    ERRCHECKRETURN(c);
     c->periodus = regData*22/10; //2.2us/bit
-    dbg.print("Peruiodus:");dbg.println(c->periodus,DEC);
+    //dbg.print("Peruiodus:");dbg.println(c->periodus,DEC);
 
     uint16_t waitTime = (uint16_t)((regData*22/100)*(c->halfCyclesSample/100));
     waitTime = waitTime + waitTime/2;//Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur
-    dbg.print("waitTime:"); dbg.println(waitTime,DEC);
+    //dbg.print("waitTime:"); dbg.println(waitTime,DEC);
     //uint16_t waitTime = 2*1000*c->halfCyclesSample/max(c->frequency,40);
 
     ADEwaitForInterrupt(CYCEND,waitTime);               ERRCHECKRETURN(c);
