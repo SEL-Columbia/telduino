@@ -10,6 +10,7 @@ Dependencies
 * avr-libc 1.7.1 
 * make
 * avrdude
+* doxygen for documentation
 
 The above are available in the WinAVR package if you are on a windows system
 
