@@ -76,8 +76,12 @@ void loop()
                 if (c == '\r') {
                     serBuff[buffCursor] = '\0';
                     buffCursor = 0;
-                    dbg.println(serBuff);
+                    dbg.print("buff:");
+                    dbg.print(serBuff);
+                    dbg.println(":");
                     parseMeterMode(serBuff);
+                } else {
+                    buffCursor += 1;
                 }
             } else {
                 //TODO handle overflow better

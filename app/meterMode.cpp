@@ -42,11 +42,6 @@ void parseMeterMode(char *cmd)
     int32_t arg = 0;
 
     //TODO Sanitize input
-    dbg.print("scanf:");
-    dbg.println(sscanf(cmd,FMTSTRINGI,&action, &cktID, &arg));
-    dbg.println();
-    dbg.print("printResults:");
-    printResults(action,cktID,arg);
 
     if ( sscanf(cmd,FMTSTRINGI,&action, &cktID, &arg) != 3) {
         printResults('!',21,-1);
