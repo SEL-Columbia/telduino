@@ -217,15 +217,15 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->chIint = false;//TODO true;
     c->chIos = 0;
     c->chIgainExp = 1;
-    c->IRMSoffset = 0;//-2048;//0x01BC;
-    c->IRMSslope = 1;//.0010;//164;
+    c->IRMSoffset = -2048;//-2048;//0x01BC;
+    c->IRMSslope = 2.25;//.0010;//164; //Units?
 
     /** Voltage Parameters */
     c->chVos = 1;//15;
     c->chVgainExp = 4;
     c->chVscale = 0;
-    c->VRMSoffset = 2047;//0x07FF;
-    c->VRMSslope = .2199;//4700;
+    c->VRMSoffset = -2048;//0x07FF;
+    c->VRMSslope = .1094//.2199;//4700;
 
     // Power Parameters
     c->VAEslope = 1;//34.2760;//2014/10000.0;
