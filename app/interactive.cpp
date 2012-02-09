@@ -138,7 +138,7 @@ void parseBerkeley()
         RCreset();
 
         //Switch the channel On
-        ADEwaitForInterrupt(ZX0,10);
+        ADEwaitForInterrupt(ZX0,20);
         SWset(_testChannel,true);
         switchings += 1;
 
@@ -281,6 +281,39 @@ void parseBerkeley()
                     } 
                 }
                 break;
+            case 'B':
+				CSselectDevice(_testChannel);
+				dbg.print("Reading IRMS and VRMS after zero-crossing: \n\r");
+				//set interrrupt enable for zero crossing: ADDR 0x0A = 0x0010
+				ADEsetIrqEnBit(ZX,true);
+				//reset the interrupt status: Read Reg ADDR 0x0C
+				ADEgetRegister(RSTSTATUS,&regData);
+			
+				//wait for Interrupt for 20 millisecs
+				ADEwaitForInterrupt(ZX,20);
+				dbg.print("_retCode after wait for interrupt: ");
+				dbg.print(RCstr(_retCode));
+				dbg.println();
+				ifnsuccess(_retCode == TIMEOUT){
+					dbg.print("We didn't get the ZX interrupt! Timeout!!\n\r");}
+				//read VRMS
+				ADEgetRegister(IRMS,&regData);
+				dbg.print("IRMS:");
+                dbg.print(RCstr(_retCode));
+                dbg.print(":0x");
+                dbg.print(regData,HEX);
+                dbg.print(":");
+                dbg.println(regData,DEC);
+				//read IRMS
+				ADEgetRegister(VRMS,&regData);
+				dbg.print("VRMS:");
+                dbg.print(RCstr(_retCode));
+                dbg.print(":0x");
+                dbg.print(regData,HEX);
+                dbg.print(":");
+                dbg.println(regData,DEC);				
+				//done
+				break;
             case 'C':                       //Change active channel for ADE, switching, and metering
                 _testChannel = getChannelID();    
                 break;

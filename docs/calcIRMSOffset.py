@@ -14,14 +14,14 @@ import os
 
 
 def main():
-	v1 = 0.12
-	v2 = 2.57
-	vrms0_1 = 19200.0
-	vrms0_2 = 413000.0
-	r = v1/v2
-	offset = (r**2*vrms0_2**2-vrms0_1**2)/(1-r**2)/32768.
-	print "for v1 = ", v1, " and v2 = ", v2
-	print "vrms0_1 is: ", vrms0_1, " and vrms0_2 is: ", vrms0_2
+	i1 = 0.210
+	i2 = .138
+	irms0_1 = 94350.0
+	irms0_2 = 62585.0
+	r = i1/i2
+	offset = (r**2*irms0_2**2-irms0_1**2)/(1-r**2)/32768.
+	print "for i1 = ", i1, " and i2 = ", i2
+	print "irms0_1 is: ", irms0_1, " and irms0_2 is: ", irms0_2
 	print "IRMS offset is: ", offset
 
 
