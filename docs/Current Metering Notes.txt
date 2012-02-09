@@ -1,19 +1,15 @@
 Steps to get the Current Metering Working on the Ade
 =====================================================
 
-1. Set the MSB of CH1OS register to 1. This enables the digital integrator on that channel and thus lets us use the di/dt sensor.
+1. Set the MSB of CH1OS register to 0. This disables the digital integrator on that channel.
 	
-	After setting this value, CH1OS = 0x01
+2. Check the Gain Register. We want 16x gain on CH1 and .125V range
 
-2. Check the Gain Register. We want 1x gain and full range on both analog channels
-
-	Right now GAIN = 0x00
+	Right now GAIN = 0x24
 
 3. Full range for the current wave form is (0xD7AE14 to 0 to 0x2851EC) in increasing order. This is 0x2851EC (+2,642,412d) and 0xD7AE14 (–2,642,412d).
 
 	So its a 24bit 2's complement number with some subtleties.
-
-4. The di/dt sensor + integrator adds noise component at 20db per decade so we need to make sure that there is a total filtering of 40 db per decade.
 
 5. To Correct the offset: To measure the offset of the rms measurement, two data points are needed from non-zero input values, for example, the base current, Ib, and Imax/100. The offset can be calculated from these measurements.
 
