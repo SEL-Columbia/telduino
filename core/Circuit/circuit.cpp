@@ -225,7 +225,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->chVgainExp = 4;
     c->chVscale = 0;
     c->VRMSoffset = -2048;//0x07FF;
-    c->VRMSslope = .1094//.2199;//4700;
+    c->VRMSslope = .1094;//.2199;//4700;
 
     // Power Parameters
     c->VAEslope = 1;//34.2760;//2014/10000.0;
@@ -300,13 +300,22 @@ void Cprint(HardwareSerial *ser, Circuit *c)
     ser->print("W slope&");
     ser->println(c->Wslope,4);
 
+    CSselectDevice(c->circuitID);
+
     ser->println("#ADE");
-    for (const ADEReg** reg = &regList[0]; reg < &(regList[regListSize-1]);reg++) {
+    for (const ADEReg** reg = &regList[0]; reg < &(regList[regListSize/sizeof(*reg)-1]);reg++) {
         int32_t regData = 0;
-        ser->print((**reg).name); ser->print("&"); 
+        ser->print((**reg).name); ser->print("& "); 
         ADEgetRegister(**reg,&regData);
-        ser->println(regData);
+        ifsuccess(_retCode) {
+            ser->print(":0x");
+            ser->print(regData,HEX);
+            ser->print(":");
+            ser->print(regData,DEC);
+        }
+        ser->println();
     }
+    CSselectDevice(DEVDISABLE);
 }
 
 void CprintMeas(HardwareSerial *ser, Circuit *c)
