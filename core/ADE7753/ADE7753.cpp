@@ -182,13 +182,10 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
   */
 void ADEsetRegister(ADEReg reg, int32_t *value)
 {
-	//Serial.print("SET ");
-	//Serial.println(reg.name);
 	_retCode = SUCCESS;
 	uint32_t writeData;
 	uint8_t nBytes = (reg.nBits+7)/8;
 	uint8_t shiftBits = nBytes*8-reg.nBits;
-	//Serial.println(shiftBits,DEC);
 
 	if (reg.signType == TWOS || reg.signType == UNSIGN) {
 		writeData = *value;
@@ -199,18 +196,11 @@ void ADEsetRegister(ADEReg reg, int32_t *value)
 		//Serial.println("MAJOR PROBLEM");
 		_retCode = FAILURE;
 	}
-	//write data
-	//Serial.println("writtenData: ");
-	//Serial.println(writeData,HEX);
 	ADEwriteData(reg, &writeData);
-	//Serial.println(writeData<<shiftBits,HEX);
 
-	//read data and verify
+	// Verify
 	uint32_t readData;
 	ADEreadData(reg,&readData);
-	//Serial.println("readData   : ");
-	//Serial.println(readData,HEX);
-	//Serial.println(readData<<shiftBits,HEX);
 	if ((writeData<<shiftBits) != (readData<<shiftBits)) {
 		_retCode = COMMERR;
 	}
@@ -285,7 +275,9 @@ void ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val)
 }
 
 /** 
-  * @return 1 if interrupt is fired. Returns 0 otherwise or if a failure occurs. 
+  * @return 1 if interrupt is fired. Returns 0 otherwise or if a failure occurs.
+  * @ warning The proper flag in the Enable interrupt register must also be set.
+  * The ZX0 mask can be used to detect a 0 bit as opposed to a 1 on the ZX register
   */
 int8_t ADEreadInterrupt(uint16_t regMask)
 {

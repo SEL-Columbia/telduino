@@ -62,6 +62,7 @@ void Cmeasure(Circuit *c)
 {
     int32_t regData;
     int8_t timeout = false;
+    RCreset();
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
 
     //Check for presence 
@@ -184,10 +185,17 @@ int8_t CisOn(Circuit *c)
     return SWisOn(c->circuitID);
 }
 
+/**
+ *  Loads circuit data from the EEPROM into memory. This data can now be used to program the registers.
+ * */
 void Cload(Circuit *c, Circuit* addrEEPROM)
 {
     eeprom_read_block(c,(uint8_t*)addrEEPROM,sizeof(Circuit));
 }
+
+/**
+ *  Save circuit data from the memory into EEPROM.
+ * */
 void Csave(Circuit *c, Circuit* addrEEPROM) 
 {
     eeprom_update_block(c,(uint8_t*)addrEEPROM,sizeof(Circuit));
@@ -247,9 +255,14 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 
 }
 
+/**
+ * Prints all circuit values from memory and the current ADE settings for the circuit. 
+ * @warning These values are not correlated until they have been programmed.
+ * */
 void Cprint(HardwareSerial *ser, Circuit *c) 
 {
 
+    ser->print("#Circuit");
     ser->print("circuitID&");
     ser->println(c->circuitID);
     ser->print("halfCyclesSample&");
@@ -258,18 +271,42 @@ void Cprint(HardwareSerial *ser, Circuit *c)
     ser->println(c->phcal);
     ser->print("chIint&");
     ser->println(c->chIint);
+    ser->print("chIOS&");
+    ser->println(c->chIos);
     ser->print("chIgainExp&");
     ser->print(c->chIgainExp);
     ser->print("IRMSOS&");
     ser->println(c->IRMSoffset);
-    ser->print("VRMSOS&");
-    ser->println(c->VRMSoffset);
     ser->print("IRMS slope&");
     ser->println(c->IRMSslope,4);
+
+    ser->print("chVOS&");
+    ser->println(c->chVos);
+    ser->print("chIgainExp&");
+    ser->print(c->chVgainExp);
+    ser->print("chVscale&");
+    ser->println(c->chVscale);
+    ser->print("VRMSOS&");
+    ser->println(c->VRMSoffset);
     ser->print("VRMS slope&");
     ser->println(c->VRMSslope,4);
+
     ser->print("VAE slope&");
     ser->println(c->VAEslope,4);
+    ser->print("VA OS&");
+    ser->println(c->VAoffset,4);
+    ser->print("W OS&");
+    ser->println(c->VAoffset,4);
+    ser->print("W slope&");
+    ser->println(c->Wslope,4);
+
+    ser->println("#ADE");
+    for (const ADEReg** reg = &regList[0]; reg < &(regList[regListSize-1]);reg++) {
+        int32_t regData = 0;
+        ser->print((**reg).name); ser->print("&"); 
+        ADEgetRegister(**reg,&regData);
+        ser->println(regData);
+    }
 }
 
 void CprintMeas(HardwareSerial *ser, Circuit *c)

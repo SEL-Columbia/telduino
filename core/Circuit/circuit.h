@@ -25,9 +25,9 @@ typedef struct {
 	  Current parameters
 	*/
 	int8_t chIint;
-	int8_t chIos;
+	int8_t chIos;       // Channel I offset
 	int8_t chIgainExp;
-	int16_t IRMSoffset;
+	int16_t IRMSoffset; // IRMS value offset
 	float IRMSslope;	// Converts measured units into Amps
 
 	/** 

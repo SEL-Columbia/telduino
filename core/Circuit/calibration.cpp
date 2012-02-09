@@ -28,6 +28,7 @@
 
 /**
 	Used to gather measurement data interactively over the serial port (dbg). 
+	@warning Assumes 200 line cycles and 50hz
   */
 int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMeas,
 	 		               int32_t *VRMSCkt, int32_t *IRMSCkt,  int32_t *VACkt ) 
@@ -43,7 +44,6 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	ADEgetRegister(RSTSTATUS,VRMSCkt); //reset interrupt
 	ADEwaitForInterrupt(ZX,waitTime);
 	EXITIFNOCYCLES();
-	//dbg.println("Saw ZX as 1");
 	ADEwaitForInterrupt(ZX0,waitTime);
 	//CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
@@ -64,13 +64,13 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	dbg.print("ADEVRMS: "); dbg.println(*VRMSCkt);
 	dbg.print("ADEIRMS: "); dbg.println(*IRMSCkt);
 
-	//TODO For active power attach load
+	//TODO For active power PHCAL attach reactive load
+    
 	//getVA from Ckt
 	ADEgetRegister(RSTSTATUS,VACkt);
 	ADEwaitForInterrupt(CYCEND,waitTime);
 	EXITIFNOCYCLES();
 	ADEgetRegister(LVAENERGY,VACkt);
-	//Assumes 200 line cycles and 50hz
 	return true;
 }
 
@@ -202,7 +202,8 @@ void calibrateCircuit(Circuit *c)
 	ifnsuccess(_retCode) {
 		dbg.println(ADEFAILEDSTR);
 		return;
-	} 
+	}
+    CsetOn(c, false);
 	CSselectDevice(DEVDISABLE);
 	dbg.println(COMPLETESTR);
 }
