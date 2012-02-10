@@ -74,11 +74,11 @@ void Cmeasure(Circuit *c)
     //Start measuring
     ADEgetRegister(PERIOD,&regData);                    ERRCHECKRETURN(c);
     c->periodus = regData*22/10; //2.2us/bit
-    //dbg.print("Peruiodus:");dbg.println(c->periodus,DEC);
+
+    dbg.println("Measuring Ckt");
 
     uint16_t waitTime = (uint16_t)((regData*22/100)*(c->halfCyclesSample/100));
     waitTime = waitTime + waitTime/2;//Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur
-    //dbg.print("waitTime:"); dbg.println(waitTime,DEC);
     //uint16_t waitTime = 2*1000*c->halfCyclesSample/max(c->frequency,40);
 
     ADEwaitForInterrupt(CYCEND,waitTime);               ERRCHECKRETURN(c);
@@ -278,7 +278,7 @@ void Cprint(HardwareSerial *ser, Circuit *c)
     ser->print("IRMSOS&");
     ser->println(c->IRMSoffset);
     ser->print("IRMS slope&");
-    ser->println(c->IRMSslope,4);
+    ser->println(c->IRMSslope);
 
     ser->print("chVOS&");
     ser->println(c->chVos);
@@ -289,19 +289,29 @@ void Cprint(HardwareSerial *ser, Circuit *c)
     ser->print("VRMSOS&");
     ser->println(c->VRMSoffset);
     ser->print("VRMS slope&");
-    ser->println(c->VRMSslope,4);
+    ser->println(c->VRMSslope);
 
     ser->print("VAE slope&");
-    ser->println(c->VAEslope,4);
+    ser->println(c->VAEslope);
     ser->print("VA OS&");
-    ser->println(c->VAoffset,4);
+    ser->println(c->VAoffset);
     ser->print("W OS&");
-    ser->println(c->VAoffset,4);
+    ser->println(c->VAoffset);
     ser->print("W slope&");
-    ser->println(c->Wslope,4);
+    ser->println(c->Wslope);
+
+    ser->print("IRMS"); ser->println(c->IRMS);
+    ser->print("VRMS"); ser->println(c->VRMS);
+    ser->print("Period"); ser->println(c->periodus);
+    ser->print("VA"); ser->println(c->VA);
+    ser->print("W"); ser->println(c->W);
+    ser->print("PF"); ser->println(c->PF);
+    ser->print("VA Energy"); ser->println(c->VAEnergy);
+    ser->print("W Energy"); ser->println(c->WEnergy);
+    ser->print("ipeak"); ser->println(c->ipeak);
+    ser->print("vpeak"); ser->println(c->vpeak);
 
     CSselectDevice(c->circuitID);
-
     ser->println("#ADE");
     for (const ADEReg** reg = &regList[0]; reg < &(regList[regListSize/sizeof(*reg)-1]);reg++) {
         int32_t regData = 0;
@@ -320,29 +330,29 @@ void Cprint(HardwareSerial *ser, Circuit *c)
 
 void CprintMeas(HardwareSerial *ser, Circuit *c)
 {
-    ser->print(c->circuitID);
+    ser->print(c->circuitID,DEC);
     ser->print(",");
-    ser->print(CisOn(c));
+    ser->print(CisOn(c),DEC);
     ser->print(",");
-    ser->print(c->VRMS);
+    ser->print(c->VRMS,DEC);
     ser->print(",");
-    ser->print(c->IRMS);
+    ser->print(c->IRMS,DEC);
     ser->print(",");
-    ser->print(c->vpeak);
+    ser->print(c->vpeak,DEC);
     ser->print(",");
-    ser->print(c->ipeak);
+    ser->print(c->ipeak,DEC);
     ser->print(",");
-    ser->print(c->periodus);
+    ser->print(c->periodus,DEC);
     ser->print(",");
-    ser->print(c->VA);
+    ser->print(c->VA,DEC);
     ser->print(",");
-    ser->print(c->W);
+    ser->print(c->W,DEC);
     ser->print(",");
-    ser->print(c->VAEnergy);
+    ser->print(c->VAEnergy,DEC);
     ser->print(",");
-    ser->print(c->WEnergy);
+    ser->print(c->WEnergy,DEC);
     ser->print(",");
-    ser->print(c->PF);
+    ser->print(c->PF,DEC);
     ser->print(",");
     // TODO VA ACCUM
     ser->print(0);

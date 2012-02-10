@@ -356,17 +356,14 @@ void parseBerkeley()
                 }
                 printTableStrings(codes,NCIRCUITS);
                 break;
-            case 'p':                       //Measure circuit values and print
+            case 'p':                       //Print Circuit values
                 c = &(ckts[_testChannel]);
-                Cmeasure(c);
-                dbg.println(RCstr(_retCode));
-                CprintMeas(&dbg,c);
                 Cprint(&dbg,c);
                 dbg.println();
                 break;
             case 'R':                       //Hard Reset using watchdog timer
                wdt_enable((WDTO_4S));            
-               dbg.println("resetting in 4s.");
+               dbg.println(" #resetting in 4s.");
                break;
             case 'S':                       //Toggle channel switch
                 ID = getChannelID();        
@@ -376,17 +373,17 @@ void parseBerkeley()
                 displayEnabled(SWgetSwitchState());
                 break;
             case'T':                        //Change reporting interval
-                dbg.print(" New Reporting Interval:");
+                dbg.print(" #New Reporting Interval:");
                 ifsuccess(CLgetInt(&dbg,&retVal)) {
                     reportInterval = retVal;
                 }
                 break;
             case 't':
-                dbg.print(" Reporting Interval:");
+                dbg.print(" #Reporting Interval:");
                 dbg.println(reportInterval);
                 break;
             case 'M':                       //Change Interaction Mode
-                dbg.print(" 2 for meter mode, 1 for interactive mode:"); 
+                dbg.print(" #2 for meter mode, 1 for interactive mode:"); 
                 ifsuccess(CLgetInt(&dbg,&retVal)) {
                     if ( retVal == INTERACTIVEMODE || retVal == METERMODE) {
                         mode = retVal;
@@ -396,6 +393,15 @@ void parseBerkeley()
                 }
                 dbg.println();
                 dbg.println("Bad Input.");
+                break;
+            case 'm':                       //Meter but do not print
+                Cmeasure(&ckts[_testChannel]);
+                ifsuccess(_retCode) {
+                    dbg.println("#Meter Completely Successful.");
+                } else {
+                    dbg.println("#Meter unsuccessful.");
+                }
+                RCreset();
                 break;
             case 'o':                       //Wait for zero-crossing
                 CSselectDevice(_testChannel);

@@ -51,7 +51,8 @@ void parseMeterMode(char *cmd)
     switch (action) {
         case 'S':
             if (cktID == -1) {
-                for (int8_t id = MAINS+1; id<NCIRCUITS;id++) {
+                for (int8_t id = 0; id<NCIRCUITS;id++) {
+                    if (id == MAINS) continue;
                     CsetOn(&ckts[id],arg);
                 }
             } else {
@@ -114,7 +115,7 @@ void meter(Circuit *ckt)
 void meterAll() 
 {
     //Prepare all ckts for reading. If the code starts to rely on LINCYC, this can become counterproductive.
-    dbg.println("ts,seq,#ID,S,V,I,Vp,Ip,per,VA,W,VAE,WE,PF");
+    dbg.println("ts,seq,#ID,S,V,I,Vp,Ip,per,VA,W,VAE,WE,PF,0,0,Errcode");
     for (int i=0; i < NCIRCUITS; i++) {
         Cclear(&ckts[i]);
     }
