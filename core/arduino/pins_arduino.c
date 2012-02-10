@@ -199,7 +199,23 @@ const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	PK	, // PK 4 ** 66 ** A12	
 	PK	, // PK 5 ** 67 ** A13	
 	PK	, // PK 6 ** 68 ** A14	
-	PK	, // PK 7 ** 69 ** A15	
+	PK	, // PK 7 ** 69 ** A15	//////////// New Pins mapped below
+	PD	, // PF 0 ** 70 ** 	
+	PD	, // PF 1 ** 71 ** 	
+	PD	, // PF 2 ** 72 ** 	
+	PE	, // PF 3 ** 73 ** 	
+	PE	, // PF 4 ** 74 ** 	
+	PG	, // PF 5 ** 75 ** 	
+	PG	, // PF 6 ** 76 ** 	
+	PH	, // PF 7 ** 77 ** 	
+	PJ	, // PK 0 ** 78 ** 	
+	PJ	, // PK 1 ** 79 ** 	
+	PJ	, // PK 2 ** 80 ** 	
+	PJ	, // PK 3 ** 81 ** 	
+	PJ	, // PK 4 ** 82 ** 	
+	PJ	, // PK 5 ** 83 ** 	
+	PL	, // PK 6 ** 84 ** 	
+	PL	, // PK 7 ** 85 ** 	
 };
 
 const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
@@ -274,7 +290,23 @@ const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
 	_BV( 4 )	, // PK 4 ** 66 ** A12	
 	_BV( 5 )	, // PK 5 ** 67 ** A13	
 	_BV( 6 )	, // PK 6 ** 68 ** A14	
-	_BV( 7 )	, // PK 7 ** 69 ** A15	
+	_BV( 7 )	, // PK 7 ** 69 ** A15	/////New Channels below
+	_BV( 4 )	, // PD 4 ** 70 ** 	
+	_BV( 5 )	, // PD 5 ** 71 ** 	
+	_BV( 6 )	, // PD 6 ** 72 ** 	
+	_BV( 6 )	, // PE 6 ** 73 ** 	
+	_BV( 7 )	, // PE 7 ** 74 ** 	
+	_BV( 3 )	, // PG 3 ** 75 ** 	
+	_BV( 4 )	, // PG 4 ** 76 ** 	
+	_BV( 7 )	, // PH 7 ** 77 ** 	
+	_BV( 2 )	, // PJ 2 ** 78 ** 	
+	_BV( 3 )	, // PJ 3 ** 79 ** 	
+	_BV( 4 )	, // PJ 4 ** 80 ** 	
+	_BV( 5 )	, // PJ 5 ** 81 ** 	
+	_BV( 6 )	, // PJ 6 ** 82 ** 	
+	_BV( 7 )	, // PJ 7 ** 83 ** 	
+	_BV( 5 )	, // PL 5 ** 84 ** 	
+	_BV( 6 )	, // PL 6 ** 85 ** 	
 };
 
 const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
