@@ -61,7 +61,7 @@ void parseMeterMode(char *cmd)
         case 'M':
             mode = arg;
             break;
-        case 'R':
+        case 'T':
             reportInterval = arg;
             break;
         case 'W':
@@ -76,7 +76,7 @@ void parseMeterMode(char *cmd)
         case 'm':
             arg = mode;
             break;
-        case 'r':
+        case 't':
             arg = reportInterval;
             break;
         default:

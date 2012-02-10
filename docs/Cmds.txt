@@ -26,3 +26,12 @@ z         //Read out results from test
 Z         //Start switch and metering test
 
 METER MODE
+M Change to meter or interactive mode with 2 or 1 respectively.
+m Return mode
+S switch circuit on or off (1,0)
+s return state of circuit
+T change reporting interveral in seconds
+t read reporting interval in seconds
+W meterAll circuits
+w meter a particular circuit
+! do nothing

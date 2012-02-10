@@ -14,10 +14,8 @@ CHANGELIST
 
 HALTON
 - Make sure that deployment meters all use one serial port or mirror output to both for monitoring.
-- Consistency in newlines
 - Have race where meter outputs after a \r has been read
 - Need to reset flags after reading a value in meter mode
-- Fix meter mode parsing
 
 AWAITING TEST:
 - Get Circuit up and running with new parameters and outputing reasonable results awaiting tests
@@ -26,14 +24,11 @@ AWAITING TEST:
 -- to set a reporting period for metering data.
 - Add a metering mode that has the following components
 -- Regular reporting accord to the above configuration
--- Switching
--- Go to interactive mode
 
 OVERALL TODO FOR HAITI:
 - Circuits code should fill in obvious junk values if there is a comm error
 - Fix issue with inconsistent state after reading something
-- Fix issue with scanf on metermode
-- Regularize input/output for Metermode and interactivemode
+- Regularize input/output for and interactivemode
 
 - Add functionality to interactive mode 
 -- Autodetect number of active circuits
@@ -50,7 +45,7 @@ OVERALL TODO FOR HAITI:
 CLEANUP
 - Separate all printing from processing 
 - Make Circuit into a real objects
-- make initialization naming conventions sane
+- Make initialization naming conventions sane
 - Create a constants file to initialize switch data so that all constants are in one place.
 
 ReturnValues
@@ -76,8 +71,7 @@ ADE
 - Need to error check input ranges before sending to ADE
 - Need to make sure that x bits are being used for numerical data.
 - Write handlers for calibration
-- refactor get/set register to not use pointer.
-- VAslope and Wslope should be fixed parameters and then Wgain and VAgain should be set during calibration.
+- Refactor get/set register to not use pointers
 
 Docs
 - add reference in doxygen
@@ -105,11 +99,6 @@ Doxygen Basics:
 
 
 ARCHITECTURE
-(TODO pull data out of Rajesh's code)
-
-ADE7753
-ShiftRegister
-Demux
 SDRAW -> SDFAT32
 Debug
 	- Manages LEDs
@@ -135,3 +124,7 @@ QueryEngine
 	- Aggregates data from Logger, Circuits, and Accounts
 	- Formats for GSM or logging
 	- Sends to GSM, logger
+
+
+ChangeList
+Added metering mode with switching and metering at constant or polled intervals.
