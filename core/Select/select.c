@@ -10,7 +10,8 @@
 
 // I know that static auto-initializes to 0, but why isn't it explictly declared? -AM
 static int _device;
-static const int8_t mapCtoPinCS[] = {62,57};
+static const int8_t mapCtoPinCS[] = {62,57,68,67,24,23,29,28,79,80,31,30,36,35,72,38,42,21,47,46};
+//NOTE: ABOVE 00 means that these need to be assigned in pins_arduino.C !!!!!!!! - AM 2/9/2012
 
 /**
 *   Initiallizes the SDSS pin and sets all other CS pins to high.

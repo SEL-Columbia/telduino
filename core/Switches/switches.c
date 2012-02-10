@@ -4,8 +4,8 @@
 /**
     Mapping from switch number to pins.
 */
-static const int8_t mapSWtoPinON[] = {11,56};
-static const int8_t mapSWtoPinOFF[] = {55,54};
+static const int8_t mapSWtoPinON[] = {11,56,10,66,74,22,73,27,3,81,48,15,76,34,75,41,77,20,13,45};
+static const int8_t mapSWtoPinOFF[] = {55,54,65,64,83,69,26,25,82,39,14,78,33,32,40,37,70,71,84,85};
 
 /**
   The workhorse of the Switches library. This function along with 
