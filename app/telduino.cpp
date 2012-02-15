@@ -63,6 +63,9 @@ void setup()
     for (int i=0; i < NCIRCUITS; i++) {
         Cload(&ckts[i],&cktsSave[i]);
     }
+    for (int i=0; i < NCIRCUITS; i++) {
+        Cprogram(&ckts[i]);
+    }
 }
 
 

@@ -138,7 +138,7 @@ void Cmeasure(Circuit *c)
 void Cprogram(Circuit *c)
 {
     int32_t regData;
-    _retCode = SUCCESS;
+    RCreset();
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
 
     ADEreset();
@@ -229,9 +229,9 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->VRMSslope = .1068; /** in mV/Counts */
 
     /** Power Calibration Parameters */
-    c->VAEslope = 37.5;//34.2760;//2014/10000.0; mJ/Counts
+    c->VAEslope = 75300;//34.2760;//2014/10000.0; mJ/Counts
     c->VAoffset = 0;// TODO not used yet
-    c->Wslope= 31.05; // TODO not used yet mJ/Counts for watts
+    c->Wslope= 31050; // TODO not used yet mJ/Counts for watts
     c->Woffset=0;// TODO not used yet
 
     /** Software Saftey Parameters */
