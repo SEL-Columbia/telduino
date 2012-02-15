@@ -109,6 +109,7 @@ void meterAuto()
 
 void meter(Circuit *ckt)
 {
+    RCreset();
     Cmeasure(ckt);
     printMeter(ckt);
 }
@@ -120,7 +121,6 @@ void meterAll()
         Cclear(&ckts[i]);
     }
     for (int i=0; i < NCIRCUITS; i++) {
-        RCreset();
         meter(&ckts[i]);
     }
 }

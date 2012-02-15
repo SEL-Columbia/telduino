@@ -48,6 +48,7 @@ void Cclear(Circuit *c)
     c->status &= ~COMM;
     c->status &= 0xFFFF0000;
     c->status |= (0x0000FFFF&regData);
+    CSselectDevice(DEVDISABLE);                       ERRCHECKRETURN(c);
 }
 
 /** 
@@ -77,7 +78,7 @@ void Cmeasure(Circuit *c)
 
     dbg.println("Measuring Ckt");
 
-    uint16_t waitTime = (uint16_t)((regData*22/100)*(c->halfCyclesSample/100));
+    uint16_t waitTime = (uint16_t)((regData*22/100.0)*(c->halfCyclesSample/100));
     waitTime = waitTime + waitTime/2;//Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur
     //uint16_t waitTime = 2*1000*c->halfCyclesSample/max(c->frequency,40);
 
@@ -90,11 +91,11 @@ void Cmeasure(Circuit *c)
     if (!timeout) {
         //Apparent power or Volt Amps
         ADEgetRegister(LVAENERGY,&regData);             ERRCHECKRETURN(c);
-        c->VA = regData*c->VAEslope/(c->halfCyclesSample/2*c->periodus/1000);  //Watts
+        c->VA = regData*c->VAEslope/(c->halfCyclesSample/2.0*c->periodus/1000000);  //Watts
 
         //Active power or watts
         ADEgetRegister(LAENERGY,&regData);              ERRCHECKRETURN(c);
-        c->W = regData/(c->halfCyclesSample/2*c->periodus/1000);
+        c->W = regData*c->Wslope/(c->halfCyclesSample/2.0*c->periodus/1000000); //The denominator is the actual time in seconds
 
         //IRMS
         ADEgetRegister(IRMS,&regData);                  ERRCHECKRETURN(c);
@@ -110,7 +111,7 @@ void Cmeasure(Circuit *c)
 
         //Actve energy accumulated since last query
         ADEgetRegister(RAENERGY,&regData);              ERRCHECKRETURN(c);
-        c->WEnergy = regData*c->VAEslope/1000;
+        c->WEnergy = regData*c->Wslope/1000;
 
         //Current and Voltage Peaks
         ADEgetRegister(RSTIPEAK,&regData);              ERRCHECKRETURN(c);
@@ -166,7 +167,7 @@ void Cprogram(Circuit *c)
     } else {
         ADEsetModeBit(CYCMODE,false);                   ERRCHECKRETURN(c);
     }
-    regData = c->chIgainExp | (c->chVgainExp<<5) | (c->chVscale<<3);
+    regData =  (c->chVgainExp<<5) | (c->chVscale<<3) | c->chIgainExp;
     ADEsetRegister(GAIN,&regData);                      ERRCHECKRETURN(c);
     
     CSselectDevice(DEVDISABLE);
@@ -209,28 +210,28 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 {
     c->circuitID = circuitID;
 
-    /** Measurement Parameters */
+    /** Measurement Configuration Parameters */
     c->halfCyclesSample = 120;
     c->phcal = 11; //Ox0B
 
-    /** Current Parameters  */
-    c->chIint = false;//TODO true;
+    /** Current Calibration Parameters  */
+    c->chIint = false;
     c->chIos = 0;
-    c->chIgainExp = 1;
+    c->chIgainExp = 4;
     c->IRMSoffset = -2048;//-2048;//0x01BC;
-    c->IRMSslope = 2.25;//.0010;//164; //Units?
+    c->IRMSslope = .00224;//.0010;//164; /** in mA/Counts */
 
-    /** Voltage Parameters */
+    /** Voltage Calibration Parameters */
     c->chVos = 1;//15;
-    c->chVgainExp = 4;
+    c->chVgainExp = 1;
     c->chVscale = 0;
     c->VRMSoffset = -2048;//0x07FF;
-    c->VRMSslope = .1094;//.2199;//4700;
+    c->VRMSslope = .1068; /** in mV/Counts */
 
-    // Power Parameters
-    c->VAEslope = 1;//34.2760;//2014/10000.0;
+    /** Power Calibration Parameters */
+    c->VAEslope = 37.5;//34.2760;//2014/10000.0; mJ/Counts
     c->VAoffset = 0;// TODO not used yet
-    c->Wslope=1; // TODO not used yet
+    c->Wslope= 31.05; // TODO not used yet mJ/Counts for watts
     c->Woffset=0;// TODO not used yet
 
     /** Software Saftey Parameters */
@@ -247,11 +248,11 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->periodus = 1024;
     c->VA = 0;
     c->W = 0;
-    c->PF = 65534;
+    c->PF = 1234;// Is a value from 0 to 2^16-1
     c->VAEnergy = 0;
     c->WEnergy = 0;
-    c->ipeak = 1000;
-    c->vpeak = 240;
+    c->ipeak = 123;
+    c->vpeak = 123;
 
 }
 
@@ -322,6 +323,8 @@ void Cprint(HardwareSerial *ser, Circuit *c)
             ser->print(regData,HEX);
             ser->print(":");
             ser->print(regData,DEC);
+        } else {
+            ser->println("FAILURE");
         }
         ser->println();
     }
@@ -370,8 +373,19 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
 */
 int8_t CrestoreCommunications(Circuit *c)
 {
+    RCreset();
     CSselectDevice(c->circuitID);
     CSstrobe();
     
+    //Get DIEREV guaranteed not to be zero
+    int32_t regData = 0;
+    ADEgetRegister(DIEREV, &regData);
+    CSselectDevice(DEVDISABLE);
+
+    ifsuccess(_retCode) {
+        if (regData != 0) return true;
+    }
+    return false;
+
 }
 
