@@ -1,4 +1,4 @@
-** @file select.cpp
+/** @file select.cpp
 
 */
 #include <inttypes.h>
@@ -71,7 +71,7 @@ void CSstrobe()
 {
 	int device = _device;
 	CSselectDevice(DEVDISABLE);
-    delay(1):
+    delay(1);
 	CSselectDevice(device);
 }
 

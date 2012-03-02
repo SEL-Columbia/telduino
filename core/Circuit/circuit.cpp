@@ -260,54 +260,40 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 void Cprint(HardwareSerial *ser, Circuit *c) 
 {
 
-    ser->print("#Circuit");
-    ser->print("circuitID&");
-    ser->println(c->circuitID);
-    ser->print("halfCyclesSample&");
-    ser->println(c->halfCyclesSample);
-    ser->print("phcal&");
-    ser->println(c->phcal);
-    ser->print("chIint&");
-    ser->println(c->chIint);
-    ser->print("chIOS&");
-    ser->println(c->chIos);
-    ser->print("chIgainExp&");
-    ser->print(c->chIgainExp);
-    ser->print("IRMSOS&");
-    ser->println(c->IRMSoffset);
-    ser->print("IRMS slope&");
-    ser->println(c->IRMSslope);
+    ser->print("#CIRCUIT");
+    ser->print("circuitID:"); ser->print(c->circuitID);
+    ser->print("\thalfCyclesSample:"); ser->print(c->halfCyclesSample);
+    ser->print("\tphcal:"); ser->println(c->phcal);
 
-    ser->print("chVOS&");
-    ser->println(c->chVos);
-    ser->print("chIgainExp&");
-    ser->print(c->chVgainExp);
-    ser->print("chVscale&");
-    ser->println(c->chVscale);
-    ser->print("VRMSOS&");
-    ser->println(c->VRMSoffset);
-    ser->print("VRMS slope&");
-    ser->println(c->VRMSslope);
+    ser->print("chIint:"); ser->print(c->chIint);
+    ser->print("\tchIOS:"); ser->print(c->chIos);
+    ser->print("\tchIgainExp:"); ser->println(c->chIgainExp);
 
-    ser->print("VAE slope&");
-    ser->println(c->VAEslope);
-    ser->print("VA OS&");
-    ser->println(c->VAoffset);
-    ser->print("W OS&");
-    ser->println(c->VAoffset);
-    ser->print("W slope&");
-    ser->println(c->Wslope);
+    ser->print("IRMSOS:"); ser->print(c->IRMSoffset);
+    ser->print("\tIRMS slope:"); ser->print(c->IRMSslope);
+    ser->print("\tchVOS:"); ser->println(c->chVos);
 
-    ser->print("IRMS"); ser->println(c->IRMS);
-    ser->print("VRMS"); ser->println(c->VRMS);
-    ser->print("Period"); ser->println(c->periodus);
-    ser->print("VA"); ser->println(c->VA);
-    ser->print("W"); ser->println(c->W);
-    ser->print("PF"); ser->println(c->PF);
-    ser->print("VA Energy"); ser->println(c->VAEnergy);
-    ser->print("W Energy"); ser->println(c->WEnergy);
-    ser->print("ipeak"); ser->println(c->ipeak);
-    ser->print("vpeak"); ser->println(c->vpeak);
+    ser->print("chIgainExp:"); ser->print(c->chVgainExp);
+    ser->print("\tchVscale:"); ser->print(c->chVscale);
+    ser->print("\tVRMSOS:"); ser->println(c->VRMSoffset);
+
+    ser->print("VRMS slope:"); ser->print(c->VRMSslope);
+    ser->print("\tVAE slope:"); ser->print(c->VAEslope);
+    ser->print("\tVA OS:"); ser->println(c->VAoffset);
+
+    ser->print("W OS:"); ser->print(c->VAoffset);
+    ser->print("\tW slope:"); ser->println(c->Wslope);
+
+    ser->print("IRMS:"); ser->print(c->IRMS);
+    ser->print("\tVRMS:"); ser->print(c->VRMS);
+    ser->print("\tPeriod:"); ser->println(c->periodus);
+    ser->print("VA:"); ser->print(c->VA);
+    ser->print("\tW:"); ser->print(c->W);
+    ser->print("\tPF:"); ser->println(c->PF);
+    ser->print("VA Energy:"); ser->print(c->VAEnergy);
+    ser->print("\tW Energy:"); ser->print(c->WEnergy);
+    ser->print("\tipeak:"); ser->println(c->ipeak);
+    ser->print("vpeak:"); ser->println(c->vpeak);
 
     CSselectDevice(c->circuitID);
     ser->println("#ADE");

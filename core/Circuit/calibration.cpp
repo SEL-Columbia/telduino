@@ -45,7 +45,6 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	ADEwaitForInterrupt(ZX,waitTime);
 	EXITIFNOCYCLES();
 	ADEwaitForInterrupt(ZX0,waitTime);
-	//CsetOn(&cCal,false);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,VRMSCkt);
 	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return false;}
@@ -56,7 +55,7 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(*IRMSMeas,DEC);
-	*VAMeas = *IRMSMeas**VRMSMeas*2/1000;
+	*VAMeas = *IRMSMeas*(*VRMSMeas)*2/1000;
 
 	//get IRMS from Ckt
 	ADEgetRegister(IRMS,IRMSCkt);
@@ -111,7 +110,6 @@ void calibrateCircuit(Circuit *c)
 
 	//Calibrate low level channel offsets
 	CSselectDevice(cCal.circuitID);
-	//CsetOn(&cCal,false);
 	
 	dbg.print("Ground both input lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
@@ -119,28 +117,22 @@ void calibrateCircuit(Circuit *c)
 
 	//Set waveform mode to read voltage
 	dbg.println("Configuring to read raw voltage.");
-	ADEsetModeBit(WAVESEL_0,true);
-	ifnsuccess(_retCode) return;
-	ADEsetModeBit(WAVESEL1_,true);
-	ifnsuccess(_retCode) return;
+	ADEsetModeBit(WAVESEL_0,true); ifnsuccess(_retCode) return;
+	ADEsetModeBit(WAVESEL1_,true); ifnsuccess(_retCode) return;
 	ADEsetIrqEnBit(WSMP,true);	//The WAVEFORM register will not work without this.
-	ADEsetIrqEnBit(CYCEND,true);//Just in case
-	ifnsuccess(_retCode) return;
-	//dbg.println("WAVEFORM set to V, WSMP set to 1.");
+	ADEsetIrqEnBit(CYCEND,true);/*Just in case */ ifnsuccess(_retCode) return;
 	
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
-	//CsetOn(&cCal,true);
 	CSstrobe();
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(WSMP,waitTime);
 	ifnsuccess(_retCode) {CsetOn(&cCal,false); dbg.println("Waiting for WSMP failed."); return;}
 	ADEgetRegister(WAVEFORM,&regData);
-	//CsetOn(&cCal,false); 
 	ifnsuccess(_retCode) {dbg.println("get WAVEFORM failed"); return;}
 	dbg.print("CHVwaveform:"); dbg.println(regData);
 	//regData = regData*500*100/10322/161; //(1.61mV/LSB in CH2OS) and 500/10322 in WAVEFORM
-	regData = (regData*31549)>>20; 
+	regData = (regData*31549)>>20;  /** This value changes depenging on the hardware configuration. TODO make this more general*/
 	//The CHXOS maxes out at 2^4 as it is a 5 bit signed magnitude number
 	if (regData > 15){
 		regData = 15;
@@ -153,6 +145,7 @@ void calibrateCircuit(Circuit *c)
 	ifnsuccess(_retCode) {dbg.println("set CHXOS 2 failed.");return;}
 	dbg.print("CHVoffset:"); dbg.println(offset);
 	
+    //Start calibration of VRMSOS
 	//Query user to place load for low V,high I measurement
 	dbg.print("(120VAC 50Hz) (.72A) on ckt \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
