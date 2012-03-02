@@ -1,4 +1,4 @@
-/** @file select.cpp
+** @file select.cpp
 
 */
 #include <inttypes.h>
@@ -8,8 +8,8 @@
 #include "ReturnCode/returncode.h"
 
 
-// I know that static auto-initializes to 0, but why isn't it explictly declared? -AM
-static int _device;
+static int _device = DEVDISABLE;
+/** Maps the Circuit number to abstract pin numbers.*/
 static const int8_t mapCtoPinCS[] = {62,57,68,67,24,23,29,28,79,80,31,30,36,35,72,38,42,21,47,46};
 //NOTE: ABOVE 00 means that these need to be assigned in pins_arduino.C !!!!!!!! - AM 2/9/2012
 
@@ -40,13 +40,17 @@ void initSelect()
 */
 void CSselectDevice(int newDevice) 
 {
+    if (_device == newDevice) return;
     if (newDevice == SDCARD) {
 		//disable the old device by setting to HIGH-Z
 		pinMode(mapCtoPinCS[_device], INPUT);
         digitalWrite(mapCtoPinCS[_device],HIGH);
-        digitalWrite(SDSS,LOW); //SELECT sdss
-    } else if ( 0 <= newDevice && newDevice < NCIRCUITS) {
-		digitalWrite(SDSS,HIGH);
+        digitalWrite(SDSS,LOW); //SELECT SD Card
+    } else if (0 <= newDevice && newDevice < NCIRCUITS) {
+        // Disable the old line
+        CSselectDevice(DEVDISABLE);
+        // To satisfy Atmel datasheet "Switching between Input and Output"
+        digitalWrite(mapCtoPinCS[newDevice],LOW); 
 		pinMode(mapCtoPinCS[newDevice], OUTPUT);
         digitalWrite(mapCtoPinCS[newDevice],LOW);
     } else if ( newDevice == DEVDISABLE ) {
@@ -67,7 +71,7 @@ void CSstrobe()
 {
 	int device = _device;
 	CSselectDevice(DEVDISABLE);
-	for (int i=0; i < 10; i++); //wait
+    delay(1):
 	CSselectDevice(device);
 }
 

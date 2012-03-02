@@ -25,4 +25,5 @@ int8_t blinkComm();
 
 //IO
 void printTableStrings(const char *strs[], int8_t len);
+void printIRMSVRMSZX( int channel );
 #endif

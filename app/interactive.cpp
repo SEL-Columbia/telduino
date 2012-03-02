@@ -282,37 +282,7 @@ void parseBerkeley()
                 }
                 break;
             case 'B':
-				CSselectDevice(_testChannel);
-				dbg.print("Reading IRMS and VRMS after zero-crossing: \n\r");
-				//set interrrupt enable for zero crossing: ADDR 0x0A = 0x0010
-				ADEsetIrqEnBit(ZX,true);
-				//reset the interrupt status: Read Reg ADDR 0x0C
-				ADEgetRegister(RSTSTATUS,&regData);
-			
-				//wait for Interrupt for 20 millisecs
-				ADEwaitForInterrupt(ZX,20);
-				dbg.print("_retCode after wait for interrupt: ");
-				dbg.print(RCstr(_retCode));
-				dbg.println();
-				ifnsuccess(_retCode == TIMEOUT){
-					dbg.print("We didn't get the ZX interrupt! Timeout!!\n\r");}
-				//read VRMS
-				ADEgetRegister(IRMS,&regData);
-				dbg.print("IRMS:");
-                dbg.print(RCstr(_retCode));
-                dbg.print(":0x");
-                dbg.print(regData,HEX);
-                dbg.print(":");
-                dbg.println(regData,DEC);
-				//read IRMS
-				ADEgetRegister(VRMS,&regData);
-				dbg.print("VRMS:");
-                dbg.print(RCstr(_retCode));
-                dbg.print(":0x");
-                dbg.print(regData,HEX);
-                dbg.print(":");
-                dbg.println(regData,DEC);				
-				//done
+                printIRMSVRMSZX(_testChannel); 
 				break;
             case 'C':                       //Change active channel for ADE, switching, and metering
                 _testChannel = getChannelID();    
@@ -794,4 +764,51 @@ void printTableStrings(const char *strs[], int8_t len)
             dbg.println();
         }
     }
+}
+
+void printIRMSVRMSZX( int channel ) {
+    int32_t VRMSdata = 0;
+    int32_t IRMSdata = 0;
+    int32_t ZXstatus= 0;
+    int32_t Istatus= 0;
+    int32_t Vstatus= 0;
+
+    CSselectDevice(channel);
+
+    dbg.println("IRMS and VRMS after zero-crossing: ");
+    //set interrrupt enable for zero crossing: ADDR 0x0A = 0x0010
+    ADEsetIrqEnBit(ZX,true);
+    //reset the interrupt status: Read Reg ADDR 0x0C
+    ADEgetRegister(RSTSTATUS,&ZXstatus);
+    //ZXstatus is chosen arbitrarily it gets erased later on
+    //wait for Interrupt for 20 millisecs
+    ADEwaitForInterrupt(ZX,20);
+    ZXstatus = _retCode;
+    //read VRMS
+    ADEgetRegister(IRMS,&VRMSdata);
+    Istatus = _retCode;
+    //read IRMS
+    ADEgetRegister(VRMS,&IRMSdata);
+    Vstatus = _retCode;
+
+    ifnsuccess(ZXstatus== TIMEOUT) {
+        dbg.print("We didn't get the ZX interrupt: ");
+        dbg.print(RCstr(ZXstatus));
+    }
+
+    dbg.print("IRMS:");
+    dbg.print(RCstr(Istatus));
+    dbg.print(":0x");
+    dbg.print(IRMSdata,HEX);
+    dbg.print(":");
+    dbg.println(IRMSdata,DEC);
+
+    dbg.print("VRMS:");
+    dbg.print(RCstr(Vstatus));
+    dbg.print(":0x");
+    dbg.print(VRMSdata,HEX);
+    dbg.print(":");
+    dbg.println(VRMSdata,DEC);				
+
+    CSselectDevice(DEVDISABLE);
 }

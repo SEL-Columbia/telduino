@@ -15,7 +15,6 @@ CHANGELIST
 HALTON
 - Make sure that deployment meters all use one serial port or mirror output to both for monitoring.
 - Have race where meter outputs after a \r has been read
-- Need to reset flags after reading a value in meter mode
 
 AWAITING TEST:
 - Get Circuit up and running with new parameters and outputing reasonable results awaiting tests
@@ -25,11 +24,10 @@ AWAITING TEST:
 - Add a metering mode that has the following components
 -- Regular reporting accord to the above configuration
 
-OVERALL TODO FOR HAITI:
+OVERALL TODO:
 - Circuits code should fill in obvious junk values if there is a comm error
 - Fix issue with inconsistent state after reading something
 - Regularize input/output for and interactivemode
-
 - Add functionality to interactive mode 
 -- Autodetect number of active circuits
 -- to set number of actual circuits

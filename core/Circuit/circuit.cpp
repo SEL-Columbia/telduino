@@ -39,9 +39,8 @@ void Cclear(Circuit *c)
 {
     RCreset();
     int32_t regData;
-    int8_t timeout = false;
-    CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
 
+    CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
     //Check for presence and clears the interrupt register
     //Comm errors is stored in c->status
     ADEgetRegister(RSTSTATUS,&regData);                 ERRCHECKRETURN(c);
@@ -76,11 +75,9 @@ void Cmeasure(Circuit *c)
     ADEgetRegister(PERIOD,&regData);                    ERRCHECKRETURN(c);
     c->periodus = regData*22/10; //2.2us/bit
 
-    dbg.println("Measuring Ckt");
-
-    uint16_t waitTime = (uint16_t)((regData*22/100.0)*(c->halfCyclesSample/100));
-    waitTime = waitTime + waitTime/2;//Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur
-    //uint16_t waitTime = 2*1000*c->halfCyclesSample/max(c->frequency,40);
+    uint16_t duration_ms = (uint16_t)((c->periodus/1000.0)*(c->halfCyclesSample/2.0));
+    /*Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur*/
+    uint16_t waitTime =  max(duration_ms + duration_ms/2,1000);
 
     ADEwaitForInterrupt(CYCEND,waitTime);               ERRCHECKRETURN(c);
     //The failure may have occured because there was no interrupt
@@ -91,11 +88,11 @@ void Cmeasure(Circuit *c)
     if (!timeout) {
         //Apparent power or Volt Amps
         ADEgetRegister(LVAENERGY,&regData);             ERRCHECKRETURN(c);
-        c->VA = regData*c->VAEslope/(c->halfCyclesSample/2.0*c->periodus/1000000);  //Watts
+        c->VA = regData*c->VAEslope/2;// TODO assuming 2 seconds/(c->halfCyclesSample/2.0*c->periodus/1000000);  //Watts
 
         //Active power or watts
         ADEgetRegister(LAENERGY,&regData);              ERRCHECKRETURN(c);
-        c->W = regData*c->Wslope/(c->halfCyclesSample/2.0*c->periodus/1000000); //The denominator is the actual time in seconds
+        c->W = regData*c->Wslope/2;//TODO Assuming 2 seconds///(c->halfCyclesSample/2.0*c->periodus/1000000); //The denominator is the actual time in seconds
 
         //IRMS
         ADEgetRegister(IRMS,&regData);                  ERRCHECKRETURN(c);
@@ -105,20 +102,20 @@ void Cmeasure(Circuit *c)
         ADEgetRegister(VRMS,&regData);                  ERRCHECKRETURN(c);
         c->VRMS= regData*c->VRMSslope;
 
-        //Apparent energy in joules accumulated since last query
+        //Apparent energy in millijoules accumulated since last query
         ADEgetRegister(RVAENERGY,&regData);             ERRCHECKRETURN(c);
-        c->VAEnergy = regData*c->VAEslope/1000;
+        c->VAEnergy = regData*c->VAEslope;
 
-        //Actve energy accumulated since last query
+        //Actve energy in millijoules accumulated since last query
         ADEgetRegister(RAENERGY,&regData);              ERRCHECKRETURN(c);
         c->WEnergy = regData*c->Wslope/1000;
 
-        //Current and Voltage Peaks
+        //Current and Voltage Peaks TODO in whatever units
         ADEgetRegister(RSTIPEAK,&regData);              ERRCHECKRETURN(c);
-        c->ipeak = regData*c->IRMSslope;
+        c->ipeak = regData;
 
         ADEgetRegister(RSTVPEAK,&regData);              ERRCHECKRETURN(c);
-        c->vpeak = regData*c->VRMSslope;
+        c->vpeak = regData;
 
         //Power Factor PF
         if (c->VAEnergy != 0){ 
@@ -225,14 +222,14 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->chVos = 1;//15;
     c->chVgainExp = 1;
     c->chVscale = 0;
-    c->VRMSoffset = -2048;//0x07FF;
-    c->VRMSslope = .1068; /** in mV/Counts */
+    c->VRMSoffset = -2048;//-2048;//0x07FF;
+    c->VRMSslope = .1069; /** in mV/Counts */
 
     /** Power Calibration Parameters */
     c->VAEslope = 75300;//34.2760;//2014/10000.0; mJ/Counts
     c->VAoffset = 0;// TODO not used yet
     c->Wslope= 31050; // TODO not used yet mJ/Counts for watts
-    c->Woffset=0;// TODO not used yet
+    c->Woffset = 0;// TODO not used yet
 
     /** Software Saftey Parameters */
     c->sagDurationCycles = 10;
