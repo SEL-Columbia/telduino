@@ -53,4 +53,85 @@ For two daughterboards: 100mA @ 5V, .5W
 \subsubsection{Measurement Method}
 Measurements were taken directly from the power supply.
 \subsubsection{Measurement Result}
+
+\section{Testing Protocol}
+\subsection{Functionality}
+\subsection{Noise}
+\subsection{Software Tests}
+
+\section{Verification}
+    \subsection{Telduino}
+        \subsubsection{Inspection}
+            Solder bridges on the atmega micro-controller
+            Solder bridges or incomplete connections on the FTDI usb-serial converter
+            Reversed polarity of capacitors see layout for correct polarity
+                For power circuit the output voltage may slowly drop if any of the polarized capacitors are in reverse and you are using the linear regulator.
+                This is also true of the polarized capacitors near the modem and the atmega.
+                If an AC/DC adapter is used without the ability to detect a short, the capacitors may ignite.
+                The capacitors near the crystal are very close.
+
+        \subsubsection{Testing}
+            * Ensure jumpers are disconnected
+                -- which jumpers
+            Test
+            Expected
+            Error
+            GSM
+            Test for GSM serial communications
+            Type AT at the terminal will recieve OK back.
+            Test antenna basic functionality
+            Send a quick SMS using the commands
+            Expected to recieve in x seconds
+
+            Test correct power voltage
+            Conditions
+            Expect 3.6V across pins x and y
+            Maximum load is 2A put X ohm resistor across pins A and B and ensure that 3.6V is still present
+
+            Test USB to serial chip
+            Ensure connection to computer with commands ...
+            Probe pins X and Y while typing
+            Jump pins to do echo?
+
+            Test Micro Controller
+
+            Test Power Draw
+
+    \subsection{Meter Daughterboard}
+        * Ensure jumpers are disconnected
+             -- which jumpers
+        \subsubsection{Inspection}
+            The DC/DC converter can easily be unseated and put out of alignment. Check the leads for colds solders.
+            The Optoisolators can be easily cold soldered as well.
+            Check the crystals around the ADEs for solder bridges. The capacitors are very close.
+        \subsubsection{Testing}
+
+            Integrate notes from docs
+            TODO add female headers to parts list for completeness
+            Find a telit source.
+            Test Power Draw
+    \subsection{System}
+    \subsubsection{Noise}
+        Real world loads
+        CFL
+        Fan
+        Power charger
+        Switching test
+
+    \subsubsection{Metering Capability}
+    Test small load
+    Test minimum visible
+    Test minimum measureable
+    Test maximum
+    Test large load
+    Test reactive load
+    Test passive load
+    Test switch functionality
+    \subsubsection{Ratings}
+    Maximum current draw
+    Maximum voltage
+
+    \subsection{ToFix}
+        See: https://github.com/modilabs/telduino/issues/
 \end{document}
+
