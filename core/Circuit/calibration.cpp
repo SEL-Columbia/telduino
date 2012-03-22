@@ -108,9 +108,10 @@ void calibrateCircuit(Circuit *c)
 		return;
 	}
 
-	//Calibrate low level channel offsets
 	CSselectDevice(cCal.circuitID);
 	
+	//Calibrate low level channel offsets current channel is not needed 
+    //b/c the HPF is enabled (default)
 	dbg.print("Ground both input lines on circuit \'");
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
@@ -124,7 +125,6 @@ void calibrateCircuit(Circuit *c)
 	
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
-	CSstrobe();
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	ADEwaitForInterrupt(WSMP,waitTime);
 	ifnsuccess(_retCode) {CsetOn(&cCal,false); dbg.println("Waiting for WSMP failed."); return;}
@@ -132,12 +132,13 @@ void calibrateCircuit(Circuit *c)
 	ifnsuccess(_retCode) {dbg.println("get WAVEFORM failed"); return;}
 	dbg.print("CHVwaveform:"); dbg.println(regData);
 	//regData = regData*500*100/10322/161; //(1.61mV/LSB in CH2OS) and 500/10322 in WAVEFORM
-	regData = (regData*31549)>>20;  /** This value changes depenging on the hardware configuration. TODO make this more general*/
-	//The CHXOS maxes out at 2^4 as it is a 5 bit signed magnitude number
-	if (regData > 15){
-		regData = 15;
-	} else if (regData < -15) {
-		regData= -15;
+	//regData = (regData*31549)>>20;  
+	//The CHXOS maxes out at 2^5 as it is a 6 bit signed magnitude number
+    // Waveform is a twos complement number setCHXOS converts it to the correct signed magnitude number
+	if (regData > 31){
+		regData = 31;
+	} else if (regData < -31) {
+		regData= -31;
 	}
 	int8_t offset = (int8_t)regData;
 	cCal.chVos = offset;
@@ -145,16 +146,17 @@ void calibrateCircuit(Circuit *c)
 	ifnsuccess(_retCode) {dbg.println("set CHXOS 2 failed.");return;}
 	dbg.print("CHVoffset:"); dbg.println(offset);
 	
-    //Start calibration of VRMSOS
+    //Start calibration of VRMSOS and IRMSOS
+    // One point is iMax/100 and another is base (expected) load
 	//Query user to place load for low V,high I measurement
-	dbg.print("(120VAC 50Hz) (.72A) on ckt \'");
+	dbg.print("(120VAC 50Hz) ~(.72A) on ckt \'"); // Max current for a house more so than anything else
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 	dbg.println();
 	if(!getPoint(cCal,&VlowMeas,&IhighMeas, &VAhighMeas, &VlowCkt, &IhighCkt, &VAhighCkt)) return; 
 
 	//Query user to place load for high V,low I measurement
-	dbg.print("(240VAC 50Hz) (.025A) on ckt \'");
+	dbg.print("(240VAC 50Hz) ~(.050A) on ckt \'"); //Was .025A is ~imax/50
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 	dbg.println();
@@ -282,7 +284,6 @@ void CLwaitForZX10VIRMS()
 	int32_t regData,Vckt,Ickt;
 
 	//get VRMS from Ckt
-	CSstrobe();
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
 	_retCode = SUCCESS;
 	ADEwaitForInterrupt(ZX,waitTime);

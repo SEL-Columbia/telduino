@@ -11,6 +11,7 @@ int8_t getChannelID();
 void testSwitch(int8_t swID);
 void testHardware();
 void softSetup();
+void printSDCardInfo();
 
 //Hacked up test
 #define RARAASIZE 450
@@ -26,4 +27,5 @@ int8_t blinkComm();
 //IO
 void printTableStrings(const char *strs[], int8_t len);
 void printIRMSVRMSZX( int channel );
+
 #endif

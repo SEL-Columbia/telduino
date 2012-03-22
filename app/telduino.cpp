@@ -56,8 +56,7 @@ void setup()
     initSelect();				// Select Circuit
     SWinit();                   // Switches
     SPI.begin();				// SPI
-    // TODO sd_raw_init() is hanging
-    // sd_raw_init();			//SDCard
+    sd_raw_init();			//SDCard
 
     // Load circuit data from EEPROM
     for (int i=0; i < NCIRCUITS; i++) {

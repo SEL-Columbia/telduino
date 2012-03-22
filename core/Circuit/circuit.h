@@ -98,5 +98,8 @@ void Cmeasure(Circuit *c);
 void Cprogram(Circuit *c);
 void Cprint(HardwareSerial *ser, Circuit *c);
 void CprintMeas(HardwareSerial *ser, Circuit *c);
+int8_t CrestoreCommunications(Circuit *c);
+int8_t CtestComms(Circuit *c);
+void Creset(Circuit *c);
 
 #endif

@@ -28,6 +28,7 @@
 #include "ADE7753/ADE7753.h"
 #include "Select/select.h"
 #include "Switches/switches.h"
+#include "sd-reader/sd_raw.h"
 
 //Metering logic
 #include "Circuit/circuit.h"
@@ -228,6 +229,7 @@ void parseBerkeley()
         int32_t phcal = 0x0B;
         int32_t zeros[2] = {0};
         int32_t runMin = 0;
+        dbg.println(incoming);
         switch (incoming) {
             case 'A':                       //Write to ADE Register
                 dbg.print("Register to write $");
@@ -317,6 +319,9 @@ void parseBerkeley()
             case 'L':                       //Run calibration routine on channel
                 c = &(ckts[_testChannel]);
                 calibrateCircuit(c);
+                break;
+            case 'l':                       //Read SD card info, quick sd card test
+                printSDCardInfo();
                 break;
             case 'P':                       //Program values in ckts[] to ADE
                 for (int i = 0; i < NCIRCUITS; i++) {
@@ -408,13 +413,12 @@ void parseBerkeley()
                 dbg.println(RCstr(_retCode));
                 CSselectDevice(DEVDISABLE);
                 break;
-            case 'X':                       // Read WAVEFORM Data
+            case 'X':                       // Read WAVEFORM Data need to configure registers first!
                 CSselectDevice(_testChannel);
-                int32_t regData;
                 for (int i =0; i < 80; i++) {
                     ADEgetRegister(WAVEFORM,&regData);
                     dbg.print(regData);
-                    dbg.print(" ");
+                    dbg.println(" Note: Did you configure the MODE and Interrupt registers properly?");
                 }
                 CSselectDevice(DEVDISABLE);
                 break;
@@ -811,4 +815,25 @@ void printIRMSVRMSZX( int channel ) {
     dbg.println(VRMSdata,DEC);				
 
     CSselectDevice(DEVDISABLE);
+}
+
+void printSDCardInfo() 
+{
+    sd_raw_info sdinfo;
+    sdinfo.capacity =0;
+    sdinfo.manufacturer=0;
+    sdinfo.manufacturing_year=0;
+    
+    sd_raw_get_info(&sdinfo);
+    dbg.print("Inserted:");
+    dbg.println((bool)sd_raw_available());
+    dbg.print("Write Protected:");
+    dbg.println((bool)sd_raw_locked());
+
+    dbg.print("Capacity:");
+    dbg.println((uint32_t)sdinfo.capacity);
+    dbg.print("Manufacturer:");
+    dbg.println((int16_t)sdinfo.manufacturer);
+    dbg.print("Manufacturing Year:");
+    dbg.println((int16_t)sdinfo.manufacturing_year);
 }

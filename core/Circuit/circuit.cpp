@@ -11,9 +11,10 @@
 #define max(X,Y) ((X)>=(Y))?(X):(Y)
 #define ERRCHECKRETURN(Cptr) if (_shouldReturn(Cptr)) return;
 
-// TODO make switch wait time a parameter
 // TODO Have fault detection code check interrupts for sag detection and frequency variation
 // ipeak is RMS or what basically should I multiple by root2?
+// TODO make this a class separated from the implementation of the Meter.
+// TODO reset shouldn't be aware of the topology of the daughterboards and switch state.
 
 int8_t _shouldReturn(Circuit *c) 
 {
@@ -37,7 +38,6 @@ int8_t _shouldReturn(Circuit *c)
  * */
 void Cclear(Circuit *c) 
 {
-    RCreset();
     int32_t regData;
 
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
@@ -62,7 +62,6 @@ void Cmeasure(Circuit *c)
 {
     int32_t regData;
     int8_t timeout = false;
-    RCreset();
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
 
     //Check for presence 
@@ -135,11 +134,11 @@ void Cmeasure(Circuit *c)
 void Cprogram(Circuit *c)
 {
     int32_t regData;
-    RCreset();
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
 
     ADEreset();
 
+    //If there is some non-zero sag duration cycle set it
     if (c->sagDurationCycles > 0) { 
         regData = c->sagDurationCycles + 1;
         ADEsetModeBit(DISSAG,false);                    ERRCHECKRETURN(c);
@@ -157,6 +156,7 @@ void Cprogram(Circuit *c)
     ADEsetCHXOS(2,&c->chIint,&c->chVos);                ERRCHECKRETURN(c);
     regData = c->VRMSoffset;
     ADEsetRegister(VRMSOS, &regData);                   ERRCHECKRETURN(c);
+    //If there is some non-zero cycle sample time set CYCMODE appropriately
     if (c->halfCyclesSample> 0) {
         regData = c->halfCyclesSample;
         ADEsetRegister(LINECYC,&regData);               ERRCHECKRETURN(c);
@@ -164,6 +164,8 @@ void Cprogram(Circuit *c)
     } else {
         ADEsetModeBit(CYCMODE,false);                   ERRCHECKRETURN(c);
     }
+
+    //Set gains and scale
     regData =  (c->chVgainExp<<5) | (c->chVscale<<3) | c->chIgainExp;
     ADEsetRegister(GAIN,&regData);                      ERRCHECKRETURN(c);
     
@@ -201,6 +203,10 @@ void Csave(Circuit *c, Circuit* addrEEPROM)
 
 /** 
     Reasonable default values for Circuit.
+    Igain and Vgain are 0 assuming the maximum input 
+    current is 15A with a .03Ohm shunt and 
+    the maximum input voltage is 340V for 240RMS.
+    vscale is 0 for a full scale of .5V
     @warning Does not program the ADE7753s
   */
 void CsetDefaults(Circuit *c, int8_t circuitID) 
@@ -214,13 +220,13 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     /** Current Calibration Parameters  */
     c->chIint = false;
     c->chIos = 0;
-    c->chIgainExp = 4;
+    c->chIgainExp = 0; // Was 4  with .005Ohm, 0 for .03Ohm
     c->IRMSoffset = -2048;//-2048;//0x01BC;
     c->IRMSslope = .00224;//.0010;//164; /** in mA/Counts */
 
     /** Voltage Calibration Parameters */
     c->chVos = 1;//15;
-    c->chVgainExp = 1;
+    c->chVgainExp = 0; //Was 1 for any good reason?
     c->chVscale = 0;
     c->VRMSoffset = -2048;//-2048;//0x07FF;
     c->VRMSslope = .1069; /** in mV/Counts */
@@ -349,26 +355,56 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
 
 /** 
     Attempts to reestablish communications with the ADE.
-    1) The SS pin is strobed. 
-    2) TODO Then the ADE is reset. 
-    3) TODO Finally the ADE is reprogrammed.
-    @returns true if a communication was successful.
+    1) The SS pin is strobed  if that works return 1.
+    2) IF that fails the ADE is reset and reprogrammed.
+    @returns 0 if unable to restore. 1 if communication was successfully\
+        restored without reprogramming and perhaps without data loss.\
+        2 if meter was reprogrammed with dataloss.
 */
 int8_t CrestoreCommunications(Circuit *c)
 {
-    RCreset();
+    //Try strobing the CS pin
     CSselectDevice(c->circuitID);
-    CSstrobe();
-    
-    //Get DIEREV guaranteed not to be zero
+    delay(1);
+    CSselectDevice(DEVDISABLE);
+    delay(1);
+    CSselectDevice(c->circuitID);
+    delay(1);
+    CSselectDevice(DEVDISABLE);
+    if (CtestComms(c)) {
+        return 1;
+    }
+
+    //Destructive reset
+    Creset(c);
+    if (CtestComms(c)) {
+        return 2;
+    }
+
+    return 0;
+}
+
+/** 
+ *  Checks to see if communications are working with the ADE
+ */
+int8_t CtestComms(Circuit *c) 
+{
+    CSselectDevice(c->circuitID);
+    //Get DIEREV. Guaranteed not to be zero
     int32_t regData = 0;
     ADEgetRegister(DIEREV, &regData);
     CSselectDevice(DEVDISABLE);
-
-    ifsuccess(_retCode) {
-        if (regData != 0) return true;
-    }
-    return false;
-
+    return regData && success(_retCode);
 }
+
+/**
+ *  Resets the ADEs on the daughterboard and erases all data on the Circuit.
+ *  Usually you want to follow this up with a reprogram of floor(circuitID/2) 
+ *  and floor(circuitID/2) +1 unless you want virgin ADEs.
+ */
+void Creset(Circuit *c) 
+{
+    CSreset(c->circuitID);
+}
+
 

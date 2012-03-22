@@ -321,15 +321,6 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 		ifnsuccess(_retCode) { /*Serial.println("COMMERR in waitForInterrupt");*/}
 		time = millis();
 	} while ((time <= endTime) && (endTime-time <= waitTimems));
-	/*
-	Serial.print("waitforInterrupt waiting(ms):");
-	Serial.println(waitTimems);
-	Serial.print("waitforInterrupt time(ms):");
-	Serial.println(time);
-	Serial.print("waitforInterrupt endTime(ms):");
-	Serial.println(endTime);
-	*/
-	//Serial.println("TIMEOUT in waitForInterrupt");
 	_retCode = TIMEOUT;
 }
 
@@ -348,7 +339,6 @@ void ADEsetModeBit(uint16_t regMask, uint8_t bit)
 	if (bit != 0) {
 		mode = mode | regMask;
 	}
-
 	ADEsetRegister(MODE, &mode);
 }
 

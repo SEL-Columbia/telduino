@@ -65,7 +65,7 @@ extern "C"
  * Set to 1 to support so-called SDHC memory cards, i.e. SD
  * cards with more than 2 gigabytes of memory.
  */
-#define SD_RAW_SDHC 0
+#define SD_RAW_SDHC 1
 
 /**
  * @}
@@ -105,8 +105,8 @@ extern "C"
     #define configure_pin_miso() DDRB &= ~(1 << DDB3)
 
     //#define configure_pin_ss() DDRB |= (1 << DDB0)
-//    #define select_card() PORTB &= ~(1 << PORTB0)
-//    #define unselect_card() PORTB |= (1 << PORTB0)
+    //#define select_card() PORTB &= ~(1 << PORTB0)
+    //#define unselect_card() PORTB |= (1 << PORTB0)
 
     //THE BELOW FUNCTIONALITY IS NOW IN SD_RAW
     //void configure_pin_ss(){ initSelect(); }//DDRL |= (1 << DDL2)   //Must change, sets PL2 to output 
@@ -116,11 +116,13 @@ extern "C"
     #error "no sd/mmc pin mapping available!"
 #endif
 
-#define configure_pin_available() DDRC &= ~(1 << DDC4)
-#define configure_pin_locked() DDRC &= ~(1 << DDC5)
+/** Configure WP and CD pins 
+ * should be moved to Select or some SD select functionality should be moved here*/
+#define configure_pin_available() DDRH &= ~(1 << DDH3)
+#define configure_pin_locked() DDRH &= ~(1 << DDH4)
 
-#define get_pin_available() (PINC & (1 << PINC4))
-#define get_pin_locked() (PINC & (1 << PINC5))
+#define get_pin_available() (PINH & (1 << PINH3))
+#define get_pin_locked() (PINH & (1 << PINH4))
 
 #if SD_RAW_SDHC
     typedef uint64_t offset_t;

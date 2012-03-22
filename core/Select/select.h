@@ -9,16 +9,20 @@ extern "C"{
 #define NCIRCUITS 2
 #define SDSS  8
 
+/**
+ * A sentinel value which is invalid.
+ */
+#define DEVDISABLE -1
 /** 
 *	@warning Ensure SDCCARD is not within the range of [-1,NCIRCUITS].
 */
-#define DEVDISABLE -1
 #define SDCARD 24 //24 works as there are less than 22 circuits
 
 void initSelect();
 void CSselectDevice(int device);
-void CSstrobe();
 int CSgetDevice();
+void _CSselectDevice(int device);
+void CSreset(int device);
 
 #ifdef __cplusplus
 }

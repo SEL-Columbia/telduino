@@ -36,22 +36,22 @@ measured values resulting.
 \subsection{Power Factor Measurements}
 
 \section{Meter DC Consumption}
-Per meter marginal increase: 50mA @ 5V, .25W
+    Per meter marginal increase: 50mA @ 5V, .25W
 
 \subsection{Motherboard DC Consumption}
 
 \subsubsection{Measurement Method}
-Measurements were taken directly from the power supply.
+    Measurements were taken directly from the power supply.
 \subsubsection{Measurement Result}
-Without any meters: <=90mA, .5W \\*
-Complete system with 20 meters: 1.1A @ 5V, 5.5W
+    Without any meters: <=90mA, .5W \\*
+    Complete system with 20 meters: 1.1A @ 5V, 5.5W
 
 \subsection{Daughterboard DC Consumption}
-Per meter increase: 50mA @ 5V, .25W
-For two daughterboards: 100mA @ 5V, .5W
+    Per meter increase: 50mA @ 5V, .25W
+    For two daughterboards: 100mA @ 5V, .5W
 
 \subsubsection{Measurement Method}
-Measurements were taken directly from the power supply.
+    Measurements were taken directly from the power supply. More precise measurements pending.
 \subsubsection{Measurement Result}
 
 \section{Testing Protocol}
@@ -72,7 +72,15 @@ Measurements were taken directly from the power supply.
 
         \subsubsection{Testing}
             * Ensure jumpers are disconnected
-                -- which jumpers
+                 Isolate Modem
+                 -- Power: MDMPWER JP4 disconnects VCC from modem
+                 -- RT TX MDMuCSer disconnects modem control from uC
+                 -- JMDMSW disconnects On/Off modem control form uC
+                 -- JRST disconnects modem hardware reset from uC
+                 
+                 Isolate Power from entire board
+                 -- JP5 disconnects the power module from everything else.
+
             Test
             Expected
             Error
@@ -84,54 +92,147 @@ Measurements were taken directly from the power supply.
             Expected to recieve in x seconds
 
             Test correct power voltage
-            Conditions
-            Expect 3.6V across pins x and y
-            Maximum load is 2A put X ohm resistor across pins A and B and ensure that 3.6V is still present
+            Expect 3.6V across GND and JP5
+            Expect 5V input across GND and 5VTST
+
+            ***  Maximum load is 2A put X ohm resistor across pins A and B and ensure that 3.6V is still present
 
             Test USB to serial chip
-            Ensure connection to computer with commands ...
-            Probe pins X and Y while typing
-            Jump pins to do echo?
+            Connect to computer via USB
+            Ensure connection to computer with commands:
+                dmesg after connecting ensure no errors. On linux expect:
+             
+                usb 6-1: new full speed USB device number 4 using uhci_hcd
+                ftdi_sio 6-1:1.0: FTDI USB Serial Device converter detected
+                usb 6-1: Detected FT232RL
+                usb 6-1: Number of endpoints 2
+                usb 6-1: Endpoint 1 MaxPacketSize 64
+                usb 6-1: Endpoint 2 MaxPacketSize 64
+                usb 6-1: Setting MaxPacketSize 64
+                usb 6-1: FTDI USB Serial Device converter now attached to ttyUSB0
+
+            Leaving the rest of the board unpowered
+            Connect pins OK3.4 to OK4.2 and type on the terminal, you should see an echo
+
+            jumped jp5
+            smoke test
+            3.6V expected across JP5
+            
 
             Test Micro Controller
+                Use JTAG programmer as primary programmer. Use ICSP as backup
+                
+                Programming code
+                
 
-            Test Power Draw
+                You should see the following messages
+                **********************************************
+                vrdude: verifying ...
+                avrdude: 39290 bytes of flash verified
+
+                avrdude: safemode: Fuses OK
+
+                avrdude done.  Thank you.
+
+                Program fuses
+                The following messages are expected 
+                ******************************
+                avrdude: verifying ...
+avrdude: 1 bytes of efuse verified
+
+avrdude: safemode: Fuses OK
+
+avrdude done.  Thank you.
+
+
+Comm Test to mirco
+    Connect USB to board
+    Reset micro
+
+    The follow message is expected
+        ****************************************
+        telduino power up
+        last compilation
+        Mar 19 2012
+        23:41:08
+        ****************************
+
+    At prompt enter 'a' 
+
+    Expected Response: "Enter anme of register to read:"
+    Enter "IRMS"
+    Expected response: "regData:SUCCESS: hex value: decimal
+
+Jumper Modem jumpers: 
+
+Smoke test
+
+    Expected current draw with modem off 150mA
+    
+Manual powering modem on
+
+    Expected current draw is ~250mA
+
+Comm test
+First enter "at"
+Expected Response: "OK"
+Test SIMCard
+    To test simcard connection:
+    Enter "AT+CIMI"
+    Expected IMSI from sim card a several digit number.
+
+
+        Test< Power Draw
+                Without modem connected: ~50mA at 5V
+                With modem connected and powered off ~150mA
+                With modem on ~250mA
+
+
 
     \subsection{Meter Daughterboard}
-        * Ensure jumpers are disconnected
-             -- which jumpers
+
+
+            
         \subsubsection{Inspection}
             The DC/DC converter can easily be unseated and put out of alignment. Check the leads for colds solders.
             The Optoisolators can be easily cold soldered as well.
             Check the crystals around the ADEs for solder bridges. The capacitors are very close.
         \subsubsection{Testing}
+            Test voltage across gnd and vcc test points should be between 5 and 5.5
+            Voltage across C32 should be input voltage 5V
 
-            Integrate notes from docs
-            TODO add female headers to parts list for completeness
-            Find a telit source.
-            Test Power Draw
+            Expected Power Draw: 100mA at 5V
+
     \subsection{System}
     \subsubsection{Noise}
         Real world loads
         CFL
         Fan
         Power charger
-        Switching test
+        High frequency Switching test
 
     \subsubsection{Metering Capability}
-    Test small load
-    Test minimum visible
-    Test minimum measureable
-    Test maximum
-    Test large load
-    Test reactive load
-    Test passive load
-    Test switch functionality
+        Test small load
+        Test minimum visible
+        Test minimum measureable
+        Test maximum
+        Test large load
+        Test reactive load
+        Test passive load
+        Test long duration low frequency switch and meter functionality
+        Test GSM transmission during metering
     \subsubsection{Ratings}
-    Maximum current draw
-    Maximum voltage
-
+        Maximum current draw
+            A large 1kW hotplate or two floodlights will easily draw 10A (1kW at 120V).
+        Maximum voltage
+            Maximum rated voltage is 250VAC. 
+            An inverter or step-up converter will do the trick.
     \subsection{ToFix}
         See: https://github.com/modilabs/telduino/issues/
 \end{document}
+
+TODO add female headers to parts list for completeness
+Why is the Z test routine having issues?
+Test Power draw at 2A
+Replace buffer with level translator, right now the modem is mostly protected, but the uC can possibly output higher voltage than the level transaltors limit of 2.8=VAUX
 
