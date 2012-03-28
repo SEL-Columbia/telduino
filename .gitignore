@@ -6,3 +6,7 @@ cruft
 *.hex
 *.swp
 .DS_Store
+results.dvi
+results.log
+results.dvi
+results.rtf

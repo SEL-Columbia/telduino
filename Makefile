@@ -46,10 +46,11 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \
 
 #TARGETS
 .PHONY : clean install programfuses readfuses docs
-.DEFAUL_GOAL := install
-install: compile program
-all: compile program programfuses readfuses docs
+.DEFAUL_GOAL := update
+update: compile program
 compile: $(PROJECT).hex
+install: programfuses update
+all: compile program programfuses readfuses docs
 
 
 %.hex : $(OBJECT_FILES)

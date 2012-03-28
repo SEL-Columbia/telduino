@@ -9,6 +9,8 @@
  *  These serial commands are executed by the telduino code and sent back to the linux box.
  */
 
+
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
@@ -53,10 +55,10 @@ void setup()
     dbg.println(__TIME__);
 
     initDbgTel();				// Blink leds
-    initSelect();				// Select Circuit
-    SWinit();                   // Switches
-    SPI.begin();				// SPI
+    //initSelect();				// Select Circuit done in sd_raw_init
     sd_raw_init();			//SDCard
+    SPI.begin();				// SPI
+    SWinit();                   // Switches
 
     // Load circuit data from EEPROM
     for (int i=0; i < NCIRCUITS; i++) {
