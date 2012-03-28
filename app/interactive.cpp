@@ -37,8 +37,8 @@
 #include "telduino.h"
 #include "cfg.h"
 
-//For interactive mode
-int _testChannel = 1; //This is the input daughter board channel. This should only b
+//This is the input daughter board channel actively being manipulated
+int _testChannel = 1; 
 
 //Hacked up test
 int32_t switchSec = 0;
@@ -64,40 +64,6 @@ void testCircuitPrint()
         dbg.print(RARAA[1]);
         dbg.println();
     }
-}
-
-int8_t blinkTime()
-{
-    //Check for comm errors
-    ifnsuccess(_retCode) {
-        //FAILURE
-        for (int i=0; i < 10; i++) {
-            setDbgLeds(GRPAT);
-            //delay(100);
-            setDbgLeds(OFFPAT);
-            //delay(100);
-        }
-        RCreset();
-        return true;
-    }
-    return false;
-}
-
-int8_t blinkComm()
-{
-    //Check for comm errors
-    ifnsuccess(_retCode) {
-        //FAILURE
-        for (int i=0; i < 10; i++) {
-            setDbgLeds(GRPAT);
-            //delay(100);
-            setDbgLeds(GPAT);
-            //delay(100);
-        }
-        return true;
-        RCreset();
-    }
-    return false;
 }
 
 /**
@@ -144,12 +110,14 @@ void parseBerkeley()
         ADEwaitForInterrupt(CYCEND,1100);
         RCreset();
         ADEwaitForInterrupt(CYCEND,1100);
-        if (blinkTime()){
+        ifnsuccess(_retCode) {
             RARAA[0] = -2000;
+            RCreset();
         } else {
             ADEgetRegister(LAENERGY,&RARAA[0]);
         }
-        if (blinkComm()) {
+        ifnsuccess(_retCode) {
+            RCreset();
             RARAA[0] = -1000;
         }
 
@@ -161,7 +129,8 @@ void parseBerkeley()
         //Meter it 
         ADEwaitForInterrupt(CYCEND,1050);
         ADEgetRegister(RAENERGY,&RARAA[1]);
-        if (blinkComm()) {
+        ifnsuccess(_retCode){
+            RCreset();
             RARAA[1] = -1000;
         }
         
@@ -235,6 +204,7 @@ void parseBerkeley()
 
                 for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
                     if (strcmp(regList[i]->name,buff) == 0){
+                        RCreset();
                         CSselectDevice(_testChannel);
                         dbg.print("Current regData:");
                         ADEgetRegister(*regList[i],&regData);
@@ -263,10 +233,9 @@ void parseBerkeley()
                 CLgetString(&dbg,buff,sizeof(buff));
                 dbg.println();
 
-                //dbg.print("(int32_t)(&),HEX:");
-                //dbg.println((int32_t)(&WAVEFORM),HEX);
                 for (int i=0; i < regListSize/sizeof(regList[0]); i++) {
                     if (strcmp(regList[i]->name,buff) == 0){
+                        RCreset();
                         CSselectDevice(_testChannel);
                         ADEgetRegister(*regList[i],&regData);
                         dbg.print("regData:");

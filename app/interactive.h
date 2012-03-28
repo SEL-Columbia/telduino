@@ -16,10 +16,8 @@ void printSDCardInfo();
 //Hacked up test
 extern int32_t switchSec;
 extern int32_t testIdx;
-
 void testCircuitPrint();
-int8_t blinkTime();
-int8_t blinkComm();
+
 
 //IO
 void printTableStrings(const char *strs[], int8_t len);

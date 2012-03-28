@@ -44,7 +44,6 @@ void initSelect()
 */
 void CSselectDevice(int newDevice) 
 {
-    RCreset();
     if (_device == newDevice) return;
     _CSselectDevice(newDevice);
     ifsuccess(_retCode) {

@@ -41,6 +41,8 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	dbg.println(*VRMSMeas,DEC);
 
 	//get VRMS from Ckt
+    // TODO average multiple measurements
+    delay(2000); // Settling time according to ADE
 	ADEgetRegister(RSTSTATUS,VRMSCkt); //reset interrupt
 	ADEwaitForInterrupt(ZX,waitTime);
 	EXITIFNOCYCLES();
@@ -58,6 +60,12 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	*VAMeas = *IRMSMeas*(*VRMSMeas)*2/1000;
 
 	//get IRMS from Ckt
+    // TODO average multiple measurements
+    delay(2000); // Settling time according to ADE
+	ADEwaitForInterrupt(ZX,waitTime);
+	EXITIFNOCYCLES();
+	ADEwaitForInterrupt(ZX0,waitTime);
+	EXITIFNOCYCLES();
 	ADEgetRegister(IRMS,IRMSCkt);
 	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return false;}
 	dbg.print("ADEVRMS: "); dbg.println(*VRMSCkt);
@@ -97,7 +105,6 @@ void calibrateCircuit(Circuit *c)
 	Circuit cCal = *c;				//In case of failure so settings are not lost.
 
 	
-	CsetOn(&cCal,true);
 	//Clear values which need to be calibrated
 	cCal.chIos = cCal.chVos = cCal.IRMSoffset = cCal.VRMSoffset = 0;
 	cCal.VAoffset = cCal.Woffset = 0;
@@ -108,6 +115,7 @@ void calibrateCircuit(Circuit *c)
 		return;
 	}
 
+    RCreset();
 	CSselectDevice(cCal.circuitID);
 	
 	//Calibrate low level channel offsets current channel is not needed 
@@ -116,13 +124,18 @@ void calibrateCircuit(Circuit *c)
 	dbg.print(cCal.circuitID,DEC); 	dbg.println("\'."); dbg.print(PRESSENTERSTR);
 	while (dbg.read() != '\r');
 
+
 	//Set waveform mode to read voltage
+    // Only 
 	dbg.println("Configuring to read raw voltage.");
 	ADEsetModeBit(WAVESEL_0,true); ifnsuccess(_retCode) return;
 	ADEsetModeBit(WAVESEL1_,true); ifnsuccess(_retCode) return;
 	ADEsetIrqEnBit(WSMP,true);	//The WAVEFORM register will not work without this.
 	ADEsetIrqEnBit(CYCEND,true);/*Just in case */ ifnsuccess(_retCode) return;
-	
+
+	CsetOn(&cCal,true);
+    delay(1000);
+
 	//Read waveform and set CH2OS (voltage) +500mV/10322/LSB in WAVEFORM
 	dbg.println("Setting voltage offset.");
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
@@ -276,7 +289,7 @@ int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
 }
 
 /**
-	Waits for the ZX (zero crossing) bit to transision to 1 then waits for it to go to 0.
+	Waits for the ZX (zero crossing) bit to transition to 1 then waits for it to go to 0.
 	retCode is set to TIMEOUT if it is never seen.
   */
 void CLwaitForZX10VIRMS() 
@@ -285,12 +298,12 @@ void CLwaitForZX10VIRMS()
 
 	//get VRMS from Ckt
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
-	_retCode = SUCCESS;
+    RCreset();
 	ADEwaitForInterrupt(ZX,waitTime);
 	dbg.println(RCstr(_retCode));
 	dbg.print("Saw ZX as 1?:");
 	dbg.println(RCstr(_retCode));
-	_retCode = SUCCESS;
+    RCreset();
 	ADEwaitForInterrupt(ZX0,waitTime);
 	dbg.println(RCstr(_retCode));
 	ADEgetRegister(VRMS,&Vckt);

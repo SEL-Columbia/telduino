@@ -39,7 +39,7 @@ int8_t _shouldReturn(Circuit *c)
 void Cclear(Circuit *c) 
 {
     int32_t regData;
-
+    RCreset();
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
     //Check for presence and clears the interrupt register
     //Comm errors is stored in c->status
@@ -62,6 +62,7 @@ void Cmeasure(Circuit *c)
 {
     int32_t regData;
     int8_t timeout = false;
+    RCreset();
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
 
     //Check for presence 
@@ -72,7 +73,7 @@ void Cmeasure(Circuit *c)
 
     //Start measuring
     ADEgetRegister(PERIOD,&regData);                    ERRCHECKRETURN(c);
-    c->periodus = regData*22/10; //2.2us/bit
+    c->periodus = periodTous(regData);
 
     uint16_t duration_ms = (uint16_t)((c->periodus/1000.0)*(c->halfCyclesSample/2.0));
     /*Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur*/
@@ -134,6 +135,8 @@ void Cmeasure(Circuit *c)
 void Cprogram(Circuit *c)
 {
     int32_t regData;
+
+    RCreset();
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
 
     ADEreset();
@@ -301,6 +304,7 @@ void Cprint(HardwareSerial *ser, Circuit *c)
     ser->print("\tipeak:"); ser->println(c->ipeak);
     ser->print("vpeak:"); ser->println(c->vpeak);
 
+    RCreset();
     CSselectDevice(c->circuitID);
     ser->println("#ADE");
     for (const ADEReg** reg = &regList[0]; reg < &(regList[regListSize/sizeof(*reg)-1]);reg++) {
