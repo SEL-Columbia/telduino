@@ -1,11 +1,7 @@
 #ifndef TELDUINO_H
 #define TELDUINO_H
 
-#include <avr/eeprom.h>
-#include "Circuit/circuit.h"
-#include "Select/select.h"
-#include "arduino/WProgram.h"
-#include "cfg.h"
+#include "arduino/wiring.h"
 
 void setup();
 void loop();

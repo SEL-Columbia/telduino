@@ -20,6 +20,9 @@
 #define SHEEVA_BAUD_RATE 9600
 #define TELIT_BAUD_RATE 9600
 
+//HACKED UP TEST REMOVE
+#define RARAASIZE 450
+
 
 #define MAINS 0
 #define serBuffSize 128
@@ -32,7 +35,11 @@ extern int8_t mode;             /** 0 emergency, 1 interactive, 2 meter */
 #define METERMODE 2
 
 extern Circuit ckts[NCIRCUITS];
+//EEPROM DATA
 extern Circuit EEMEM cktsSave[NCIRCUITS];
+//HACKED UP TEST REMOVE \/
+extern int32_t EEMEM RARAASave[RARAASIZE][2];// = {0};
+extern int32_t EEMEM nRARAASave;// = 0;
             
 extern char serBuff[128];
 #endif

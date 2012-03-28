@@ -14,11 +14,8 @@ void softSetup();
 void printSDCardInfo();
 
 //Hacked up test
-#define RARAASIZE 450
 extern int32_t switchSec;
 extern int32_t testIdx;
-extern int32_t EEMEM RARAASave[RARAASIZE][2];
-extern int32_t EEMEM nRARAASave;
 
 void testCircuitPrint();
 int8_t blinkTime();

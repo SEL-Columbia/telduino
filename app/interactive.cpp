@@ -11,17 +11,16 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <errno.h>
 
 #include <avr/wdt.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
 
-#include "Strings/strings.h"
 //Helper functions
 #include "ReturnCode/returncode.h"
 #include "arduino/WProgram.h"
+#include "Strings/strings.h"
 
 //Metering Hardware
 #include "DbgTel/DbgTel.h"
@@ -44,8 +43,6 @@ int _testChannel = 1; //This is the input daughter board channel. This should on
 //Hacked up test
 int32_t switchSec = 0;
 int32_t testIdx = 0;//Present index into RARAASAVE counts down to 0
-int32_t EEMEM RARAASave[RARAASIZE][2] = {0};
-int32_t EEMEM nRARAASave = 0; //Total number of entries in RARAASave
 int32_t switchings = 0;
 
 

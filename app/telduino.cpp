@@ -20,7 +20,7 @@
 
 // Helper functions
 #include "prescaler.h"
-#include "arduino/WProgram.h"
+#include "arduino/wiring.h"
 
 // Metering Hardware
 #include "SPI/SPI.h"
