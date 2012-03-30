@@ -106,5 +106,6 @@ void Creset(Circuit *c);
 void CwaitForZX10(int8_t waitTime);
 int32_t Cvrms(void*);
 int32_t Cirms(void*);
+int32_t Cwaveform(void*);
 
 #endif

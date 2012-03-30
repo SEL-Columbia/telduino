@@ -127,7 +127,6 @@ void calibrateCircuit(Circuit *c)
 
 
 	//Set waveform mode to read voltage
-    // Only 
 	dbg.println("Configuring to read raw voltage.");
 	ADEsetModeBit(WAVESEL_0,true); ifnsuccess(_retCode) return;
 	ADEsetModeBit(WAVESEL1_,true); ifnsuccess(_retCode) return;
@@ -304,8 +303,8 @@ int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
 int32_t avg(int n, int32_t (*sample)(void*), void* context, int32_t *var) 
 {
     int32_t x = 0;
-    int32_t delta = 0;
-    int32_t mean = 0;
+    float delta = 0;
+    float mean = 0;
     float m2 = 0;
     for (int i=1; i<=n; i++) {
         x = sample(context);
@@ -322,6 +321,6 @@ int32_t avg(int n, int32_t (*sample)(void*), void* context, int32_t *var)
         if (n == 1) n = 2; //1 point is not big enough sample.
         *var = (int32_t)(m2/(n-1));
     }
-    return mean;
+    return (int32_t)mean;
 }
 

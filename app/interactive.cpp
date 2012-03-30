@@ -362,14 +362,52 @@ void parseBerkeley()
                 CSselectDevice(DEVDISABLE);
                 break;
             case 'O':                       //Take long running averages of IRMS and VRMS
-                int32_t vrmsav,vrmsvar,irmsav,irmsvar;
+                int8_t zero;
+                int32_t vrmsavr,vrmsvar,irmsav,irmsvar,wfmVavr,wfmVvar,wfmIavr,wfmIvar;
+                vrmsavr = vrmsvar = irmsav = vrmsvar = wfmVavr = wfmVvar = wfmIavr = wfmIvar= zero =0;
                 start = millis();
                 RCreset();
-                vrmsav = avg(1000,Cvrms,&ckts[_testChannel],&vrmsvar);
+                CSselectDevice(ckts[_testChannel].circuitID);
+                ADEsetRegister(IRMSOS,&vrmsavr);
+                ADEgetRegister(IRMSOS,&vrmsavr);
+                dbg.print(vrmsavr);
+                ADEgetRegister(VRMSOS,&vrmsavr);
+                dbg.print(vrmsavr);
+                CSselectDevice(DEVDISABLE);
+                vrmsavr = avg(1000,Cvrms,&ckts[_testChannel],&vrmsvar);
                 irmsav = avg(1000,Cirms,&ckts[_testChannel],&irmsvar);
                 dbg.print(millis()-start); dbg.println(":TotalTime");
-                dbg.print("VRMS_AVG:"); dbg.print(vrmsav); dbg.print(", VRMS_VAR:"); dbg.println(vrmsvar);
+                dbg.print("VRMS_AVG:"); dbg.print(vrmsavr); dbg.print(", VRMS_VAR:"); dbg.println(vrmsvar);
                 dbg.print("IRMS_AVG:"); dbg.print(irmsav); dbg.print(", IRMS_VAR:"); dbg.println(irmsvar);
+
+                _retCode = FAILURE;
+                while(nsuccess(_retCode)) {
+                    RCreset();
+                    CSselectDevice(ckts[_testChannel].circuitID);
+                    dbg.println("Configuring to read raw voltage.");
+                    vrmsavr = 0;
+                    ADEsetCHXOS(2,&zero,&zero);
+                    ADEsetIrqEnBit(WSMP,true);  ifnsuccess(_retCode) continue; //The WAVEFORM register will not work without this.
+                    ADEsetModeBit(WAVESEL_0,true); ifnsuccess(_retCode) continue;
+                    ADEsetModeBit(WAVESEL1_,true); ifnsuccess(_retCode) continue;
+                    ADEsetIrqEnBit(CYCEND,true);/*Just in case */ ifnsuccess(_retCode) continue;
+                    CSselectDevice(DEVDISABLE);
+                }
+                wfmVavr = avg(1000,Cwaveform,&ckts[_testChannel],&wfmVvar);
+                dbg.print("WAVEFORMV_AVG:"); dbg.print(wfmVavr); dbg.print(", WAVEFORMV_VAR:"); dbg.println(wfmVvar);
+
+                _retCode = FAILURE;
+                while(nsuccess(_retCode)) {
+                    RCreset();
+                    dbg.println("Configuring to read raw current.");
+                    CSselectDevice(ckts[_testChannel].circuitID);
+                    vrmsavr = 0;
+                    ADEsetCHXOS(1,&zero,&zero);
+                    ADEsetModeBit(WAVESEL_0,false); ifnsuccess(_retCode) continue;
+                    CSselectDevice(DEVDISABLE);
+                }
+                wfmIavr = avg(1000,Cwaveform,&ckts[_testChannel],&wfmIvar);
+                dbg.print("WAVEFORMI_AVG:"); dbg.print(wfmIavr); dbg.print(", WAVEFORMI_VAR:"); dbg.println(wfmIvar);
                 break;
             case 'x':                       //Wait for interrupt specified by interrupt mask
                 dbg.println();

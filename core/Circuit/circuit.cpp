@@ -242,7 +242,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->phcal = 11;          //Ox0B
 
     /** Current Calibration Parameters  */
-    c->chIint = false;
+    c->chIint = false;      //false unless a current loop or some dI/dt sensor is used.
     c->chIos = 0;           //Max +-31d
     c->chIgainExp = 0;      // .03Ohm to achieve max disipation of CS resistors Imax = 11.5
     c->IRMSoffset = -2048;  //-2048;//0x01BC;
@@ -455,7 +455,26 @@ void Creset(Circuit *c)
 int32_t Cwaveform(void* c) 
 {
     Circuit* cir = (Circuit*)c;
-    return 0;
+    int32_t waveform=0;
+    CSselectDevice(cir->circuitID);
+    for (int i = 0;i<10;i++) {
+        RCreset();
+        ADEgetRegister(RSTSTATUS,&waveform);
+        ifnsuccess(_retCode) {
+            Cstrobe(cir);
+            CSselectDevice(cir->circuitID);
+            continue;
+        }
+        ADEwaitForInterrupt(WSMP,CwaitTime(cir));
+        ADEgetRegister(WAVEFORM,&waveform);
+        ifnsuccess(_retCode) {
+            Cstrobe(cir);
+            CSselectDevice(cir->circuitID);
+            continue;
+        }
+    }
+    CSselectDevice(DEVDISABLE);
+    return waveform;
 }
 
 
