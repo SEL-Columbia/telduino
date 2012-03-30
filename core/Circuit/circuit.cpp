@@ -34,6 +34,17 @@ int8_t _shouldReturn(Circuit *c)
 }
 
 /**
+ * Waits 1.5 tmes as long for functions which depend on the AC period.
+ * Waits at least 21ms (50hz) but not more than 100ms
+ * */
+uint16_t CwaitTime(Circuit *c) 
+{
+    uint16_t duration_ms = (uint16_t)((c->periodus/1000.0)*(c->halfCyclesSample/2.0));
+    /*Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur*/
+    return min(max(duration_ms + duration_ms/2,21),100);
+}
+
+/**
  * Clears circuit interrupts
  * */
 void Cclear(Circuit *c) 
@@ -64,6 +75,7 @@ void Cmeasure(Circuit *c)
     int8_t timeout = false;
     RCreset();
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
+    delay(1);
 
     //Check for presence 
     ADEgetRegister(STATUS,&regData);                 ERRCHECKRETURN(c);
@@ -74,10 +86,8 @@ void Cmeasure(Circuit *c)
     //Start measuring
     ADEgetRegister(PERIOD,&regData);                    ERRCHECKRETURN(c);
     c->periodus = periodTous(regData);
+    uint16_t waitTime = CwaitTime(c);
 
-    uint16_t duration_ms = (uint16_t)((c->periodus/1000.0)*(c->halfCyclesSample/2.0));
-    /*Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur*/
-    uint16_t waitTime =  max(duration_ms + duration_ms/2,1000);
 
     ADEwaitForInterrupt(CYCEND,waitTime);               ERRCHECKRETURN(c);
     //The failure may have occured because there was no interrupt
@@ -175,14 +185,25 @@ void Cprogram(Circuit *c)
     CSselectDevice(DEVDISABLE);
 }
 
+/**
+ * If switch state is not already in the desired state, wait for a zero-crossing or 50ms and then switches.
+ * Leaves _retcode as is.
+ * */
 void CsetOn(Circuit *c, int8_t on) 
 {
+    int8_t code = _retCode;
+    int8_t durationms = c->periodus/1000;
+    if (durationms > 50|| durationms < 10) durationms = 50;
     if (CisOn(c) != on) {
-        ADEwaitForInterrupt(ZX0,10);
+        CwaitForZX10(durationms);
     }
+    _retCode = code;
     SWset(c->circuitID,on);
 }
 
+/**
+ * Returns switch state.
+ * */
 int8_t CisOn(Circuit *c) 
 {
     return SWisOn(c->circuitID);
@@ -218,21 +239,21 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
 
     /** Measurement Configuration Parameters */
     c->halfCyclesSample = 120;
-    c->phcal = 11; //Ox0B
+    c->phcal = 11;          //Ox0B
 
     /** Current Calibration Parameters  */
     c->chIint = false;
-    c->chIos = 0;
-    c->chIgainExp = 0; // Was 4  with .005Ohm, 0 for .03Ohm
-    c->IRMSoffset = -2048;//-2048;//0x01BC;
-    c->IRMSslope = .00224;//.0010;//164; /** in mA/Counts */
+    c->chIos = 0;           //Max +-31d
+    c->chIgainExp = 0;      // .03Ohm to achieve max disipation of CS resistors Imax = 11.5
+    c->IRMSoffset = -2048;  //-2048;//0x01BC;
+    c->IRMSslope = .00468;  /** in mA/Counts */
 
     /** Voltage Calibration Parameters */
-    c->chVos = 1;//15;
-    c->chVgainExp = 0; //Was 1 for any good reason?
+    c->chVos = 1;           // Max +-31d
+    c->chVgainExp = 0;      //Version 5 is 0 as 380V -> 10:1 -> .380V at ADE
     c->chVscale = 0;
-    c->VRMSoffset = -2048;//-2048;//0x07FF;
-    c->VRMSslope = .1069; /** in mV/Counts */
+    c->VRMSoffset = -2048;  //-2048;//0x07FF;
+    c->VRMSslope = 2.18;//.1069; /** in mV/Counts */
 
     /** Power Calibration Parameters */
     c->VAEslope = 75300;//34.2760;//2014/10000.0; mJ/Counts
@@ -251,7 +272,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     // Measured
     c->IRMS = 0;
     c->VRMS = 0;
-    c->periodus = 1024;
+    c->periodus = 50000;
     c->VA = 0;
     c->W = 0;
     c->PF = 1234;// Is a value from 0 to 2^16-1
@@ -357,6 +378,26 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
     ser->print(0);
 }
 
+/** Strobe the CS pin on the current ADE.
+ *
+ * */
+int8_t Cstrobe(Circuit *c) 
+{
+    int8_t comms =0;
+    //Try strobing the CS pin
+    CSselectDevice(c->circuitID);
+    delay(1);
+    CSselectDevice(DEVDISABLE);
+    delay(1);
+    CSselectDevice(c->circuitID);
+    delay(1);
+    CSselectDevice(DEVDISABLE);
+    delay(1);
+    comms = CtestComms(c);
+    return comms; 
+}
+
+
 /** 
     Attempts to reestablish communications with the ADE.
     1) The SS pin is strobed  if that works return 1.
@@ -367,18 +408,9 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
 */
 int8_t CrestoreCommunications(Circuit *c)
 {
-    //Try strobing the CS pin
-    CSselectDevice(c->circuitID);
-    delay(1);
-    CSselectDevice(DEVDISABLE);
-    delay(1);
-    CSselectDevice(c->circuitID);
-    delay(1);
-    CSselectDevice(DEVDISABLE);
-    if (CtestComms(c)) {
+    if (Cstrobe(c)){
         return 1;
     }
-
     //Destructive reset
     Creset(c);
     if (CtestComms(c)) {
@@ -412,3 +444,99 @@ void Creset(Circuit *c)
 }
 
 
+/**
+ * Waveform readings need to be read once they are ready 
+ * as indicated by the interrrupt register.
+ * The ADE must be configured properly beforehand.
+ *
+ * This function will retry several times and make an 
+ * attempt to restore communications without resetting the ADE.
+ * */
+int32_t Cwaveform(void* c) 
+{
+    Circuit* cir = (Circuit*)c;
+    return 0;
+}
+
+
+/**
+ * IRMS readings need to be read after the zero-crossing
+ * The ADE must be configured properly beforehand.
+ *
+ * This function will retry several times and make an 
+ * attempt to restore communications without resetting the ADE.
+ * */
+int32_t  Cvrms(void* c) 
+{
+    Circuit *cir = (Circuit*)c;
+    int32_t vrms = 0;
+    CSselectDevice(cir->circuitID);
+    for (int i = 0; i<10; i++) {
+        CwaitForZX10(CwaitTime(cir));
+        if (_retCode == TIMEOUT) { return 0; } 
+        else if (_retCode == COMMERR) {
+            Cstrobe(cir);
+            CSselectDevice(cir->circuitID);
+            continue;
+        } else {
+            ADEgetRegister(VRMS,&vrms);
+            if (_retCode == COMMERR) {
+                Cstrobe(cir);
+                CSselectDevice(cir->circuitID);
+                continue;
+            } else {
+                RCreset();
+                break;
+            }
+        }
+    }
+    CSselectDevice(DEVDISABLE);
+    return vrms;
+}
+
+/**
+ * VRMS readings need to be read after the zero-crossing
+ * The ADE must be configured properly beforehand.
+ *
+ * This function will retry several times and make an 
+ * attempt to restore communications without resetting the ADE.
+ * */
+int32_t Cirms(void* c)
+{
+    Circuit *cir = (Circuit*)c;
+    int32_t irms = 0;
+    CSselectDevice(cir->circuitID);
+    for (int i = 0; i<10; i++) {
+        CwaitForZX10(CwaitTime(cir));
+        if (_retCode == TIMEOUT) { return 0; } 
+        else if (_retCode == COMMERR) {
+            Cstrobe(cir);
+            continue;
+        } else {
+            ADEgetRegister(IRMS,&irms);
+            if (_retCode == COMMERR) {
+                Cstrobe(cir);
+                continue;
+            } else {
+                RCreset();
+                break;
+            }
+        }
+    }
+    CSselectDevice(DEVDISABLE);
+    return irms;
+}
+
+/**
+	Waits for the ZX (zero crossing) flag to transition to 0.
+	retCode is set to TIMEOUT if it is never seen or COMMERR if there was a communiations issue.
+  */
+void CwaitForZX10(int8_t waitTime) 
+{
+	int32_t regData;
+    RCreset();
+	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt ZX is now 1
+    ifnsuccess(_retCode){return;}
+	ADEwaitForInterrupt(ZX0,waitTime);  //Wait for the 1 to change to 0
+    ifnsuccess(_retCode){return;}
+}

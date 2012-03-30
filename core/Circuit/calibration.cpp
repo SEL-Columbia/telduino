@@ -43,9 +43,9 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	//get VRMS from Ckt
     // TODO average multiple measurements
     delay(2000); // Settling time according to ADE
-	ADEgetRegister(RSTSTATUS,VRMSCkt); //reset interrupt
-	ADEwaitForInterrupt(ZX,waitTime);
-	EXITIFNOCYCLES();
+	ADEgetRegister(RSTSTATUS,VRMSCkt); //reset interrupt to 1
+	//ADEwaitForInterrupt(ZX,waitTime);
+	//EXITIFNOCYCLES();
 	ADEwaitForInterrupt(ZX0,waitTime);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,VRMSCkt);
@@ -104,18 +104,19 @@ void calibrateCircuit(Circuit *c)
 	int32_t VAlowCkt,VAlowMeas;
 	Circuit cCal = *c;				//In case of failure so settings are not lost.
 
-	
+
 	//Clear values which need to be calibrated
 	cCal.chIos = cCal.chVos = cCal.IRMSoffset = cCal.VRMSoffset = 0;
 	cCal.VAoffset = cCal.Woffset = 0;
 	cCal.IRMSslope = cCal.VRMSslope = cCal.VAEslope = cCal.Wslope = 1;
+
+    RCreset();
 	Cprogram(&cCal);
 	ifnsuccess(_retCode) {
 		dbg.println("Clearing failed in calibrateCircuit.");
 		return;
 	}
 
-    RCreset();
 	CSselectDevice(cCal.circuitID);
 	
 	//Calibrate low level channel offsets current channel is not needed 
@@ -211,8 +212,8 @@ void calibrateCircuit(Circuit *c)
 		dbg.println(ADEFAILEDSTR);
 		return;
 	}
-    CsetOn(c, false);
 	CSselectDevice(DEVDISABLE);
+    CsetOn(c, false);
 	dbg.println(COMPLETESTR);
 }
 
@@ -288,32 +289,39 @@ int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
     return FAILURE;
 }
 
+
 /**
-	Waits for the ZX (zero crossing) bit to transition to 1 then waits for it to go to 0.
-	retCode is set to TIMEOUT if it is never seen.
-  */
-void CLwaitForZX10VIRMS() 
+ * n is the number of values used in the arithmetic mean.
+ * sample returns the value to be averaged. 
+ * It is responsible for setting return codes. 
+ * If sample sets an unseccessful return code the routine 
+ * exits and returns a 0 mean and variance.
+ *
+ * if *var != NULL the variance is returned as well.
+ *
+ * Mean and var is computed using the Knuth online mean algorithm.
+ * */
+int32_t avg(int n, int32_t (*sample)(void*), void* context, int32_t *var) 
 {
-	int32_t regData,Vckt,Ickt;
-
-	//get VRMS from Ckt
-	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt
-    RCreset();
-	ADEwaitForInterrupt(ZX,waitTime);
-	dbg.println(RCstr(_retCode));
-	dbg.print("Saw ZX as 1?:");
-	dbg.println(RCstr(_retCode));
-    RCreset();
-	ADEwaitForInterrupt(ZX0,waitTime);
-	dbg.println(RCstr(_retCode));
-	ADEgetRegister(VRMS,&Vckt);
-	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return;}
-
-	//get IRMS from Ckt
-	ADEgetRegister(IRMS,&Ickt);
-	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return;}
-	
-	dbg.print("ADEIRMS: "); dbg.println(Ickt);
-	dbg.print("ADEVRMS: "); dbg.println(Vckt);
-
+    int32_t x = 0;
+    int32_t delta = 0;
+    int32_t mean = 0;
+    float m2 = 0;
+    for (int i=1; i<=n; i++) {
+        x = sample(context);
+        ifnsuccess(_retCode) {
+            if (var != NULL) *var = 0;
+            return 0;
+        }
+        delta = x - mean;
+        //Update
+        mean = mean + delta/i; 
+        m2 += delta*((float)x-mean);
+    }
+    if (var != NULL && n > 0) {
+        if (n == 1) n = 2; //1 point is not big enough sample.
+        *var = (int32_t)(m2/(n-1));
+    }
+    return mean;
 }
+

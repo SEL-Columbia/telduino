@@ -109,7 +109,6 @@ void meterAuto()
 
 void meter(Circuit *ckt)
 {
-    RCreset();
     Cmeasure(ckt);
     printMeter(ckt);
 }

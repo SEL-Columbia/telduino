@@ -15,7 +15,8 @@
 
 #select the file to run. telduino is main, telduino_test is going to be the test routines
 PROJECT = telduino
-PROGRAMMER = dragon_isp #dragon_isp
+PROGRAMMER = dragon_isp #stk500 #dragon_jtag #dragon_isp
+PORT = usb
 BITPERIOD = 10
 #PROJECT = telduino_test
 MCU = atmega1280
@@ -75,7 +76,8 @@ clean:
 program: $(PROJECT).hex
     #avrdude -p$(MCU) -c $(PROGRAMMER) -Uflash:w:$(PROJECT).hex
     #Set B to 10 or higher if programming fails or intermittently fails
-	avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -Uflash:w:$< -B$(BITPERIOD)
+	#avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -Uflash:w:$< -B$(BITPERIOD)
+	avrdude -p$(MCU) -c $(PROGRAMMER) -P $(PORT) -Uflash:w:$< -B$(BITPERIOD)
 
 programfuses: 
 #	low fuses: set external *FULLSWING* oscillator; startup time=16K clk + 0 ms; BOD enabled; divide clock by 8 initially

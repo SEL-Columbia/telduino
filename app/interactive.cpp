@@ -336,18 +336,40 @@ void parseBerkeley()
                 dbg.println("Bad Input.");
                 break;
             case 'm':                       //Meter but do not print
+                RCreset();
                 Cmeasure(&ckts[_testChannel]);
                 ifsuccess(_retCode) {
-                    dbg.println("#Meter Completely Successful.");
+                    dbg.print("#Meter Completely Successful:");
                 } else {
-                    dbg.println("#Meter unsuccessful.");
+                    dbg.print("#Meter unsuccessful:");
                 }
+                dbg.println(RCstr(_retCode));
                 RCreset();
                 break;
-            case 'o':                       //Wait for zero-crossing
+            case 'o':                       //Wait for zero-crossing and print IRMS and VRMS
+                int32_t vrms,irms,start;
+                RCreset();
                 CSselectDevice(_testChannel);
-                CLwaitForZX10VIRMS();
+                start = millis();
+                CwaitForZX10(50);
+                ifnsuccess(_retCode) dbg.println(RCstr(_retCode));
+                ADEgetRegister(VRMS,&vrms);
+                ADEgetRegister(IRMS,&irms);
+                dbg.print(millis()-start); dbg.println(":Waited Ms"); 
+                dbg.print("VRMS:"); dbg.println(vrms);
+                dbg.print("IRMS:"); dbg.println(irms);
+                
                 CSselectDevice(DEVDISABLE);
+                break;
+            case 'O':                       //Take long running averages of IRMS and VRMS
+                int32_t vrmsav,vrmsvar,irmsav,irmsvar;
+                start = millis();
+                RCreset();
+                vrmsav = avg(1000,Cvrms,&ckts[_testChannel],&vrmsvar);
+                irmsav = avg(1000,Cirms,&ckts[_testChannel],&irmsvar);
+                dbg.print(millis()-start); dbg.println(":TotalTime");
+                dbg.print("VRMS_AVG:"); dbg.print(vrmsav); dbg.print(", VRMS_VAR:"); dbg.println(vrmsvar);
+                dbg.print("IRMS_AVG:"); dbg.print(irmsav); dbg.print(", IRMS_VAR:"); dbg.println(irmsvar);
                 break;
             case 'x':                       //Wait for interrupt specified by interrupt mask
                 dbg.println();

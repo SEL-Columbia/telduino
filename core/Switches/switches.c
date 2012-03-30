@@ -21,7 +21,7 @@ void _SWset(int8_t sw, int8_t on)
     } else {
         digitalWrite(pinOff,HIGH);
     }
-    //TODO Wait 10ms, this used to be 25. Why is it 10 now?
+    // Relays need 10ms
 	delay(10);
     digitalWrite(pinOn,LOW);
     digitalWrite(pinOff,LOW);

@@ -11,14 +11,12 @@
 * The type of number retrieved from the ADE
 */
 enum {UNSIGN=0,SIGNMAG=1,TWOS=2};
-//NOTE: We can recover memory (3*41= 124 bytes) by just using a single, data buffer
 
 typedef struct {
 	const char* name;
 	const uint8_t addr;
 	const uint8_t nBits;
 	const uint8_t signType;
-	//uint8_t data[3]; 
 } ADEReg;
 
 /** register definitions 
@@ -75,14 +73,15 @@ static const uint16_t SAG		= 0x0002; //bit 1
 static const uint16_t CYCEND	= 0x0004; //bit 2
 static const uint16_t WSMP		= 0x0008; //bit 3
 static const uint16_t ZX		= 0x0010; //bit 4
+static const uint16_t ZX1		= 0x0010; //bit 4
 static const uint16_t ZX0		= 0x0011; //Wait for a 0 not a 1
-static const uint16_t TEMPREG	= 0x0020; //bit 5 ---I changed this from TEMP to TEMPREG because of the ADEReg with the same name.
-static const uint16_t RESET	= 0x0040; //bit 6
+static const uint16_t TEMPREG	= 0x0020; //bit 5 TEMPREG because of the ADEReg with the same name.
+static const uint16_t RESET	    = 0x0040; //bit 6
 static const uint16_t AEOF		= 0x0080; //bit 7
 static const uint16_t PKV		= 0x0100; //bit 8
 static const uint16_t PKI		= 0x0200; //bit 9 
-static const uint16_t VAEHF	= 0x0400; //bit 10 A
-static const uint16_t VAEOF	= 0x0800; //bit 11 B
+static const uint16_t VAEHF	    = 0x0400; //bit 10 A
+static const uint16_t VAEOF	    = 0x0800; //bit 11 B
 static const uint16_t ZXTO		= 0x1000; //bit 12 C
 static const uint16_t PPOS		= 0x2000; //bit 13 D
 static const uint16_t PNEG		= 0x4000; //bit 14 E
@@ -94,21 +93,21 @@ extern const int intListLen;
 /**
 	Mode (MODE) Register MASKS
 */
-static const uint16_t DISHPF	= 0x0001; //bit 0
-static const uint16_t DISHPF2 	= 0x0002; //bit 1
-static const uint16_t DISCF  	= 0x0004; //bit 2
-static const uint16_t DISSAG  	= 0x0008; //bit 3
-static const uint16_t ASUSPEND	= 0x0010; //bit 4
-static const uint16_t TEMPSEL	= 0x0020; //bit 5
-static const uint16_t SWRST	= 0x0040; //bit 6
-static const uint16_t CYCMODE	= 0x0080; //bit 7
-static const uint16_t DISCH1	= 0x0100; //bit 8
-static const uint16_t DISCH2	= 0x0200; //bit 9 
-static const uint16_t SWAP	= 0x0400; //bit 10 A
-static const uint16_t DTRT_0	= 0x0800; //bit 11 B
-static const uint16_t DTRT1_	= 0x1000; //bit 12 C
-static const uint16_t WAVESEL_0= 0x2000; //bit 13 D
-static const uint16_t WAVESEL1_= 0x4000; //bit 14 E
+static const uint16_t DISHPF	= 0x0001;   //bit 0
+static const uint16_t DISHPF2 	= 0x0002;   //bit 1
+static const uint16_t DISCF  	= 0x0004;   //bit 2
+static const uint16_t DISSAG  	= 0x0008;   //bit 3
+static const uint16_t ASUSPEND	= 0x0010;   //bit 4
+static const uint16_t TEMPSEL	= 0x0020;   //bit 5
+static const uint16_t SWRST	= 0x0040;       //bit 6
+static const uint16_t CYCMODE	= 0x0080;   //bit 7
+static const uint16_t DISCH1	= 0x0100;   //bit 8
+static const uint16_t DISCH2	= 0x0200;   //bit 9 
+static const uint16_t SWAP	= 0x0400;       //bit 10 A
+static const uint16_t DTRT_0	= 0x0800;   //bit 11 B
+static const uint16_t DTRT1_	= 0x1000;   //bit 12 C
+static const uint16_t WAVESEL_0= 0x2000;    //bit 13 D
+static const uint16_t WAVESEL1_= 0x4000;    //bit 14 E
 
 /**
 	Binary two-tuple constants
@@ -138,10 +137,6 @@ void ADEsetModeBit(uint16_t regMask, uint8_t bit);
 void ADEsetIrqEnBit(uint16_t regMask, uint8_t bit);
 int8_t ADEperToFreq(int32_t period);
 void ADEreset();
-
-#define RETRIES 3
-//Sample circuit functions
-//Get stuff
 
 #endif
 

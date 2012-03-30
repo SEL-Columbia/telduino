@@ -88,6 +88,7 @@ typedef struct {
   Updates circuit measured parameters
   @returns a return code
 */
+uint16_t CwaitTime(Circuit *c);
 void CsetOn(Circuit *c, int8_t on);
 int8_t CisOn(Circuit *c);
 void Cload(Circuit *c, Circuit* addrEEPROM);
@@ -98,8 +99,12 @@ void Cmeasure(Circuit *c);
 void Cprogram(Circuit *c);
 void Cprint(HardwareSerial *ser, Circuit *c);
 void CprintMeas(HardwareSerial *ser, Circuit *c);
+int8_t Cstrobe(Circuit*);
 int8_t CrestoreCommunications(Circuit *c);
 int8_t CtestComms(Circuit *c);
 void Creset(Circuit *c);
+void CwaitForZX10(int8_t waitTime);
+int32_t Cvrms(void*);
+int32_t Cirms(void*);
 
 #endif

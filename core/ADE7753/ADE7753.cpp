@@ -59,6 +59,8 @@ const int regListSize = sizeof(regList);
 /**
 * returns BYTES from the ADE in a uint32_t value
 * MSB of ADE output is the MSB of the data output
+* Low level read and write for ADE. ALL reads and writes to the ADE use this 
+* function, change it if you want to use some other protocol than SPI.
 * @warning SPI mode is changed after calling this funciton
 */
 void ADEreadData(ADEReg reg, uint32_t *data)
@@ -79,6 +81,10 @@ void ADEreadData(ADEReg reg, uint32_t *data)
 	}
 }
 
+/**
+ * Low level read and write for ADE. ALL reads and writes to the ADE use this 
+ * function, change it if you want to use some other protocol than SPI.
+ * */
 void ADEwriteData(ADEReg reg, uint32_t *data)
 {
 	uint8_t nBytes = (reg.nBits+7)/8;
@@ -98,42 +104,23 @@ void ADEwriteData(ADEReg reg, uint32_t *data)
 
 /**
   resets _retCode to SUCCESS then tries to get the regValue from register reg
+* @note to read the CHXOS registers use ADEget/setCHXOS instead
 */
 void ADEgetRegister(ADEReg reg, int32_t *regValue)
 {
-	//Serial.print("GET ");
-	//Serial.println(reg.name);
 	//get raw data, MSB of data is MSB from ADE irrespective of byte length
 	_retCode = SUCCESS;
 	uint32_t rawData = 0;
 	uint8_t nBytes = (reg.nBits+7)/8;
 	uint32_t chksum = 0;
-	int8_t retries = RETRIES;
-
-	//Serial.print("(int32_t)(&),HEX:");
-	//Serial.println((int32_t)(&WAVEFORM),HEX);
 
 	ADEreadData(reg, &rawData);
 	ADEreadData(CHKSUM,&chksum);
 	if (ADEchksum(rawData) != ((uint8_t*)&chksum)[3]) {
 		_retCode = COMMERR;
-		//Serial.print("ADE _retCode:");
-		//Serial.println(RCstr(_retCode));
 	} else {
 		_retCode = SUCCESS;
 	}
-
-    /*
-	Serial.print("ADEgetRegister rawData: ");
-	Serial.println(rawData,BIN);
-	Serial.print("ADEgetRegister chksum(rawdata): ");
-	Serial.println((int)ADEchksum(rawData));
-	Serial.print("ADEgetRegister chksum from ADE: ");
-	Serial.println(chksum,BIN);
-	Serial.print("ADEgetRegister chksum from ADE after shift: ");
-	Serial.println((int)(((uint8_t*)&chksum)[3]),BIN);
-	Serial.println(RCstr(_retCode));
-    */
 
 	//Push bits into MSB for irregular sizes
 	rawData <<= (nBytes*8-reg.nBits);
@@ -143,14 +130,6 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 		//Use signed shift for 8 byte alignment, then to move LSB to 0 byte
 		(*regValue) >>= (nBytes*8-reg.nBits);
 		(*regValue) >>= ((sizeof(*regValue)-nBytes)*8);
-		/*Serial.print("ADEgetRegister rawData: ");
-		Serial.println(rawData,HEX);
-		Serial.print("ADEgetRegister bitshift right: ");
-		Serial.println((nBytes*8-reg.nBits));
-		Serial.print("ADEgetRegister byteshift right: ");
-		Serial.println(((sizeof(*regValue)-nBytes)*8));
-		Serial.print("ADEgetRegister *value: ");
-		Serial.println(*regValue,HEX);*/
 
 	} else if (reg.signType == UNSIGN) {
 		//Use unsigned shift for 8 byte alignment, then to move LSB to 0 byte
@@ -178,6 +157,7 @@ void ADEgetRegister(ADEReg reg, int32_t *regValue)
 /**
 *	
 *	resets _retCode to SUCCESS then tries to get the regValue from register reg
+*	@note to read the CHXOS registers use ADEget/setCHXOS instead
 *	@warning Range of input value is not checked. Refer to the ADE7753 datasheet for proper input ranges.
   */
 void ADEsetRegister(ADEReg reg, int32_t *value)
@@ -251,6 +231,10 @@ void ADEgetCHXOS(const uint8_t X,int8_t *enableInt,int8_t *val)
 	} 
 }
 
+/**
+ * The CH1,2OS is mixed in with other register values so they have 
+ * this special function to read and write them.
+ * */
 void ADEsetCHXOS(const uint8_t X,const int8_t *enableInt,const int8_t *val) 
 {
 	int32_t data  =*val;
@@ -305,12 +289,12 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	int32_t status = 0;
 	unsigned long time = millis();
 	unsigned long endTime = time + waitTimems;
-	_retCode = SUCCESS;
+    RCreset();
 	if (time > endTime) {
 		//wait for rollover
 		do {
 			if (ADEreadInterrupt(regMask)) return;
-			ifnsuccess(_retCode) {/*Serial.println("COMMERR in waitForInterrupt");*/}
+			ifnsuccess(_retCode) {return;/*Serial.println("COMMERR in waitForInterrupt");*/}
 		} while (millis() > endTime);
 	}
 	//now time=millis() should be less than endTime unless time 
@@ -318,7 +302,7 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	//where it is more than waitTimems far away
 	do {
 		if (ADEreadInterrupt(regMask)) return;
-		ifnsuccess(_retCode) { /*Serial.println("COMMERR in waitForInterrupt");*/}
+		ifnsuccess(_retCode) {return; /*Serial.println("COMMERR in waitForInterrupt");*/} //TODO restore communications here?
 		time = millis();
 	} while ((time <= endTime) && (endTime-time <= waitTimems));
 	_retCode = TIMEOUT;
@@ -372,10 +356,9 @@ int8_t ADEperToFreq(int32_t period)
   */
 void ADEreset()
 {
-	//Writes the defaults+the software reset bit
+	//Writes the defaults+the software reset bit to MODE
 	uint32_t regData = 0x004c0000;
 	ADEwriteData(MODE,&regData);
 	for (int i=0; i<500; i++);//Wait at least 32us assuming a 16mhz clock
 }
-
 
