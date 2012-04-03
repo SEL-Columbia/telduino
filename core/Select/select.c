@@ -15,6 +15,29 @@ static int _device = DEVDISABLE;
 static const int8_t mapCtoPinCS[] = {62,57,68,67,24,23,29,28,79,80,31,30,36,35,72,38,42,21,47,46};
 
 /**
+ * For the ADE pins.
+ * */
+void CSpinActive(int8_t active,int8_t device) 
+{
+    if (active) {
+        // Instead of setting the pins as low impedenece high outputs, let's set them as High-Z
+        // In this setup adding another Port A causes communications to fail. In the other configurations it is Port B
+        // To satisfy Atmel datasheet "Switching between Input and Output" in the High-Z mode add the below line
+        digitalWrite(mapCtoPinCS[device],LOW); 
+
+        pinMode(mapCtoPinCS[device],OUTPUT);
+        digitalWrite(mapCtoPinCS[device],LOW);
+    } else {
+        //pinMode(mapCtoPinCS[device],OUTPUT);
+        //digitalWrite(mapCtoPinCS[device],HIGH);
+        //Instead of setting the pins as low impedenece high outputs, let's set them as High-Z
+        //digitalWrite(mapCtoPinCS[device],HIGH);
+        pinMode(mapCtoPinCS[device],INPUT);
+        digitalWrite(mapCtoPinCS[device],HIGH);
+    }
+}
+
+/**
 *   Initiallizes the SDSS pin and sets all other CS pins to high.
 *	All the channels are disable from communication. 
 */
@@ -25,11 +48,7 @@ void initSelect()
     digitalWrite(SDSS,HIGH); 
     /** Note that sd_raw_config has more configuration information for these pins*/
     for (int8_t i=0; i < NCIRCUITS; i++) {
-	//Instead of setting the pins as low impedenece high outputs, let's set them as High-Z
-//        pinMode(mapCtoPinCS[i],OUTPUT);
-//        digitalWrite(mapCtoPinCS[i],HIGH); 
-        pinMode(mapCtoPinCS[i],INPUT);
-        digitalWrite(mapCtoPinCS[i],HIGH); 
+        CSpinActive(false,i);
     }
     CSselectDevice(DEVDISABLE);
 }
@@ -51,26 +70,22 @@ void CSselectDevice(int newDevice)
     }
 }
 
+
 /**
  * Implementation of select device without error handling outside of range.
  */
 void _CSselectDevice(int newDevice) {
     if (newDevice == SDCARD) {
 		//disable the old device by setting to HIGH-Z
-		pinMode(mapCtoPinCS[_device], INPUT);
-        digitalWrite(mapCtoPinCS[_device],HIGH);
+        CSpinActive(false,_device);
         digitalWrite(SDSS,LOW); //SELECT SD Card
     } else if (0 <= newDevice && newDevice < NCIRCUITS) {
         // Disable the old line
         _CSselectDevice(DEVDISABLE);
-        // To satisfy Atmel datasheet "Switching between Input and Output"
-        digitalWrite(mapCtoPinCS[newDevice],LOW); 
-		pinMode(mapCtoPinCS[newDevice], OUTPUT);
-        digitalWrite(mapCtoPinCS[newDevice],LOW);
+        CSpinActive(true,newDevice);
     } else if (newDevice == DEVDISABLE) {
         digitalWrite(SDSS,HIGH);
-		pinMode(mapCtoPinCS[_device], INPUT);
-        digitalWrite(mapCtoPinCS[_device],HIGH);
+        CSpinActive(false,_device);
     } else { //error
         _retCode = ARGVALUEERR;
     }
@@ -87,20 +102,12 @@ void CSreset(int device)
     }
     CSselectDevice(DEVDISABLE);
     device = (device/2)*2;
-    // To satisfy Atmel datasheet "Switching between Input and Output"
-    digitalWrite(mapCtoPinCS[device],LOW); 
-    pinMode(mapCtoPinCS[device], OUTPUT);
-    digitalWrite(mapCtoPinCS[device],LOW);
-    
-    digitalWrite(mapCtoPinCS[device+1],LOW); 
-    pinMode(mapCtoPinCS[device+1], OUTPUT);
-    digitalWrite(mapCtoPinCS[device+1],LOW);
+    CSpinActive(true,device);
+    CSpinActive(true,device+1);
 
     delay(10);
-    pinMode(mapCtoPinCS[device], INPUT);
-    digitalWrite(mapCtoPinCS[device],HIGH);
-    pinMode(mapCtoPinCS[device+1], INPUT);
-    digitalWrite(mapCtoPinCS[device+1],HIGH);
+    CSpinActive(false,device);
+    CSpinActive(false,device+1);
 }
 
 /** Returns the currently selected device. 

@@ -21,7 +21,7 @@
 #define TELIT_BAUD_RATE 9600
 
 //HACKED UP TEST REMOVE
-#define RARAASIZE 450
+#define RARAASIZE 225
 
 
 #define MAINS 0
