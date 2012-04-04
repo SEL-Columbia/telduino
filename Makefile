@@ -93,5 +93,8 @@ readfuses:
 
 docs :
 	doxygen
+stats:
+	@find -iname  "*.c*"|tr "\n"  "\0"|wc -l --files0-from=-|\
+		tail -n1 | awk '{print $$$$2,"lines.";}'
 #testBoard:
 #	sudo screen /dev/ttyUSB0 9600 logfile $(date +%Y-%b-%d-%m-%S) logfile flush 1

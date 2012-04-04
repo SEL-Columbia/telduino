@@ -19,13 +19,9 @@ HALTON
 AWAITING TEST:
 - Get Circuit up and running with new parameters and outputing reasonable results awaiting tests
 - Get calibration and saving routine working
-- Add functionality to interactive mode 
--- to set a reporting period for metering data.
-- Add a metering mode that has the following components
--- Regular reporting accord to the above configuration
 
 OVERALL TODO:
-- Circuits code should fill in obvious junk values if there is a comm error
+- Restore communications during meter mode failure
 - Fix issue with inconsistent state after reading something
 - Regularize input/output for and interactivemode
 - Add functionality to interactive mode 
