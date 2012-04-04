@@ -76,14 +76,14 @@ void parseBerkeley()
     dbg.print(_testChannel,DEC);
     dbg.print(" $");
     while (dbg.available() == 0 && testIdx == 0) {
-        setDbgLeds(GPAT);
+        DbgLeds(GPAT);
         for (int i=0; i < 100; i++) {
             if (dbg.available() != 0) {
                 break;
             }
             delay(10);
         }
-        setDbgLeds(0);
+        DbgLeds(0);
         for (int i=0; i < 100; i++) {
             if (dbg.available() != 0) {
                 break;
@@ -520,7 +520,7 @@ void parseBerkeley()
         }
     }
 
-    setDbgLeds(0);
+    DbgLeds(0);
 }
 
 /** resets the test channel (input daughter board) to default parameters and sets the linecycle count up.
@@ -630,7 +630,7 @@ void displayChannelInfo()
     dbg.println(RCstr(_retCode));
 
     ifsuccess(_retCode) {
-        setDbgLeds(GYRPAT);
+        DbgLeds(GYRPAT);
 
         dbg.print("_testChannel:");
         dbg.println(_testChannel,DEC);

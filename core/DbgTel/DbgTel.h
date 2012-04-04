@@ -2,8 +2,8 @@
 #define DBGTEL_H
 
 #include <inttypes.h>
-#include "arduino/pins_arduino.h"
 #include "arduino/wiring.h"
+#include "arduino/pins_arduino.h"
 /** @file DbgTel.h
  *
  *  Controls up to three leds for debuging purposes and provides basic patterns for their use.
@@ -32,14 +32,15 @@ const int8_t REDPIN = 2;
  *  Sets pins to output and defaults LEDs to off.
  *
  * */
-void initDbgTel();
+void DbgTelInit();
 
 /**
  *  Genereates a pattern according to a 3-bit bitmask. 
  *  @warning initDbgTel() must be called once first.
  *
  * */
-void setDbgLeds(int8_t pattern);
+void DbgLeds(int8_t pattern);
+void DbgPrint(char* tag, char *label, int32_t val);
 
 #endif
 

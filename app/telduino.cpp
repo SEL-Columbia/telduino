@@ -54,7 +54,7 @@ void setup()
     dbg.println(__DATE__);
     dbg.println(__TIME__);
 
-    initDbgTel();				// Blink leds
+    DbgTelInit();				// Blink leds
     //initSelect();				// Select Circuit done in sd_raw_init
     sd_raw_init();			//SDCard
     SPI.begin();				// SPI
@@ -80,9 +80,9 @@ void loop()
                 if (c == '\r') {
                     serBuff[buffCursor] = '\0';
                     buffCursor = 0;
-                    dbg.print("buff:");
-                    dbg.print(serBuff);
-                    dbg.println(":");
+                    if (cpu.peek() == '\n') {
+                        cpu.read();
+                    }
                     parseMeterMode(serBuff);
                 } else {
                     buffCursor += 1;
@@ -90,6 +90,7 @@ void loop()
             } else {
                 //TODO handle overflow better
                 buffCursor = 0;
+                serBuff[0] = '\0';
             }
         }
         meterAuto();
@@ -106,11 +107,11 @@ extern "C"
     void __cxa_pure_virtual(void) 
     {
         while(1) {
-            setDbgLeds(RPAT);
+            DbgLeds(RPAT);
             delay(332);
-            setDbgLeds(YPAT);
+            DbgLeds(YPAT);
             delay(332);
-            setDbgLeds(GPAT);
+            DbgLeds(GPAT);
             delay(332);
         }
     }

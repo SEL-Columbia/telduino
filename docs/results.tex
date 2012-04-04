@@ -85,21 +85,17 @@ The current rating is limited to 16A or the current sense resistor power dissipa
                  Isolate Power from entire board
                  -- JP5 disconnects the power module from everything else.
 
-            Test
-            Expected
-            Error
-            GSM
-            Test for GSM serial communications
-            Type AT at the terminal will recieve OK back.
-            Test antenna basic functionality
-            Send a quick SMS using the commands
-            Expected to recieve in x seconds
+            Test for GSM serial communications OUTLINE
+                Type AT at the terminal will recieve OK back.
+                Test antenna basic functionality
+                Send a quick SMS using the commands
+                Expected to recieve in x seconds
 
-            Test correct power voltage
-            Expect 3.6V across GND and JP5
-            Expect 5V input across GND and 5VTST
 
-            ***  Maximum load is 2A put X ohm resistor across pins A and B and ensure that 3.6V is still present
+            Test correct power voltages
+                Expect 3.6V across GND and JP5
+                Expect 5V input across GND and 5VTST
+                Maximum load is 2A put 1.8 ohm (>8Watt) resistor across pins GND and JP5 and ensure that the 3.6V holds
 
             Test USB to serial chip
             Connect to computer via USB

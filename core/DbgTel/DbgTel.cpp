@@ -1,14 +1,16 @@
 /** @file DbgTel.cpp */
 #include "DbgTel.h"
+#include "arduino/wiring.h"
+#include "cfg.h"
 
-void initDbgTel()
+void DbgTelInit()
 {
 	pinMode(GRNPIN,OUTPUT);
 	pinMode(YELPIN,OUTPUT);
 	pinMode(REDPIN,OUTPUT);
 }
 
-void setDbgLeds(int8_t pattern) 
+void DbgLeds(int8_t pattern) 
 {
 	if (pattern & RPAT) {
 		digitalWrite(REDPIN, HIGH);
@@ -30,3 +32,15 @@ void setDbgLeds(int8_t pattern)
 	}
 }
 
+void DbgPrint(char *tag, char *label, int32_t value )
+{
+    dbg.print(tag);
+    dbg.print(":");
+    dbg.print(label);
+    dbg.print(":");
+    dbg.println(value,BIN);
+    dbg.print(":");
+    dbg.println(value,HEX);
+    dbg.print(":");
+    dbg.print(value);
+}
