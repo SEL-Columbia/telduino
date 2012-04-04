@@ -23,14 +23,16 @@
 //(M)ode
 //(R)eport Interval in seconds
 //(W)atts meter ALL circuits
+//TODO (X)Reset and Reprogram Meter
 
 //GET
 //(s)witch status
 //(m)ode status 
 //(r)eport Interval in seconds
 //(w)atts meter circuit
-
 //! do nothing NOP
+
+
 uint64_t lastMeter = 0;
 int32_t sequenceNum = 0;
 const char *FMTSTRINGI = "%c %hd %ld";
@@ -91,27 +93,30 @@ void parseMeterMode(char *cmd)
 void meterAuto() 
 {   
 
-    //TODO assumes millis returns an unsigned long
     //TODO save data regularly in nonvolitile memory
-    uint64_t timeNow = millis();
-    // TODO overflow case
-    //if (timeNow < lastMeter) {
-    //    timeNow = (uint32_t(-1))-(lastMeter-timeNow); //Now time diference
-    //} else {
-    timeNow = timeNow - lastMeter; //Now time diference
-    //}
-    if (reportInterval > 0 && (timeNow/1000 < reportInterval)) {
+    //TODO if measure fails attempt to restore communications, 
+    //if first meter reset after the second one is read, 
+    //then reset both and reprogram
+    uint32_t timeNow = millis();
+    uint32_t diff = timeNow - lastMeter;
+    if (timeNow < lastMeter) { //overflow
+        diff = ((uint32_t(-1))-lastMeter)+timeNow; 
+    } 
+    if (reportInterval > 0 && (diff/1000 < reportInterval)) {
         return;
     }
     lastMeter = millis();
     meterAll();
 }
 
+/**Meters and prints the results of the metering operation.*/
 void meter(Circuit *ckt)
 {
+    RCreset();
     Cmeasure(ckt);
     printMeter(ckt);
 }
+
 void meterAll() 
 {
     //Prepare all ckts for reading. If the code starts to rely on LINCYC, this can become counterproductive.
@@ -125,17 +130,20 @@ void meterAll()
 }
 
 void printMeter(Circuit *ckt) {
-    RCreset();
     cpu.print(millis());
     cpu.print(",");
     cpu.print(sequenceNum++);
     cpu.print(",");
     CprintMeas(&cpu,ckt);
     cpu.print(",");
-    cpu.print(_retCode);
+    cpu.print(ckt->status,HEX);
     cpu.println();
 }
 
+/**
+ * Prints the result of a command. Which is the same syntax 
+ * as the given command.
+ * */
 void printResults(char action, int8_t cktID, int32_t arg) {
     cpu.print(action);
     cpu.print(" ");

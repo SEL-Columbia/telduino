@@ -24,7 +24,7 @@ int8_t _shouldReturn(Circuit *c)
             CSselectDevice(DEVDISABLE);    
             return true;                        
         } else if (_retCode == TIMEOUT) {
-            //Do Nothing
+            c->status |= TIME;
         } else {                        
             CSselectDevice(DEVDISABLE);    
             return true;                        
@@ -54,10 +54,8 @@ void Cclear(Circuit *c)
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
     //Check for presence and clears the interrupt register
     //Comm errors is stored in c->status
+    c->status=0;
     ADEgetRegister(RSTSTATUS,&regData);                 ERRCHECKRETURN(c);
-    c->status &= ~COMM;
-    c->status &= 0xFFFF0000;
-    c->status |= (0x0000FFFF&regData);
     CSselectDevice(DEVDISABLE);                       ERRCHECKRETURN(c);
 }
 
@@ -79,9 +77,7 @@ void Cmeasure(Circuit *c)
 
     //Check for presence 
     ADEgetRegister(STATUS,&regData);                 ERRCHECKRETURN(c);
-    c->status &= ~COMM;
-    c->status &= 0xFFFF0000;
-    c->status |= (0x0000FFFF&regData);
+    c->status = (0x0000FFFF&regData);
 
     //Start measuring
     ADEgetRegister(PERIOD,&regData);                    ERRCHECKRETURN(c);
@@ -137,6 +133,7 @@ void Cmeasure(Circuit *c)
 
     CSselectDevice(DEVDISABLE);
 
+    // Since the above get register errors would hide the TIMEOUT
     if (timeout) {
         _retCode = TIMEOUT;
     }
@@ -281,6 +278,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->ipeak = 123;
     c->vpeak = 123;
 
+    c->status = 0;
 }
 
 /**

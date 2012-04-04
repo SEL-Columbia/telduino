@@ -4,7 +4,8 @@
 
 #include "arduino/HardwareSerial.h"
 
-static const uint32_t COMM	  = 0x00010000;
+static const uint32_t COMM	= 0x00010000;
+static const uint32_t TIME  = 0x00020000;
 
 typedef struct {
 
