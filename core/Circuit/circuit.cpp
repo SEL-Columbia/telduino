@@ -82,12 +82,8 @@ void Cmeasure(Circuit *c)
     //Start measuring
     ADEgetRegister(PERIOD,&regData);                    ERRCHECKRETURN(c);
     c->periodus = periodTous(regData);
-    dbg.print("period:");
-    dbg.println(c->periodus);
-    uint16_t waitTime = CwaitTime(c);
-    dbg.print("waitTime:");
-    dbg.println(waitTime);
-    ADEwaitForInterrupt(CYCEND,waitTime);               ERRCHECKRETURN(c);
+
+    ADEwaitForInterrupt(CYCEND,CwaitTime(c));               ERRCHECKRETURN(c);
     //The failure may have occured because there was no interrupt
     if (_retCode == TIMEOUT) {
         timeout = true;

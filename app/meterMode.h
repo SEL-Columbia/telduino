@@ -2,9 +2,8 @@
 #define METERMODE_H
 #include <stdint.h>
 #include "Circuit/circuit.h"
-
+ 
 extern long nextMeter;
-
 void parseMeterMode(char *cmd);
 void printMeter(Circuit* ckt);
 void meter(Circuit* ckt);

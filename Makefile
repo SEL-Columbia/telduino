@@ -8,9 +8,9 @@
 # -o place the output in file
 
 # $< is the macro for the source in %.o : %.c
-# $^
+# $^ is the name of all prerequisites
 # $@ first name of target of rule
-# $*
+# $* is the stem of a rule math %.o matches foo.o $* is foo
 
 
 #select the file to run. telduino is main, telduino_test is going to be the test routines
@@ -66,7 +66,7 @@ size : $(PROJECT).elf
 %.o : %.c
 	@avr-gcc $(GCCFLAGS) -mmcu=$(MCU) -DF_CPU=$(CLOCK) $< -o$@ 
 
-%.o : %.cpp 
+%.o : %.cpp
 	@avr-g++ $(G++FLAGS) -mmcu=$(MCU) -DF_CPU=$(CLOCK) $< -o$@ 
 
 clean:
