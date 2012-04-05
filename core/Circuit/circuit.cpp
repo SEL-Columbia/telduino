@@ -35,13 +35,13 @@ int8_t _shouldReturn(Circuit *c)
 
 /**
  * Waits 1.5 tmes as long for functions which depend on the AC period.
- * Waits at least 21ms (50hz) but not more than 100ms
  * */
 uint16_t CwaitTime(Circuit *c) 
 {
-    uint16_t duration_ms = (uint16_t)((c->periodus/1000.0)*(c->halfCyclesSample/2.0));
+    int16_t cycles = c->halfCyclesSample/2 +1;
+    uint16_t duration_ms = (uint16_t)((c->periodus/1000)*cycles);
     /*Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur*/
-    return min(max(duration_ms + duration_ms/2,21),100);
+    return duration_ms + duration_ms/2; // At worst this is 65ms*cycles
 }
 
 /**
@@ -53,7 +53,7 @@ void Cclear(Circuit *c)
     RCreset();
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
     //Check for presence and clears the interrupt register
-    //Comm errors is stored in c->status
+    //Comm errors are stored in c->status
     c->status=0;
     ADEgetRegister(RSTSTATUS,&regData);                 ERRCHECKRETURN(c);
     CSselectDevice(DEVDISABLE);                       ERRCHECKRETURN(c);
@@ -82,9 +82,11 @@ void Cmeasure(Circuit *c)
     //Start measuring
     ADEgetRegister(PERIOD,&regData);                    ERRCHECKRETURN(c);
     c->periodus = periodTous(regData);
+    dbg.print("period:");
+    dbg.println(c->periodus);
     uint16_t waitTime = CwaitTime(c);
-
-
+    dbg.print("waitTime:");
+    dbg.println(waitTime);
     ADEwaitForInterrupt(CYCEND,waitTime);               ERRCHECKRETURN(c);
     //The failure may have occured because there was no interrupt
     if (_retCode == TIMEOUT) {

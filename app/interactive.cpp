@@ -306,6 +306,32 @@ void parseBerkeley()
                wdt_enable((WDTO_4S));            
                dbg.println(" #resetting in 4s.");
                break;
+            case 'r':                       //Restore communicaions on channel
+                RCreset();
+                CSselectDevice(_testChannel);
+                delay(10);
+                CSselectDevice(DEVDISABLE);
+                delay(10);
+                CSselectDevice(_testChannel);
+                delay(10);
+                CSselectDevice(DEVDISABLE);
+                CSselectDevice(_testChannel);
+                ADEgetRegister(DIEREV,&regData);
+                ifsuccess(_retCode) {
+                    dbg.println("Restored");
+                    break;
+                } else {
+                    dbg.println("Reprogramming");
+                }
+                CSreset(_testChannel);
+                Cprogram(&ckts[(_testChannel/2)*2]);
+                Cprogram(&ckts[(_testChannel/2)*2+1]);
+                ADEgetRegister(DIEREV,&regData);
+                ifsuccess(_retCode) {
+                    dbg.println("Restored");
+                    break;
+                } 
+                break;
             case 'S':                       //Toggle channel switch
                 ID = getChannelID();        
                 SWset(ID,!SWisOn(ID));
@@ -434,7 +460,10 @@ void parseBerkeley()
                     }
                 }
                 dbg.println();
+                RCreset();
                 CSselectDevice(_testChannel);
+                RCreset();
+                ADEgetRegister(RSTSTATUS,&regData);
                 ADEwaitForInterrupt((int16_t)mask,4000);
                 dbg.println(RCstr(_retCode));
                 CSselectDevice(DEVDISABLE);

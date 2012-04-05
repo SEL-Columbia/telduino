@@ -6,7 +6,7 @@
 #error "TWOS is defined"
 #endif
 
-#define periodTous(x) x*22/10 //22us/bit
+#define periodTous(x) (x)*22/10 //22us/bit
 /**
 * The type of number retrieved from the ADE
 */

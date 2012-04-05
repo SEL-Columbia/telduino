@@ -267,7 +267,6 @@ int8_t ADEreadInterrupt(uint16_t regMask)
 {
 	int32_t status;
 	ADEgetRegister(RSTSTATUS,&status);
-	//Serial.println(status);
 	ifsuccess(_retCode) {
 		if (regMask == ZX0) {
 			status = ~status;
@@ -294,7 +293,7 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 		//wait for rollover
 		do {
 			if (ADEreadInterrupt(regMask)) return;
-			ifnsuccess(_retCode) {return;/*Serial.println("COMMERR in waitForInterrupt");*/}
+			ifnsuccess(_retCode) {return;}
 		} while (millis() > endTime);
 	}
 	//now time=millis() should be less than endTime unless time 
@@ -302,7 +301,7 @@ void ADEwaitForInterrupt(uint16_t regMask, uint16_t waitTimems)
 	//where it is more than waitTimems far away
 	do {
 		if (ADEreadInterrupt(regMask)) return;
-		ifnsuccess(_retCode) {return; /*Serial.println("COMMERR in waitForInterrupt");*/} //TODO restore communications here?
+		ifnsuccess(_retCode) {return;} 
 		time = millis();
 	} while ((time <= endTime) && (endTime-time <= waitTimems));
 	_retCode = TIMEOUT;
