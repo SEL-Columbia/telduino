@@ -120,7 +120,7 @@ void meter(Circuit *ckt)
 void meterAll() 
 {
     //Prepare all ckts for reading. If the code starts to rely on LINCYC, this can become counterproductive.
-    dbg.println("ts,seq,#ID,S,V,I,Vp,Ip,per,VA,W,VAE,WE,PF,0,0,Errcode");
+    dbg.println("ts,seq,#ID,S,V,I,Vp,Ip,per,VA,W,VAE,WE,PF,0,0,StatusCode");
     for (int i=0; i < NCIRCUITS; i++) {
         Cclear(&ckts[i]);
     }

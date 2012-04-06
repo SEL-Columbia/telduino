@@ -11,17 +11,17 @@ typedef struct {
 
 	//Configuration parameters
 	/**
-	  circuitID is the SPI channel and switch associated with this particular circuit.
+	  circuitID is the logitcal SPI CS and switch associated with this particular circuit.
 	  @warning halfCyclesSample/frequency should be an integer. HalfCyclesSample must be less than 1400.
 	  */
 	int8_t circuitID;
+    int8_t connected;
 
 	/** 
 	  Measurement parameters
 	*/
 	uint16_t halfCyclesSample;
     int8_t phcal;
-    int8_t connected;
 
 	/** 
 	  Current parameters

@@ -6,7 +6,7 @@
 extern "C"{
 #endif
 
-#define NCIRCUITS 20
+#define NCIRCUITS 6
 #define SDSS  8
 
 /**

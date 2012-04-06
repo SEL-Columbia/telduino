@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#define NSWITCHES 20
+#define NSWITCHES 6
 
 static int8_t _enabledC[NSWITCHES] = {0};
 

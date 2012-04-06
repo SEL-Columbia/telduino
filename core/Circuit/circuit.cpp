@@ -75,7 +75,6 @@ void Cmeasure(Circuit *c)
     CSselectDevice(c->circuitID);                       ERRCHECKRETURN(c);
     delay(1);
 
-    //Check for presence 
     ADEgetRegister(STATUS,&regData);                 ERRCHECKRETURN(c);
     c->status = (0x0000FFFF&regData);
 
@@ -92,11 +91,11 @@ void Cmeasure(Circuit *c)
     if (!timeout) {
         //Apparent power or Volt Amps
         ADEgetRegister(LVAENERGY,&regData);             ERRCHECKRETURN(c);
-        c->VA = regData*c->VAEslope/2;// TODO assuming 2 seconds/(c->halfCyclesSample/2.0*c->periodus/1000000);  //Watts
+        c->VA = regData*c->VAEslope;// TODO assuming 1 seconds/(c->halfCyclesSample/2.0*c->periodus/1000000);  //Watts
 
         //Active power or watts
         ADEgetRegister(LAENERGY,&regData);              ERRCHECKRETURN(c);
-        c->W = regData*c->Wslope/2;//TODO Assuming 2 seconds///(c->halfCyclesSample/2.0*c->periodus/1000000); //The denominator is the actual time in seconds
+        c->W = regData*c->Wslope;//TODO Assuming 1 seconds///(c->halfCyclesSample/2.0*c->periodus/1000000); //The denominator is the actual time in seconds
 
         //IRMS
         ADEgetRegister(IRMS,&regData);                  ERRCHECKRETURN(c);
@@ -117,13 +116,12 @@ void Cmeasure(Circuit *c)
         //Current and Voltage Peaks TODO in whatever units
         ADEgetRegister(RSTIPEAK,&regData);              ERRCHECKRETURN(c);
         c->ipeak = regData;
-
         ADEgetRegister(RSTVPEAK,&regData);              ERRCHECKRETURN(c);
         c->vpeak = regData;
 
         //Power Factor PF
         if (c->VAEnergy != 0){ 
-            c->PF = (uint16_t)(((((uint64_t)c->WEnergy<<16)-c->WEnergy)-c->WEnergy)/c->VAEnergy);
+            c->PF = (uint16_t)(((((uint64_t)c->W<<16)-c->W)-c->W)/c->VA);
         } else {
             c->PF = 65535;
         }
@@ -241,20 +239,20 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->chIint = false;      //false unless a current loop or some dI/dt sensor is used.
     c->chIos = 0;           //Max +-31d
     c->chIgainExp = 0;      // .03Ohm to achieve max disipation of CS resistors Imax = 11.5
-    c->IRMSoffset = -2048;  //-2048;//0x01BC;
-    c->IRMSslope = .00468;  /** in mA/Counts */
+    c->IRMSoffset = 0;//-2048;  //-2048;//0x01BC;
+    c->IRMSslope = 1;//.00468;  /** in mA/Counts */
 
     /** Voltage Calibration Parameters */
     c->chVos = 1;           // Max +-31d
     c->chVgainExp = 0;      //Version 5 is 0 as 380V -> 10:1 -> .380V at ADE
     c->chVscale = 0;
-    c->VRMSoffset = -2048;  //-2048;//0x07FF;
-    c->VRMSslope = 2.18;//.1069; /** in mV/Counts */
+    c->VRMSoffset = 0;//-2048;  //-2048;//0x07FF;
+    c->VRMSslope = 1;//2.18;//.1069; /** in mV/Counts */
 
     /** Power Calibration Parameters */
-    c->VAEslope = 1;//75300;//34.2760;//2014/10000.0; J/Counts
+    c->VAEslope = 0.1976;//.03627;//75300;//34.2760;//2014/10000.0; J/Counts
     c->VAoffset = 0;// TODO not used yet
-    c->Wslope= 1;//31050; // W/Counts for watts
+    c->Wslope= 0.1976;//1;//.03627;//31050; // W/Counts for watts
     c->Woffset = 0;// TODO not used yet
 
     /** Software Saftey Parameters */
