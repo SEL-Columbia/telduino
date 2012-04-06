@@ -28,6 +28,9 @@
 
 /**
 	Used to gather measurement data interactively over the serial port (dbg). 
+    Assumes a resistive load.
+    VRMS and IRMS are in milliVolts/Amps
+    VA is in Watts
 	@warning Assumes 200 line cycles and 50hz
   */
 int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMeas,
@@ -43,10 +46,7 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	//get VRMS from Ckt
     // TODO average multiple measurements
     delay(2000); // Settling time according to ADE
-	ADEgetRegister(RSTSTATUS,VRMSCkt); //reset interrupt to 1
-	//ADEwaitForInterrupt(ZX,waitTime);
-	//EXITIFNOCYCLES();
-	ADEwaitForInterrupt(ZX0,waitTime);
+    CwaitForZX10(&cCal);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,VRMSCkt);
 	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return false;}
@@ -57,14 +57,12 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	dbg.println();
 	dbg.print(REPORTEDSTR);
 	dbg.println(*IRMSMeas,DEC);
-	*VAMeas = *IRMSMeas*(*VRMSMeas)*2/1000;
+	*VAMeas = (*IRMSMeas)*(*VRMSMeas)/1000; //Was *2/1000
 
 	//get IRMS from Ckt
     // TODO average multiple measurements
     delay(2000); // Settling time according to ADE
-	ADEwaitForInterrupt(ZX,waitTime);
-	EXITIFNOCYCLES();
-	ADEwaitForInterrupt(ZX0,waitTime);
+    CwaitForZX10(&cCal);
 	EXITIFNOCYCLES();
 	ADEgetRegister(IRMS,IRMSCkt);
 	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return false;}
@@ -202,7 +200,7 @@ void calibrateCircuit(Circuit *c)
 	
 	cCal.IRMSslope = ((float)(IlowMeas-IhighMeas))/(IlowCkt-IhighCkt);
 	cCal.VRMSslope = ((float)(VlowMeas-VhighMeas))/(VlowCkt-VhighCkt);
-	cCal.VAEslope  = ((float)(VAlowMeas-VAhighMeas))/(VAlowCkt-VAhighCkt);
+	cCal.VAEslope  = cCal.Wslope = ((float)(VAlowMeas-VAhighMeas))/(VAlowCkt-VAhighCkt);
 
 	Cprint(&dbg,&cCal);
 	Cprogram(&cCal);

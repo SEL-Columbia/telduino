@@ -106,13 +106,13 @@ void Cmeasure(Circuit *c)
         ADEgetRegister(VRMS,&regData);                  ERRCHECKRETURN(c);
         c->VRMS= regData*c->VRMSslope;
 
-        //Apparent energy in millijoules accumulated since last query
+        //Apparent energy accumulated since last query
         ADEgetRegister(RVAENERGY,&regData);             ERRCHECKRETURN(c);
         c->VAEnergy = regData*c->VAEslope;
 
-        //Actve energy in millijoules accumulated since last query
+        //Actve energy accumulated since last query
         ADEgetRegister(RAENERGY,&regData);              ERRCHECKRETURN(c);
-        c->WEnergy = regData*c->Wslope/1000;
+        c->WEnergy = regData*c->Wslope;
 
         //Current and Voltage Peaks TODO in whatever units
         ADEgetRegister(RSTIPEAK,&regData);              ERRCHECKRETURN(c);
@@ -251,15 +251,15 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->VRMSslope = 2.18;//.1069; /** in mV/Counts */
 
     /** Power Calibration Parameters */
-    c->VAEslope = 75300;//34.2760;//2014/10000.0; mJ/Counts
+    c->VAEslope = 75300;//34.2760;//2014/10000.0; J/Counts
     c->VAoffset = 0;// TODO not used yet
-    c->Wslope= 31050; // TODO not used yet mJ/Counts for watts
+    c->Wslope= 31050; // W/Counts for watts
     c->Woffset = 0;// TODO not used yet
 
     /** Software Saftey Parameters */
     c->sagDurationCycles = 10;
     c->minVSag = 100;
-    c->VAPowerMax = 2000;
+    c->VAPowerMax = 2000; //2kW
     c->ipeakMax = 16000;
     c->vpeakMax = 400;
 
@@ -267,7 +267,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     // Measured
     c->IRMS = 0;
     c->VRMS = 0;
-    c->periodus = 50000;
+    c->periodus = 30000;
     c->VA = 0;
     c->W = 0;
     c->PF = 1234;// Is a value from 0 to 2^16-1

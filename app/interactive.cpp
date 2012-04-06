@@ -249,7 +249,7 @@ void parseBerkeley()
                     } 
                 }
                 break;
-            case 'B':
+            case 'B':                       // Configure to Wait for zero-crossing and measure
                 printIRMSVRMSZX(_testChannel); 
 				break;
             case 'C':                       //Change active channel for ADE, switching, and metering
@@ -345,7 +345,7 @@ void parseBerkeley()
                     reportInterval = retVal;
                 }
                 break;
-            case 't':
+            case 't':                       //Print reporting interval
                 dbg.print(" #Reporting Interval:");
                 dbg.println(reportInterval);
                 break;
