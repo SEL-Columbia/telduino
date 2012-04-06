@@ -21,6 +21,7 @@ typedef struct {
 	*/
 	uint16_t halfCyclesSample;
     int8_t phcal;
+    int8_t connected;
 
 	/** 
 	  Current parameters

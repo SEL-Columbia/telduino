@@ -252,6 +252,9 @@ void parseBerkeley()
             case 'B':                       // Configure to Wait for zero-crossing and measure
                 printIRMSVRMSZX(_testChannel); 
 				break;
+            case 'b':
+                CSreset(_testChannel);
+                break;
             case 'C':                       //Change active channel for ADE, switching, and metering
                 _testChannel = getChannelID();    
                 break;

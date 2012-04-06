@@ -46,7 +46,7 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	//get VRMS from Ckt
     // TODO average multiple measurements
     delay(2000); // Settling time according to ADE
-    CwaitForZX10(&cCal);
+    CwaitForZX10(cCal.circuitID);
 	EXITIFNOCYCLES();
 	ADEgetRegister(VRMS,VRMSCkt);
 	ifnsuccess(_retCode) {dbg.println("get VRMS Failed");return false;}
@@ -62,7 +62,7 @@ int8_t getPoint(Circuit cCal, int32_t *VRMSMeas,int32_t *IRMSMeas, int32_t *VAMe
 	//get IRMS from Ckt
     // TODO average multiple measurements
     delay(2000); // Settling time according to ADE
-    CwaitForZX10(&cCal);
+    CwaitForZX10(cCal.circuitID);
 	EXITIFNOCYCLES();
 	ADEgetRegister(IRMS,IRMSCkt);
 	ifnsuccess(_retCode) {dbg.println("get IRMS Failed");return false;}
