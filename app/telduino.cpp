@@ -37,6 +37,9 @@
 #include "interactive.h"
 #include "meterMode.h"
 
+/**
+ * Initializes all of the hardware including the programming of the meters with defaults from EEPROM.
+ * */
 void setup()
 {
     // prescale of 2 after startup prescale of 8. 
@@ -44,9 +47,9 @@ void setup()
     setClockPrescaler(CLOCK_PRESCALER_2);    
 
     // Start up serial ports
-    dbg.begin(DEBUG_BAUD_RATE);
-    mdm.begin(TELIT_BAUD_RATE);
-    cpu.begin(SHEEVA_BAUD_RATE);
+    dbg.begin(DBG_BAUD_RATE);
+    mdm.begin(MDM_BAUD_RATE);
+    cpu.begin(CPU_BAUD_RATE);
 
     // Write startup message to debug port
     dbg.println("\r\n\r\ntelduino power up");
@@ -70,6 +73,9 @@ void setup()
 }
 
 
+/**
+ *  Handles switching between modes.
+ * */
 void loop()
 {   
     if (mode == METERMODE) {
@@ -77,10 +83,10 @@ void loop()
             char c = cpu.read();
             if (buffCursor < (serBuffSize-1)) {
                 serBuff[buffCursor] = c;
-                if (c == '\r') {
+                if (c == '\r' || c == '\n') {
                     serBuff[buffCursor] = '\0';
                     buffCursor = 0;
-                    if (cpu.peek() == '\n') {
+                    if (cpu.peek() == '\n' || cpu.peek() == '\r') {
                         cpu.read();
                     }
                     parseMeterMode(serBuff);
@@ -88,7 +94,6 @@ void loop()
                     buffCursor += 1;
                 }
             } else {
-                //TODO handle overflow better
                 buffCursor = 0;
                 serBuff[0] = '\0';
             }
@@ -104,21 +109,24 @@ void loop()
 
 extern "C" 
 {
+    /**
+     *  Used to handle virtual function call. Resets CPU after blinking.
+     * */
     void __cxa_pure_virtual(void) 
     {
-        while(1) {
+        for (int i = 0; i < 10; i++)
             DbgLeds(RPAT);
             delay(332);
             DbgLeds(YPAT);
             delay(332);
             DbgLeds(GPAT);
             delay(332);
-        }
+            wdt_enable((WDTO_4S));
     }
 }
 
 /**  Disables the watchdog timer. Should be specified to be run as soon as possible
- *   according to atmel. This is done in the declaration for this function.
+ *   according to atmel by putting in first. This is done in the declaration for this function.
  */
 void wdt_init(void)
 {
