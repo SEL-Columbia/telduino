@@ -23,7 +23,6 @@
 //HACKED UP TEST REMOVE
 #define RARAASIZE 225
 
-
 #define MAINS 0
 extern int16_t reportInterval;  /** How often to report in seconds */
 extern int8_t mode;             /** 0 emergency, 1 interactive, 2 meter, 3 test */
@@ -36,7 +35,7 @@ extern Circuit ckts[NCIRCUITS];
 //EEPROM DATA
 extern Circuit EEMEM cktsSave[NCIRCUITS];
 //HACKED UP TEST REMOVE \/
-extern int32_t EEMEM RARAASave[RARAASIZE][2];// = {0};
-extern int32_t EEMEM nRARAASave;// = 0;
+extern int32_t EEMEM RARAASave[RARAASIZE][2];
+extern int32_t EEMEM nRARAASave;
             
 #endif

@@ -40,9 +40,6 @@
 //Local Functions
 void badInput(char ch, HardwareSerial *ser);
 
-//To be deleted
-void softSetup();
-
 //This is the input daughter board channel actively being manipulated
 int _testChannel = 1; 
 
@@ -838,80 +835,3 @@ void printSDCardInfo()
     dbg.println((int16_t)sdinfo.manufacturing_year);
 }
 
-/** 
- * resets the test channel (input daughter board) 
- * to default parameters and sets the linecycle count up.
-*/
-void softSetup()
-{
-    int32_t data = 0;
-
-    dbg.print("\n\n\rSetting Channel:");
-    dbg.println(_testChannel,DEC);
-
-    CSselectDevice(_testChannel); //start SPI comm with the test device channel
-
-    //Disable Digital Integrator for _testChannel
-    int8_t ch1os=0,enableBit=0;
-    dbg.print("set CH1OS:");
-    ADEsetCHXOS(1,&enableBit,&ch1os);
-    dbg.println(RCstr(_retCode));
-    dbg.print("get CH1OS:");
-    ADEgetCHXOS(1,&enableBit,&ch1os);
-    dbg.println(RCstr(_retCode));
-    dbg.print("enabled: ");
-    dbg.println(enableBit,BIN);
-    dbg.print("offset: ");
-    dbg.println(ch1os);
-
-    //set the gain to 16 for channel _testChannel since the sensitivity appears to be 0.02157 V/Amp
-    int32_t gainVal = 0x4;
-    dbg.print("BIN GAIN (set,get):");
-    ADEsetRegister(GAIN,&gainVal);
-    dbg.print(RCstr(_retCode));
-    dbg.print(",");
-    ADEgetRegister(GAIN,&gainVal);
-    dbg.print(RCstr(_retCode));
-    dbg.print(":");
-    dbg.println(gainVal,BIN);
-
-    //NOTE*****  I am using zeros right now because we are going to up the gain and see if this is the same
-    //Set the IRMSOS to 0d444 or 0x01BC. This is the measured offset value.
-    int32_t iRmsOsVal = 0x0;//0x01BC;
-    ADEsetRegister(IRMSOS,&iRmsOsVal);
-    ADEgetRegister(IRMSOS,&iRmsOsVal);
-    dbg.print("hex IRMSOS:");
-    dbg.println(iRmsOsVal, HEX);
-
-    //Set the VRMSOS to -0d549. This is the measured offset value.
-    int32_t vRmsOsVal = 0x0;//0x07FF;//F800
-    ADEsetRegister(VRMSOS,&vRmsOsVal);
-    ADEgetRegister(VRMSOS,&vRmsOsVal);
-    dbg.print("hex VRMSOS read from register:");
-    dbg.println(vRmsOsVal, HEX);
-
-    //set the number of cycles to wait before taking a reading
-    int32_t linecycVal = 200;
-    ADEsetRegister(LINECYC,&linecycVal);
-    ADEgetRegister(LINECYC,&linecycVal);
-    dbg.print("int linecycVal:");
-    dbg.println(linecycVal);
-
-    //read and set the CYCMODE bit on the MODE register
-    int32_t modeReg = 0;
-    ADEgetRegister(MODE,&modeReg);
-    dbg.print("bin MODE register before setting CYCMODE:");
-    dbg.println(modeReg, BIN);
-    modeReg |= CYCMODE;     //set the line cycle accumulation mode bit
-    ADEsetRegister(MODE,&modeReg);
-    ADEgetRegister(MODE,&modeReg);
-    dbg.print("bin MODE register after setting CYCMODE:");
-    dbg.println(modeReg, BIN);
-
-    //reset the Interrupt status register
-    ADEgetRegister(RSTSTATUS, &data);
-    dbg.print("bin Interrupt Status Register:");
-    dbg.println(data, BIN);
-
-    CSselectDevice(DEVDISABLE); //end SPI comm with the selected device    
-}

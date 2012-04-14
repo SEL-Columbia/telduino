@@ -38,6 +38,9 @@
 #include "meterMode.h"
 #include "testMode.h"
 
+/**
+ * Initializes all of the hardware including the programming of the meters with defaults from EEPROM.
+ * */
 void setup()
 {
     // prescale of 2 after startup prescale of 8. 
@@ -70,6 +73,9 @@ void setup()
     }
 }
 
+/**
+ *  Handles switching between modes.
+ * */
 void loop()
 {   
     switch (mode) {
@@ -91,24 +97,24 @@ void loop()
 
 extern "C" 
 {
-    /** 
-     *  Called if there is a pure virtual function called.
+    /**
+     *  Used to handle virtual function call. Resets CPU after blinking.
      * */
     void __cxa_pure_virtual(void) 
     {
-        DbgLeds(RPAT);
-        delay(332);
-        DbgLeds(YPAT);
-        delay(332);
-        DbgLeds(GPAT);
-        delay(332);
-        dbg.println("Pure Virtual Function Call. Resetting");
-        wdt_enable((WDTO_4S));
+        for (int i = 0; i < 10; i++)
+            DbgLeds(RPAT);
+            delay(332);
+            DbgLeds(YPAT);
+            delay(332);
+            DbgLeds(GPAT);
+            delay(332);
+            wdt_enable((WDTO_4S));
     }
 }
 
 /**  Disables the watchdog timer. Should be specified to be run as soon as possible
- *   according to atmel. This is done in the declaration for this function.
+ *   according to atmel by putting in first. This is done in the declaration for this function.
  */
 void wdt_init(void)
 {
