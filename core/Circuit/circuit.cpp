@@ -345,32 +345,32 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
     ser->print(c->circuitID,DEC);
     ser->print(",");
     ser->print(CisOn(c),DEC);
-    ser->print(",");
-    ser->print(c->VRMS,DEC);
-    ser->print(",");
-    ser->print(c->IRMS,DEC);
-    ser->print(",");
-    ser->print(c->vpeak,DEC);
-    ser->print(",");
-    ser->print(c->ipeak,DEC);
-    ser->print(",");
-    ser->print(c->periodus,DEC);
-    ser->print(",");
-    ser->print(c->VA,DEC);
-    ser->print(",");
+   // ser->print(",");
+   // ser->print(c->VRMS,DEC);
+   // ser->print(",");
+   // ser->print(c->IRMS,DEC);
+   // ser->print(",");
+   // ser->print(c->vpeak,DEC);
+   // ser->print(",");
+   // ser->print(c->ipeak,DEC);
+   // ser->print(",");
+   // ser->print(c->periodus,DEC);
+   // ser->print(",");
+   // ser->print(c->VA,DEC);
+    ser->print(",\t");
     ser->print(c->W,DEC);
-    ser->print(",");
-    ser->print(c->VAEnergy,DEC);
-    ser->print(",");
+  //  ser->print(",");
+  //  ser->print(c->VAEnergy,DEC);
+    ser->print(",\t");
     ser->print(c->WEnergy,DEC);
-    ser->print(",");
-    ser->print(c->PF,DEC);
-    ser->print(",");
-    // TODO VA ACCUM
-    ser->print(0);
-    ser->print(",");
+  //  ser->print(",");
+  //  ser->print(c->PF,DEC);
+  //  ser->print(",");
+  //  // TODO VA ACCUM
+  //  ser->print(0);
+  //  ser->print(",");
     // TODO W ACCUM
-    ser->print(0);
+  //  ser->print(0);
 }
 
 /** Strobe the CS pin on the current ADE.

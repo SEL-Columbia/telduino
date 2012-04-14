@@ -32,10 +32,40 @@
 //(w)atts meter circuit
 //! do nothing NOP
 
+//Serial Buffer
+int8_t buffCursor = 0;
+char serBuff[SERBUFFSIZE];
+const char *FMTSTRINGI = "%c %hd %ld";
 
 uint64_t lastMeter = 0;
 int32_t sequenceNum = 0;
-const char *FMTSTRINGI = "%c %hd %ld";
+
+/**
+* Entry point for meter mode. Handles input from CPU Serial line while in metermode.
+*/
+void meterMode() 
+{
+    if (cpu.available()) {
+        char c = cpu.read();
+        if (buffCursor < (SERBUFFSIZE-1)) {
+            serBuff[buffCursor] = c;
+            if (c == '\r') {
+                serBuff[buffCursor] = '\0';
+                buffCursor = 0;
+                if (cpu.peek() == '\n') {
+                    cpu.read();
+                }
+                parseMeterMode(serBuff);
+            } else {
+                buffCursor += 1;
+            }
+        } else {
+            buffCursor = 0;
+            serBuff[0] = '\0';
+        }
+    }
+    meterAuto();
+}
 
 void parseMeterMode(char *cmd) 
 {
@@ -104,8 +134,11 @@ void meterAuto()
     } 
     if (reportInterval > 0 && (diff/1000 < reportInterval)) {
         return;
-    }
+    } 
     lastMeter = millis();
+    if (reportInterval < 0) {
+        return;
+    }
     meterAll();
 }
 

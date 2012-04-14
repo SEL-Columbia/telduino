@@ -9,8 +9,7 @@ void displayChannelInfo();
 void displayEnabled(const int8_t enabledC[NSWITCHES]);
 int8_t getChannelID();
 void testSwitch(int8_t swID);
-void testHardware();
-void softSetup();
+void testSwitching();
 void printSDCardInfo();
 
 //Hacked up test

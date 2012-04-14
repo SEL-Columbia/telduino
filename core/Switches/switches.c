@@ -2,6 +2,13 @@
 #include "ReturnCode/returncode.h"
 
 /**
+ * @file Switches.cpp
+ *
+ * TODO: Since the relays are latching relays, switch to High-Z.
+ * */
+
+
+/**
     Mapping from switch number to pins.
 */
 static const int8_t mapSWtoPinON[] = {11,56,10,66,74,22,73,27,3,81,48,15,76,34,75,41,77,20,13,45};

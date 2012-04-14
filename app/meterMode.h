@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include "Circuit/circuit.h"
  
-extern long nextMeter;
+#define SERBUFFSIZE 64
+void meterMode();
 void parseMeterMode(char *cmd);
 void printMeter(Circuit* ckt);
 void meter(Circuit* ckt);

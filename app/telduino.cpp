@@ -36,6 +36,7 @@
 #include "cfg.h"
 #include "interactive.h"
 #include "meterMode.h"
+#include "testMode.h"
 
 void setup()
 {
@@ -44,9 +45,9 @@ void setup()
     setClockPrescaler(CLOCK_PRESCALER_2);    
 
     // Start up serial ports
-    dbg.begin(DEBUG_BAUD_RATE);
-    mdm.begin(TELIT_BAUD_RATE);
-    cpu.begin(SHEEVA_BAUD_RATE);
+    dbg.begin(DBG_BAUD_RATE);
+    mdm.begin(MDM_BAUD_RATE);
+    cpu.begin(CPU_BAUD_RATE);
 
     // Write startup message to debug port
     dbg.println("\r\n\r\ntelduino power up");
@@ -69,51 +70,40 @@ void setup()
     }
 }
 
-
 void loop()
 {   
-    if (mode == METERMODE) {
-        if (cpu.available()) {
-            char c = cpu.read();
-            if (buffCursor < (serBuffSize-1)) {
-                serBuff[buffCursor] = c;
-                if (c == '\r') {
-                    serBuff[buffCursor] = '\0';
-                    buffCursor = 0;
-                    if (cpu.peek() == '\n') {
-                        cpu.read();
-                    }
-                    parseMeterMode(serBuff);
-                } else {
-                    buffCursor += 1;
-                }
-            } else {
-                //TODO handle overflow better
-                buffCursor = 0;
-                serBuff[0] = '\0';
-            }
-        }
-        meterAuto();
-    } else if (mode == INTERACTIVEMODE) {
-        parseBerkeley();
-    } else {
-        dbg.println("Invalid Mode setting to interactive mode");
-        mode = INTERACTIVEMODE;
+    switch (mode) {
+        case METERMODE:
+            meterMode();
+            break;
+        case INTERACTIVEMODE:
+            parseBerkeley();
+            break;
+        case TESTMODE:
+            testMode();
+            break;
+        default:
+            dbg.println("Invalid Mode setting to interactive mode");
+            mode = INTERACTIVEMODE;
+            break;
     }
 }
 
 extern "C" 
 {
+    /** 
+     *  Called if there is a pure virtual function called.
+     * */
     void __cxa_pure_virtual(void) 
     {
-        while(1) {
-            DbgLeds(RPAT);
-            delay(332);
-            DbgLeds(YPAT);
-            delay(332);
-            DbgLeds(GPAT);
-            delay(332);
-        }
+        DbgLeds(RPAT);
+        delay(332);
+        DbgLeds(YPAT);
+        delay(332);
+        DbgLeds(GPAT);
+        delay(332);
+        dbg.println("Pure Virtual Function Call. Resetting");
+        wdt_enable((WDTO_4S));
     }
 }
 
