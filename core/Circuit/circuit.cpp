@@ -144,6 +144,9 @@ void Cprogram(Circuit *c)
 
     ADEreset();
 
+    //Enable zero crossing Shouldn't matter
+    ADEsetIrqEnBit(ZX,true);
+
     //If there is some non-zero sag duration cycle set it
     if (c->sagDurationCycles > 0) { 
         regData = c->sagDurationCycles + 1;
@@ -551,6 +554,6 @@ void CwaitForZX10(int8_t waitTime)
     RCreset();
 	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt ZX is now 1
     ifnsuccess(_retCode){return;}
-	ADEwaitForInterrupt(ZX0,waitTime);  //Wait for the 1 to change to 0
+	ADEwaitForInterrupt(ZX1,waitTime);  //Wait for the 1 to change to 0
     ifnsuccess(_retCode){return;}
 }

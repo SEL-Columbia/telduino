@@ -69,6 +69,13 @@ void testCircuitPrint()
     }
 }
 
+int32_t sampleZXWait(void *context) 
+{
+    int32_t waitTime = millis();
+    CwaitForZX10(30);
+    return millis() - waitTime;
+}
+
 /**
  *  Single character serial interface for interaction with telduino
  *  Capital letters are usually writes and lower case letters are usually reads
@@ -249,9 +256,22 @@ void parseBerkeley()
                     } 
                 }
                 break;
-            case 'B':                       // Configure to Wait for zero-crossing and measure
-                printIRMSVRMSZX(_testChannel); 
-				break;
+            case 'B':                       //Test ZX10
+                {
+                    int waitTime = millis();
+                    RCreset();
+                    CSselectDevice(_testChannel);
+                    int32_t avgWaitTime = 0;
+                    int32_t varWaitTime = 0;
+                    //For 10 seconds measure time between ZX detections
+                    avgWaitTime = avg(600,sampleZXWait,NULL,&varWaitTime);
+                    dbg.print("avgWait:");
+                    dbg.println(avgWaitTime);
+                    dbg.print("varWait:");
+                    dbg.println(varWaitTime);
+                    CSselectDevice(DEVDISABLE);
+                }
+                break;
             case 'b':
                 CSreset(_testChannel);
                 break;
@@ -376,25 +396,13 @@ void parseBerkeley()
                 RCreset();
                 break;
             case 'o':                       //Wait for zero-crossing and print IRMS and VRMS
-                int32_t vrms,irms,start;
-                RCreset();
-                CSselectDevice(_testChannel);
-                start = millis();
-                CwaitForZX10(50);
-                ifnsuccess(_retCode) dbg.println(RCstr(_retCode));
-                ADEgetRegister(VRMS,&vrms);
-                ADEgetRegister(IRMS,&irms);
-                dbg.print(millis()-start); dbg.println(":Waited Ms"); 
-                dbg.print("VRMS:"); dbg.println(vrms);
-                dbg.print("IRMS:"); dbg.println(irms);
-                
-                CSselectDevice(DEVDISABLE);
+                printIRMSVRMSZX(_testChannel);
                 break;
             case 'O':                       //Take long running averages of IRMS and VRMS
                 int8_t zero;
-                int32_t vrmsavr,vrmsvar,irmsav,irmsvar,wfmVavr,wfmVvar,wfmIavr,wfmIvar;
+                int32_t vrmsavr,vrmsvar,irmsav,irmsvar,wfmVavr,wfmVvar,wfmIavr,wfmIvar,waitTime;
                 vrmsavr = vrmsvar = irmsav = vrmsvar = wfmVavr = wfmVvar = wfmIavr = wfmIvar= zero =0;
-                start = millis();
+                waitTime = millis();
                 RCreset();
                 CSselectDevice(ckts[_testChannel].circuitID);
                 ADEsetRegister(IRMSOS,&vrmsavr);
@@ -405,7 +413,7 @@ void parseBerkeley()
                 CSselectDevice(DEVDISABLE);
                 vrmsavr = avg(1000,Cvrms,&ckts[_testChannel],&vrmsvar);
                 irmsav = avg(1000,Cirms,&ckts[_testChannel],&irmsvar);
-                dbg.print(millis()-start); dbg.println(":TotalTime");
+                dbg.print(millis()-waitTime); dbg.println(":TotalTime");
                 dbg.print("VRMS_AVG:"); dbg.print(vrmsavr); dbg.print(", VRMS_VAR:"); dbg.println(vrmsvar);
                 dbg.print("IRMS_AVG:"); dbg.print(irmsav); dbg.print(", IRMS_VAR:"); dbg.println(irmsvar);
 
@@ -570,89 +578,6 @@ void badInput(char ch, HardwareSerial *ser)
 }
 
 
-void displayChannelInfo() 
-{
-    int32_t val;
-    uint32_t iRMS = 0;
-    uint32_t vRMS = 0;
-    uint32_t lineAccAppEnergy = 0;
-    uint32_t lineAccActiveEnergy = 0;
-    int32_t interruptStatus = 0;
-    uint32_t iRMSSlope = 164;
-    uint32_t vRMSSlope = 4700;
-    uint32_t appEnergyDiv = 5;
-    uint32_t energyJoules = 0;
-
-    //Select the Device
-    CSselectDevice(_testChannel);
-
-    //Read and clear the Interrupt Status Register
-    ADEgetRegister(RSTSTATUS, &interruptStatus);
-
-    if (0 /*loopCounter%4096*/ ){
-        dbg.print("bin Interrupt Status Register:");
-        dbg.println(interruptStatus, BIN);
-    }   //endif
-
-    //if the CYCEND bit of the Interrupt Status Registers is flagged
-    dbg.print("\n\n\r");
-    dbg.print("Waiting for next cycle: ");
-    ADEwaitForInterrupt(CYCEND,4000);
-    dbg.println(RCstr(_retCode));
-
-    ifsuccess(_retCode) {
-        DbgLeds(GYRPAT);
-
-        dbg.print("_testChannel:");
-        dbg.println(_testChannel,DEC);
-
-        dbg.print("bin Interrupt Status Register:");
-        dbg.println(interruptStatus, BIN);
-
-        //IRMS SECTION
-        dbg.print("IRMS:");
-        ADEgetRegister(IRMS,&val);
-        dbg.println( RCstr(_retCode) );
-        dbg.print("Counts:");
-        dbg.println(val);
-        dbg.print("mAmps:");
-        iRMS = val/iRMSSlope;//data*1000/40172/4;
-        dbg.println(iRMS);
-
-        //VRMS SECTION
-        dbg.print("VRMS:");
-        ADEgetRegister(VRMS,&val);
-        dbg.println(RCstr(_retCode));
-        dbg.print("Counts:");
-        dbg.println(val);
-        vRMS = val/vRMSSlope; //old value:9142
-        dbg.print("Volts:");
-        dbg.println(vRMS);
-
-
-        //APPARENT ENERGY SECTION
-        ADEgetRegister(LVAENERGY,&val);
-        dbg.print("int Line Cycle Apparent Energy after 200 half-cycles:");
-        dbg.println(val);
-        energyJoules = val*2014/10000;
-        dbg.print("Apparent Energy in Joules over the past 2 seconds:");
-        dbg.println(energyJoules);
-        dbg.print("Calculated apparent power usage:");
-        dbg.println(energyJoules/2);
-
-        //ACTIVE ENERGY SECTION
-        ADEgetRegister(LAENERGY,&val);
-        ifsuccess(_retCode) {
-            dbg.print("int Line Cycle Active Energy after 200 half-cycles:");
-            dbg.println(val);
-        } else {
-            dbg.println("Line Cycle Active Energy read failed.");
-        }// end ifsuccess
-    } //end ifsuccess
-
-    CSselectDevice(DEVDISABLE);
-}
-
 int8_t getChannelID() 
 {
     int32_t ID = -1;
@@ -753,6 +678,9 @@ void displayEnabled(const int8_t enabledC[NSWITCHES])
     dbg.println();
 }
 
+/**
+ * Pretty prints a 2D table of string values with len rows
+ * */
 void printTableStrings(const char *strs[], int8_t len)
 {
     for (int i=0; i < len; i++) {
@@ -767,24 +695,28 @@ void printTableStrings(const char *strs[], int8_t len)
     }
 }
 
+/**
+ *  Waits for the zero crossing and prints IRMS and VRMS.
+ * */
 void printIRMSVRMSZX( int channel ) {
     int32_t VRMSdata = 0;
     int32_t IRMSdata = 0;
     int32_t ZXstatus= 0;
     int32_t Istatus= 0;
     int32_t Vstatus= 0;
+    int32_t waitTime = 0;
 
     CSselectDevice(channel);
 
-    dbg.println("IRMS and VRMS after zero-crossing: ");
     //set interrrupt enable for zero crossing: ADDR 0x0A = 0x0010
     ADEsetIrqEnBit(ZX,true);
-    //reset the interrupt status: Read Reg ADDR 0x0C
-    ADEgetRegister(RSTSTATUS,&ZXstatus);
-    //ZXstatus is chosen arbitrarily it gets erased later on
+    dbg.println("IRMS and VRMS after zero-crossing: ");
     //wait for Interrupt for 20 millisecs
-    ADEwaitForInterrupt(ZX,20);
+    waitTime = millis();
+    CwaitForZX10(20);
+    waitTime = millis() - waitTime;
     ZXstatus = _retCode;
+
     //read VRMS
     ADEgetRegister(IRMS,&VRMSdata);
     Istatus = _retCode;
@@ -810,10 +742,15 @@ void printIRMSVRMSZX( int channel ) {
     dbg.print(VRMSdata,HEX);
     dbg.print(":");
     dbg.println(VRMSdata,DEC);				
+    dbg.print("waitTime:"); dbg.println(waitTime);
 
     CSselectDevice(DEVDISABLE);
 }
 
+/**
+ * Make a simple query to the SD Card. 
+ * It should give a reasonable year and capacity.
+ * */
 void printSDCardInfo() 
 {
     sd_raw_info sdinfo;

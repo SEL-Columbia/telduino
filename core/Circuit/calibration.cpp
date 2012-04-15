@@ -298,22 +298,21 @@ int8_t CLgetInt(HardwareSerial *ser,int32_t *d)
  *
  * Mean and var is computed using the Knuth online mean algorithm.
  * */
-int32_t avg(int n, int32_t (*sample)(void*), void* context, int32_t *var) 
+int32_t avg(int32_t n, int32_t (*sample)(void*), void* context, int32_t* var) 
 {
     int32_t x = 0;
     float delta = 0;
     float mean = 0;
     float m2 = 0;
-    for (int i=1; i<=n; i++) {
+    for (int32_t i=1; i<=n; i++) {
         x = sample(context);
         ifnsuccess(_retCode) {
-            if (var != NULL) *var = 0;
-            return 0;
+            if (var != NULL) *var = 0; return 0;
         }
         delta = x - mean;
         //Update
         mean = mean + delta/i; 
-        m2 += delta*((float)x-mean);
+        m2 += delta*(((float)x)-mean);
     }
     if (var != NULL && n > 0) {
         if (n == 1) n = 2; //1 point is not big enough sample.

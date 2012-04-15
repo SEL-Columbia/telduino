@@ -5,7 +5,6 @@
 extern int _testChannel; //This is the input daughter board channel. This should only b
 
 void parseBerkeley();
-void displayChannelInfo();
 void displayEnabled(const int8_t enabledC[NSWITCHES]);
 int8_t getChannelID();
 void testSwitch(int8_t swID);
