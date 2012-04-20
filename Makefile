@@ -15,13 +15,14 @@
 
 #select the file to run. telduino is main, telduino_test is going to be the test routines
 PROJECT = telduino
-PROGRAMMER = dragon_isp #stk500 #dragon_jtag #dragon_isp
+PROGRAMMER = dragon_jtag #stk500 #dragon_jtag #dragon_isp
 PORT = usb
 BITPERIOD = 10
 #PROJECT = telduino_test
 MCU = atmega1280
 CLOCK = 8000000L
-GCCFLAGS = -c -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Icore
+LIBS = libscanf_flt.a
+GCCFLAGS = -c -Os -w -Wall -std=c99 -ffunction-sections -fdata-sections -Icore 
 G++FLAGS = -c -Os -w -Wall -fno-exceptions -ffunction-sections -fdata-sections -Icore
 
 
@@ -43,7 +44,7 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \
 	HardwareSerial.o Print.o SPI.o ADE7753.o \
 	DbgTel.o select.o switches.o returncode.o  circuit.o calibration.o \
     byteordering.o fat.o partition.o sd_raw.o statistics.o interactive.o \
-	meterMode.o testMode.o cfg.o $(PROJECT).o 
+	meterMode.o testMode.o cfg.o circuit_controller.o $(PROJECT).o 
 
 #TARGETS
 .PHONY : clean install programfuses readfuses docs

@@ -106,7 +106,7 @@ void calibrateCircuit(Circuit *c)
 	//Clear values which need to be calibrated
 	cCal.chIos = cCal.chVos = cCal.IRMSoffset = cCal.VRMSoffset = 0;
 	cCal.VAoffset = cCal.Woffset = 0;
-	cCal.IRMSslope = cCal.VRMSslope = cCal.VAEslope = cCal.Wslope = 1;
+	cCal.IRMSslope = cCal.VRMSslope = cCal.VAslope = cCal.Wslope = 1;
 
     RCreset();
 	Cprogram(&cCal);
@@ -200,7 +200,7 @@ void calibrateCircuit(Circuit *c)
 	
 	cCal.IRMSslope = ((float)(IlowMeas-IhighMeas))/(IlowCkt-IhighCkt);
 	cCal.VRMSslope = ((float)(VlowMeas-VhighMeas))/(VlowCkt-VhighCkt);
-	cCal.VAEslope  = cCal.Wslope = ((float)(VAlowMeas-VAhighMeas))/(VAlowCkt-VAhighCkt);
+	cCal.VAslope  = cCal.Wslope = ((float)(VAlowMeas-VAhighMeas))/(VAlowCkt-VAhighCkt);
 
 	Cprint(&dbg,&cCal);
 	Cprogram(&cCal);

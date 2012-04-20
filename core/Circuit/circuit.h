@@ -7,6 +7,7 @@
 static const uint32_t COMM	= 0x00010000;
 static const uint32_t TIME  = 0x00020000;
 
+//MODEL
 typedef struct {
 
 	//Configuration parameters
@@ -18,13 +19,13 @@ typedef struct {
     int8_t connected;
 
 	/** 
-	  Measurement parameters
+	  ADE Measurement parameters
 	*/
 	uint16_t halfCyclesSample;
     int8_t phcal;
 
 	/** 
-	  Current parameters
+	  ADE Current parameters
 	*/
 	int8_t chIint;
 	int8_t chIos;       // Channel I offset
@@ -33,7 +34,7 @@ typedef struct {
 	float IRMSslope;	// Converts measured units into Amps
 
 	/** 
-	  Voltage parameters
+	  ADE Voltage parameters
 	  See ADE documentation for valid ranges.
 	*/
 	int8_t chVos;
@@ -43,9 +44,10 @@ typedef struct {
 	float VRMSslope;	// Converts measured units into Volts
 
 	/**
-	  Power parameters
+	  CIRCUIT Power parameters
+        TODO: Make this a piecewise function
 	*/
-	float VAEslope;	
+	float VAslope;	
 	int32_t VAoffset;	
 	float Wslope;		
 	int32_t Woffset;
@@ -85,7 +87,6 @@ typedef struct {
 
 } Circuit;
 
-
 /** 
   Updates circuit measured parameters
   @returns a return code
@@ -109,5 +110,14 @@ void CwaitForZX10(int8_t waitTime);
 int32_t Cvrms(void*);
 int32_t Cirms(void*);
 int32_t Cwaveform(void*);
+
+//CONTROLLER
+typedef void (CSET)(Circuit *c,float);
+CSET CsetWslope;
+CSET CsetVAslope;
+extern char* PARAMETERS[2];
+extern CSET* CSETS[];
+
+//VIEW
 
 #endif

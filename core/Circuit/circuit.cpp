@@ -91,7 +91,7 @@ void Cmeasure(Circuit *c)
     if (!timeout) {
         //Apparent power or Volt Amps
         ADEgetRegister(LVAENERGY,&regData);             ERRCHECKRETURN(c);
-        c->VA = regData*c->VAEslope;// TODO assuming 1 seconds/(c->halfCyclesSample/2.0*c->periodus/1000000);  //Watts
+        c->VA = regData*c->VAslope;// TODO assuming 1 seconds/(c->halfCyclesSample/2.0*c->periodus/1000000);  //Watts
 
         //Active power or watts
         ADEgetRegister(LAENERGY,&regData);              ERRCHECKRETURN(c);
@@ -107,7 +107,7 @@ void Cmeasure(Circuit *c)
 
         //Apparent energy accumulated since last query
         ADEgetRegister(RVAENERGY,&regData);             ERRCHECKRETURN(c);
-        c->VAEnergy = regData*c->VAEslope;
+        c->VAEnergy = regData*c->VAslope;
 
         //Actve energy accumulated since last query
         ADEgetRegister(RAENERGY,&regData);              ERRCHECKRETURN(c);
@@ -253,12 +253,13 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->VRMSslope = 1;//2.18;//.1069; /** in mV/Counts */
 
     /** Power Calibration Parameters */
-    c->VAEslope = 0.1976;//.03627;//75300;//34.2760;//2014/10000.0; J/Counts
+    c->VAslope = 1;//0.1976;//.03627;//75300;//34.2760;//2014/10000.0; J/Counts
     c->VAoffset = 0;// TODO not used yet
-    c->Wslope= 0.1976;//1;//.03627;//31050; // W/Counts for watts
+    c->Wslope= 1;//0.1976;//1;//.03627;//31050; // W/Counts for watts
     c->Woffset = 0;// TODO not used yet
 
-    /** Software Saftey Parameters */
+    /** Software Saftey Parameters 
+     * TODO: Not uesd yet.*/
     c->sagDurationCycles = 10;
     c->minVSag = 100;
     c->VAPowerMax = 2000; //2kW
@@ -306,7 +307,7 @@ void Cprint(HardwareSerial *ser, Circuit *c)
     ser->print("\tVRMSOS:"); ser->println(c->VRMSoffset);
 
     ser->print("VRMS slope:"); ser->print(c->VRMSslope);
-    ser->print("\tVAE slope:"); ser->print(c->VAEslope);
+    ser->print("\tVAE slope:"); ser->print(c->VAslope);
     ser->print("\tVA OS:"); ser->println(c->VAoffset);
 
     ser->print("W OS:"); ser->print(c->VAoffset);
@@ -557,3 +558,4 @@ void CwaitForZX10(int8_t waitTime)
 	ADEwaitForInterrupt(ZX1,waitTime);  //Wait for the 1 to change to 0
     ifnsuccess(_retCode){return;}
 }
+

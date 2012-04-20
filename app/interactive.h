@@ -20,5 +20,8 @@ void testCircuitPrint();
 //IO
 void printTableStrings(const char *strs[], int8_t len);
 void printIRMSVRMSZX( int channel );
+    
+//Configuration of Circuits
+void setCircuitParameter();
 
 #endif

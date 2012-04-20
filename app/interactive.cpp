@@ -49,6 +49,9 @@ int32_t testIdx = 0;//Present index into RARAASAVE counts down to 0
 int32_t switchings = 0;
 
 
+//Serial buffer
+char buff[32] = {0};
+
 void testCircuitPrint() 
 {
     int32_t records = 0;
@@ -192,7 +195,6 @@ void parseBerkeley()
     if (dbg.available() > 0) {
         char incoming = dbg.read(); 
         // TODO Make functions for each case instead of dumping code
-        char buff[16] = {0};
         int32_t regData = 0;
         const char * codes[NCIRCUITS] = {};
         Circuit *c;
@@ -277,6 +279,9 @@ void parseBerkeley()
                 break;
             case 'C':                       //Change active channel for ADE, switching, and metering
                 _testChannel = getChannelID();    
+                break;
+            case 'c':
+                setCircuitParameter();
                 break;
             case 'D':                       //Initialize ckts[] to safe defaults
                 for (int i = 0; i < NCIRCUITS; i++) {
@@ -698,7 +703,8 @@ void printTableStrings(const char *strs[], int8_t len)
 /**
  *  Waits for the zero crossing and prints IRMS and VRMS.
  * */
-void printIRMSVRMSZX( int channel ) {
+void printIRMSVRMSZX( int channel ) 
+{
     int32_t VRMSdata = 0;
     int32_t IRMSdata = 0;
     int32_t ZXstatus= 0;
@@ -772,3 +778,40 @@ void printSDCardInfo()
     dbg.println((int16_t)sdinfo.manufacturing_year);
 }
 
+/**
+ *  Queries user for circuit parameter and sets it. 
+ *  Doesn't program or save in EEPROM
+ */
+void setCircuitParameter()
+{
+    int32_t num,den;
+    float value;
+    int8_t RC;
+    dbg.print("Circuit parameter to change:");
+    ifnsuccess(CLgetString(&dbg,buff,sizeof(buff))) {
+        dbg.print("CANCELED");
+        return;
+    }
+    dbg.println();
+    dbg.print("Circuit parameter value numerator:");
+    RC=CLgetInt(&dbg,&num);
+    dbg.println();
+    dbg.println(RCstr(RC));
+    dbg.print("Circuit parameter value denominator:");
+    RC=CLgetInt(&dbg,&den);
+    dbg.println();
+    dbg.println(RCstr(RC));
+    value = float(num)/den;
+
+    for (int i=0; i < sizeof(PARAMETERS)/sizeof(char*);i++) {
+        if (!strcmp(buff,PARAMETERS[i])) {
+            dbg.print("Configuring Circuit ");
+            dbg.print(_testChannel);
+            dbg.print(":");
+            dbg.print(PARAMETERS[i]);
+            dbg.print(":");
+            CSETS[i](&ckts[_testChannel],value);
+            dbg.println(value);
+        }
+    }
+}
