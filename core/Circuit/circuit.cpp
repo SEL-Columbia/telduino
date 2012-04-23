@@ -11,10 +11,17 @@
 #define max(X,Y) ((X)>=(Y))?(X):(Y)
 #define ERRCHECKRETURN(Cptr) if (_shouldReturn(Cptr)) return;
 
-// TODO Have fault detection code check interrupts for sag detection and frequency variation
-// ipeak is RMS or what basically should I multiple by root2?
-// TODO make this a class separated from the implementation of the Meter.
-// TODO reset shouldn't be aware of the topology of the daughterboards and switch state.
+/**
+ * @file Circuit.cpp
+ * TODO
+ * ipeak is RMS or what basically should I multiple by root2?
+ * Make this a class better from the implementation of the Meter.
+ * Mainly the handing of communications resets which cause two meters \
+ * to need to be reset needs to be removed.
+ * NICE
+ * Have fault detection code check interrupts for sag detection and frequency variation
+ *
+ */
 
 int8_t _shouldReturn(Circuit *c) 
 {
@@ -34,14 +41,52 @@ int8_t _shouldReturn(Circuit *c)
 }
 
 /**
+ * If switch state is not already in the desired state, wait for a zero-crossing or 50ms and then switches.
+ * Leaves _retcode as is.
+ * */
+void CsetOn(Circuit *c, int8_t on) 
+{
+    int8_t code = _retCode;
+    int8_t durationms = c->periodus/1000;
+    if (durationms > 50|| durationms < 10) durationms = 50;
+    if (CisOn(c) != on) {
+        CwaitForZX10(durationms);
+    }
+    _retCode = code;
+    SWset(c->circuitID,on);
+}
+
+/**
+ * Returns software switch state.
+ * */
+int8_t CisOn(Circuit *c) 
+{
+    return SWisOn(c->circuitID);
+}
+
+/**
  * Waits 1.5 tmes as long for functions which depend on the AC period.
  * */
-uint16_t CwaitTime(Circuit *c) 
+uint16_t CcalcWaitTime(Circuit *c) 
 {
-    int16_t cycles = c->halfCyclesSample/2 +1;
+    int16_t cycles = c->cyclesSample +1;
     uint16_t duration_ms = (uint16_t)((c->periodus/1000)*cycles);
-    /*Wait at least 1.5 times the amount of time it takes for halfCycleSample halfCycles to occur*/
+    /*Wait at least 1.5 times the amount of time it takes for cyclesSample cycles to occur*/
     return duration_ms + duration_ms/2; // At worst this is 65ms*cycles
+}
+
+/**
+	Waits for the ZX (zero crossing) flag to transition to 0.
+	retCode is set to TIMEOUT if it is never seen or COMMERR if there was a communiations issue.
+  */
+void CwaitForZX10(int8_t waitTime) 
+{
+	int32_t regData;
+    RCreset();
+	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt ZX is now 1
+    ifnsuccess(_retCode){return;}
+	ADEwaitForInterrupt(ZX1,waitTime);  //Wait for the 1 to change to 0
+    ifnsuccess(_retCode){return;}
 }
 
 /**
@@ -62,8 +107,11 @@ void Cclear(Circuit *c)
 /** 
   Updates circuit measured parameters
   @warning As a prerequisite Cclear should be called first.
-  @warning a communications error may leave Circuit *c in an inconsisent state.
-  @warning The completion time of this function is dependent on the frequency of the line as well as halfCyclesSample. At worst the function will take one minute to return if halfCyclesSample is 1400 and the frequency drops below 40hz.
+  @warning A communications error may leave Circuit *c in an inconsisent state.
+  @warning The completion time of this function is dependent on the \
+  frequency of the line as well as cyclesSample. At worst the \
+  function will take one minute to return if cyclesSample is \
+  700 and the frequency drops below 40hz.
   @return ARGVALUEERR if the circuitID is invalid
   @return COMMERR if there is a communications error or the ADE is not detected
 */
@@ -82,7 +130,7 @@ void Cmeasure(Circuit *c)
     ADEgetRegister(PERIOD,&regData);                    ERRCHECKRETURN(c);
     c->periodus = periodTous(regData);
 
-    ADEwaitForInterrupt(CYCEND,CwaitTime(c));               ERRCHECKRETURN(c);
+    ADEwaitForInterrupt(CYCEND,CcalcWaitTime(c));               ERRCHECKRETURN(c);
     //The failure may have occured because there was no interrupt
     if (_retCode == TIMEOUT) {
         timeout = true;
@@ -91,11 +139,11 @@ void Cmeasure(Circuit *c)
     if (!timeout) {
         //Apparent power or Volt Amps
         ADEgetRegister(LVAENERGY,&regData);             ERRCHECKRETURN(c);
-        c->VA = regData*c->VAslope;// TODO assuming 1 seconds/(c->halfCyclesSample/2.0*c->periodus/1000000);  //Watts
+        c->VA = regData*c->VAslope;// TODO assuming 1 seconds/(c->cyclesSample*c->periodus/1000000);  //Watts
 
         //Active power or watts
         ADEgetRegister(LAENERGY,&regData);              ERRCHECKRETURN(c);
-        c->W = regData*c->Wslope;//TODO Assuming 1 seconds///(c->halfCyclesSample/2.0*c->periodus/1000000); //The denominator is the actual time in seconds
+        c->W = regData*c->Wslope;//TODO Assuming 1 seconds///(c->cyclesSample*c->periodus/1000000); //The denominator is the actual time in seconds
 
         //IRMS
         ADEgetRegister(IRMS,&regData);                  ERRCHECKRETURN(c);
@@ -120,8 +168,8 @@ void Cmeasure(Circuit *c)
         c->vpeak = regData;
 
         //Power Factor PF
-        if (c->VAEnergy != 0){ 
-            c->PF = (uint16_t)(((((uint64_t)c->W<<16)-c->W)-c->W)/c->VA);
+        if (c->VA != 0){ 
+            c->PF = (uint16_t)(65535*((float)c->W)/c->VA);
         } else {
             c->PF = 65535;
         }
@@ -135,6 +183,11 @@ void Cmeasure(Circuit *c)
     }
 }
 
+/**
+ * Configure ADE according to parameters specified in c.
+ *
+ * @return void
+ * */
 void Cprogram(Circuit *c)
 {
     int32_t regData;
@@ -147,7 +200,7 @@ void Cprogram(Circuit *c)
     //Enable zero crossing Shouldn't matter
     ADEsetIrqEnBit(ZX,true);
 
-    //If there is some non-zero sag duration cycle set it
+    //If there is some non-zero sag duration cycle count set it
     if (c->sagDurationCycles > 0) { 
         regData = c->sagDurationCycles + 1;
         ADEsetModeBit(DISSAG,false);                    ERRCHECKRETURN(c);
@@ -166,8 +219,8 @@ void Cprogram(Circuit *c)
     regData = c->VRMSoffset;
     ADEsetRegister(VRMSOS, &regData);                   ERRCHECKRETURN(c);
     //If there is some non-zero cycle sample time set CYCMODE appropriately
-    if (c->halfCyclesSample> 0) {
-        regData = c->halfCyclesSample;
+    if (c->cyclesSample> 0) {
+        regData = c->cyclesSample*2;
         ADEsetRegister(LINECYC,&regData);               ERRCHECKRETURN(c);
         ADEsetModeBit(CYCMODE,true);                    ERRCHECKRETURN(c);
     } else {
@@ -181,45 +234,7 @@ void Cprogram(Circuit *c)
     CSselectDevice(DEVDISABLE);
 }
 
-/**
- * If switch state is not already in the desired state, wait for a zero-crossing or 50ms and then switches.
- * Leaves _retcode as is.
- * */
-void CsetOn(Circuit *c, int8_t on) 
-{
-    int8_t code = _retCode;
-    int8_t durationms = c->periodus/1000;
-    if (durationms > 50|| durationms < 10) durationms = 50;
-    if (CisOn(c) != on) {
-        CwaitForZX10(durationms);
-    }
-    _retCode = code;
-    SWset(c->circuitID,on);
-}
 
-/**
- * Returns switch state.
- * */
-int8_t CisOn(Circuit *c) 
-{
-    return SWisOn(c->circuitID);
-}
-
-/**
- *  Loads circuit data from the EEPROM into memory. This data can now be used to program the registers.
- * */
-void Cload(Circuit *c, Circuit* addrEEPROM)
-{
-    eeprom_read_block(c,(uint8_t*)addrEEPROM,sizeof(Circuit));
-}
-
-/**
- *  Save circuit data from the memory into EEPROM.
- * */
-void Csave(Circuit *c, Circuit* addrEEPROM) 
-{
-    eeprom_update_block(c,(uint8_t*)addrEEPROM,sizeof(Circuit));
-}
 
 /** 
     Reasonable default values for Circuit.
@@ -235,7 +250,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->connected = 0;
 
     /** Measurement Configuration Parameters */
-    c->halfCyclesSample = 120;
+    c->cyclesSample = 60;
     c->phcal = 11;          //Ox0B
 
     /** Current Calibration Parameters  */
@@ -291,7 +306,7 @@ void Cprint(HardwareSerial *ser, Circuit *c)
 
     ser->print("#CIRCUIT");
     ser->print("circuitID:"); ser->print(c->circuitID);
-    ser->print("\thalfCyclesSample:"); ser->print(c->halfCyclesSample);
+    ser->print("\tcyclesSample:"); ser->print(c->cyclesSample);
     ser->print("\tphcal:"); ser->println(c->phcal);
 
     ser->print("chIint:"); ser->print(c->chIint);
@@ -464,7 +479,7 @@ int32_t Cwaveform(void* c)
             CSselectDevice(cir->circuitID);
             continue;
         }
-        ADEwaitForInterrupt(WSMP,CwaitTime(cir));
+        ADEwaitForInterrupt(WSMP,CcalcWaitTime(cir));
         ADEgetRegister(WAVEFORM,&waveform);
         ifnsuccess(_retCode) {
             Cstrobe(cir);
@@ -490,7 +505,7 @@ int32_t  Cvrms(void* c)
     int32_t vrms = 0;
     CSselectDevice(cir->circuitID);
     for (int i = 0; i<10; i++) {
-        CwaitForZX10(CwaitTime(cir));
+        CwaitForZX10(CcalcWaitTime(cir));
         if (_retCode == TIMEOUT) { return 0; } 
         else if (_retCode == COMMERR) {
             Cstrobe(cir);
@@ -525,7 +540,7 @@ int32_t Cirms(void* c)
     int32_t irms = 0;
     CSselectDevice(cir->circuitID);
     for (int i = 0; i<10; i++) {
-        CwaitForZX10(CwaitTime(cir));
+        CwaitForZX10(CcalcWaitTime(cir));
         if (_retCode == TIMEOUT) { return 0; } 
         else if (_retCode == COMMERR) {
             Cstrobe(cir);
@@ -545,17 +560,19 @@ int32_t Cirms(void* c)
     return irms;
 }
 
+
 /**
-	Waits for the ZX (zero crossing) flag to transition to 0.
-	retCode is set to TIMEOUT if it is never seen or COMMERR if there was a communiations issue.
-  */
-void CwaitForZX10(int8_t waitTime) 
+ *  Loads circuit data from the EEPROM into memory. This data can now be used to program the registers.
+ * */
+void Cload(Circuit *c, Circuit* addrEEPROM)
 {
-	int32_t regData;
-    RCreset();
-	ADEgetRegister(RSTSTATUS,&regData); //reset interrupt ZX is now 1
-    ifnsuccess(_retCode){return;}
-	ADEwaitForInterrupt(ZX1,waitTime);  //Wait for the 1 to change to 0
-    ifnsuccess(_retCode){return;}
+    eeprom_read_block(c,(uint8_t*)addrEEPROM,sizeof(Circuit));
 }
 
+/**
+ *  Save circuit data from the memory into EEPROM.
+ * */
+void Csave(Circuit *c, Circuit* addrEEPROM) 
+{
+    eeprom_update_block(c,(uint8_t*)addrEEPROM,sizeof(Circuit));
+}
