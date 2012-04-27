@@ -349,10 +349,10 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
     ser->print(c->circuitID,DEC);
     ser->print(",");
     ser->print(CisOn(c),DEC);
-   // ser->print(",");
-   // ser->print(c->VRMS,DEC);
-   // ser->print(",");
-   // ser->print(c->IRMS,DEC);
+    ser->print(",VRMS,");
+    ser->print(c->VRMS,DEC);
+    ser->print(",IRMS,");
+    ser->print(c->IRMS,DEC);
    // ser->print(",");
    // ser->print(c->vpeak,DEC);
    // ser->print(",");
@@ -361,11 +361,11 @@ void CprintMeas(HardwareSerial *ser, Circuit *c)
    // ser->print(c->periodus,DEC);
    // ser->print(",");
    // ser->print(c->VA,DEC);
-    ser->print(",\t");
+    ser->print(",W,");
     ser->print(c->W,DEC);
   //  ser->print(",");
   //  ser->print(c->VAEnergy,DEC);
-    ser->print(",\t");
+    ser->print(",WE,");
     ser->print(c->WEnergy,DEC);
   //  ser->print(",");
   //  ser->print(c->PF,DEC);

@@ -1,0 +1,28 @@
+8W load
+Oscilloscope Vrms (100mV/A): 
+max 5.48mV
+mode?: 
+min 5.06mV
+W of 90 (+-1)
+
+
+4W load
+Oscilloscope Vrms (100mV/A): 
+max mV: 2.98
+mode?:  2.2.7
+min mV: 2.67
+W of 46 (+-1)
+
+2W load Oscilliscope is hitting noise floor
+Oscilloscope Vrms (100mV/A): 
+max mV: 1.37
+mode?:  1.51
+min mV: 2.03mV
+W of 25 (+-1)
+
+1Wload
+Oscilloscope Vrms (100mV/A): 
+max mV: 800uV
+mode?:  1.50
+min mV: 1.50
+W of 14 (+-1)
