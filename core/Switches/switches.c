@@ -11,8 +11,45 @@
 /**
     Mapping from switch number to pins.
 */
-static const int8_t mapSWtoPinON[] = {11,56,10,66,74,22,73,27,3,81,48,15,76,34,75,41,77,20,13,45};
-static const int8_t mapSWtoPinOFF[] = {55,54,65,64,83,69,26,25,82,39,14,78,33,32,40,37,70,71,84,85};
+/**static const int8_t mapSWtoPinON[] = {
+    11,56,
+    10,66,
+    74,22,
+    73,27,
+    3,81,
+    48,15,
+    76,34,
+    75,41,
+    77,20,
+    13,45
+};
+static const int8_t mapSWtoPinOFF[] = {
+    55,54,
+    65,64,
+    83,69,
+    26,25,
+    82,39,
+    14,78,
+    33,32,
+    40,37,
+    70,71,
+    84,85
+};*/
+//For 5 boards connected to each alternating pin
+static const int8_t mapSWtoPinON[] = {
+    11,56,//CH0,1
+    74,22,//CH4,5
+    3,81, //CH8,9
+    76,34,//CH12,13
+    77,20,//CH16,17
+};
+static const int8_t mapSWtoPinOFF[] = {
+    55,54,//CH0,1
+    83,69,//CH4,5
+    82,39,//CH8,9
+    33,32,//CH12,13
+    70,71,//CH16,17
+};
 
 /**
   The workhorse of the Switches library. This function along with 

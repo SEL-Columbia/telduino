@@ -6,7 +6,8 @@
 extern "C"{
 #endif
 
-#define NCIRCUITS 6
+/** Must be the same value as NSWITCHES in Switches.h */
+#define NCIRCUITS 10
 #define SDSS  8
 
 /**
