@@ -146,6 +146,9 @@ void parseMeterMode(char *cmd)
 
 }
 
+/**
+ * If enough time has passed printout all meter data.
+ * */
 void meterAuto() 
 {   
 

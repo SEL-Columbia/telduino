@@ -54,7 +54,6 @@ compile: $(PROJECT).hex
 install: programfuses update
 all: compile program programfuses readfuses docs
 
-
 %.hex : $(OBJECT_FILES)
 	@avr-gcc -Os -Wl,--gc-sections -mmcu=$(MCU) -o $(PROJECT).elf $(OBJECT_FILES) -Lcore -lm
 	@avr-objcopy -j .text -j .data -O ihex -R .eeprom $(PROJECT).elf $(PROJECT).hex

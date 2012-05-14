@@ -1,4 +1,8 @@
-Directions on getting the board up and running
+
+
+
+
+DIRECTIONS ON GETTING THE BOARD UP AND RUNNING
 See Cmds.txt for a command reference
 
 The EEPROM needs to be programed with circuit default values. We can make this happen automatically later on.
@@ -15,15 +19,13 @@ CHANGELIST
 HALTON
 - Make sure that deployment meters all use one serial port or mirror output to both for monitoring.
 - Have race where meter outputs after a \r has been read
-
-AWAITING TEST:
-- Get Circuit up and running with new parameters and outputing reasonable results awaiting tests
-- Get calibration and saving routine working
+- Ensure that meter mode doesn't become unresponsive during metering phases. Buffer doesn't seem to be working as well as it could.
+- Get calibration and saving routine working for new non-linear conversion from counts to engineering units.
 
 OVERALL TODO:
-- Restore communications during meter mode failure
+- Integrate Restore communications during meter mode failure 
 - Fix issue with inconsistent state after reading something
-- Regularize input/output for and interactivemode
+- Regularize input/output for and interactive mode
 - Add functionality to interactive mode 
 -- Autodetect number of active circuits
 -- to set number of actual circuits
@@ -31,7 +33,6 @@ OVERALL TODO:
 -- set PMAX
 - Add a metering mode that has the following components
 -- Immediate switch-off for violating PMAX
-- Fill in values for switch and select mappings for all dbs
 - Power offset fix
 - Add an escape character or set of characters
 - Active power isn't working
