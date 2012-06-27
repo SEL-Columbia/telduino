@@ -37,6 +37,9 @@
 #include "telduino.h"
 #include "cfg.h"
 
+//TODO TEMP
+#include "testMode.h"
+
 //Local Functions
 void badInput(char ch, HardwareSerial *ser);
 
@@ -601,68 +604,7 @@ int8_t getChannelID()
     return (int8_t)ID;
 }
 
-/**
-  Tests the switch for 5 seconds on each of 4 different switch speeds.
- */
-void testSwitch(int8_t swID)
-{
-    int times[]      = {2500,1000, 500, 200,  10};
-    int switchings[] = {   2,   5,  10,  50, 500};
-    for (int i=0; i < sizeof(times)/sizeof(times[0]); i++) {
-        for (int j=0; j < switchings[i]; j++){
-            SWset(swID, true);
-            delay(times[i]/2);
-            SWset(swID, false);
-            delay(times[i]/2);
-        }
-    }
-}
 
-/** 
-  Quickly turns on all circuits.
-  Then turns off all of them as fast as possible except for MAINS.
-  Then tries to communicate with the ADEs.
- */
-void testSwitching() 
-{
-    int8_t enabledC[NSWITCHES] = {0};
-    int32_t val;
-
-    dbg.print("\n\rTest switches\n\r");
-
-    SWallOn();
-    delay(1000);
-    SWallOff();
-
-    //Start turning each switch on with 1 second in between
-    for (int i = 0; i < NSWITCHES; i++) {
-        enabledC[i] = 1;
-        delay(1000);
-        SWset(enabledC[i], true);
-        //SWsetSwitches(enabledC);
-    }
-    delay(1000);
-    SWallOff();
-
-    //Test communications with each ADE
-    for (int i = 0; i < NCIRCUITS; i++) {
-        CSselectDevice(i);
-
-        dbg.print("Can communicate with channel ");
-        dbg.print(i,DEC);
-        dbg.print(": ");
-
-        ADEgetRegister(DIEREV,&val);
-        ifnsuccess(_retCode) {
-            dbg.print("NO-");
-            dbg.println(RCstr(_retCode));
-        } else {
-            dbg.print("YES-DIEREV:");
-            dbg.println(val,DEC);
-        }
-        CSselectDevice(DEVDISABLE);
-    }
-}
 
 /** 
   Lists the state of the circuit switches.
