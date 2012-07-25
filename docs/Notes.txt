@@ -1,29 +1,29 @@
-Directions on getting the board up and running
+DIRECTIONS ON GETTING THE BOARD UP AND RUNNING
 See Cmds.txt for a command reference
 
 The EEPROM needs to be programed with circuit default values. We can make this happen automatically later on.
 There are two copies of the configuration state at any point in time on in ram and another in EEPROM.
 First set the defaults of the RAM circuit configuration using the D command. Verify they are set using e.
-Then save them into memory using E. 
+Then save them into memory using E.
 Program them manually using P. (This is just for testing purposes now. Later on the programming will happen every startup and communications failure or reset.)
 
 Set the reporting interval using T in seconds. Then enter meter mode using M.
-
 
 CHANGELIST
 
 HALTON
 - Make sure that deployment meters all use one serial port or mirror output to both for monitoring.
 - Have race where meter outputs after a \r has been read
-
-AWAITING TEST:
-- Get Circuit up and running with new parameters and outputing reasonable results awaiting tests
-- Get calibration and saving routine working
+- Ensure that meter mode doesn't become unresponsive during metering phases. Buffer doesn't seem to be working as well as it could.
+- Get calibration and saving routine working for new non-linear conversion from counts to engineering units.
+- Integrate with SMAP or make SMAP friendly
 
 OVERALL TODO:
-- Restore communications during meter mode failure
+- Add emergency mode
+- Handle detection of connected circuits at startup
+- Integrate Restore communications during meter mode failure 
 - Fix issue with inconsistent state after reading something
-- Regularize input/output for and interactivemode
+- Regularize input/output for and interactive mode
 - Add functionality to interactive mode 
 -- Autodetect number of active circuits
 -- to set number of actual circuits
@@ -31,7 +31,6 @@ OVERALL TODO:
 -- set PMAX
 - Add a metering mode that has the following components
 -- Immediate switch-off for violating PMAX
-- Fill in values for switch and select mappings for all dbs
 - Power offset fix
 - Add an escape character or set of characters
 - Active power isn't working
@@ -72,11 +71,6 @@ Docs
 - Use Doxygen to automatically generate documentation
 - Create patches for Ronald Reigel Libraries which specify used ports for select, available, and locked.
 
-LOGGING:
-
-QUERYING:
-- make sure that any variable length operations have a timeout built-in.
-
 Doxygen Basics:
 - http://www.agapow.net/programming/all-the-rest/doxygen-cheatsheet is a good guide for the basics
 - file must have /** @file */  at the begining to document the file.
@@ -90,35 +84,3 @@ Doxygen Basics:
 - /** @todo ToDo message */
 - see: http://www.stack.nl/~dimitri/doxygen/docblocks.html for more information.
 - A cheatsheet has been placed in the ...Berkeley_Docs/ directory.
-
-
-ARCHITECTURE
-SDRAW -> SDFAT32
-Debug
-	- Manages LEDs
-	- Manages Serial Debug
-Accounts
-	- tracks energy credits
-	- account status (FreePlay,Calibrating,PriceMode(i.e. DAY,NIGHT))
-	- pricing models
-Circuits	
-	- manages each circuits state	
-		- enabled/disabled
-		- current/power limits
-		- switching
-	- tracks uncharged energy
-
-//There's a circular dependency for the below functions so perhaps they should be integrated.
-//Perhaps the QueryEngine should have a set of recurrent query jobs that are completed after a time interval.
-Logger
-	- Formats data from some QueryEngine functions and writes it out
-	- Manages SD Card and Buffer if the card is disconnected.
-	- Takes timestamp, type, string, [id]
-QueryEngine 
-	- Aggregates data from Logger, Circuits, and Accounts
-	- Formats for GSM or logging
-	- Sends to GSM, logger
-
-
-ChangeList
-Added metering mode with switching and metering at constant or polled intervals.

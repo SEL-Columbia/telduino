@@ -11,8 +11,26 @@
 
 
 static int _device = DEVDISABLE;
-/** Maps the Circuit number to abstract pin numbers.*/
-static const int8_t mapCtoPinCS[] = {62,57,68,67,24,23,29,28,79,80,31,30,36,35,72,38,42,21,47,46};
+/** Maps the Circuit number to abstract pin numbers. This mapping should aggree with switches.c*/
+/*static const int8_t mapCtoPinCS[] = {
+    62,57,//CH0,1
+    68,67,//CH2,3
+    24,23,//CH4,5
+    29,28,//CH6,7
+    79,80,//CH8,9
+    31,30,//CH10,11
+    36,35,//CH12,13
+    72,38,//CH14,15
+    42,21,//CH16,17
+    47,46 //CH18,19
+};*/
+static const int8_t mapCtoPinCS[] = {
+    62,57, //CH0,1
+    24,23, //CH4,5
+    79,80, //CH8,9
+    36,35, //CH12,13
+    42,21  //CH16,17
+};
 
 /**
  * For the ADE pins.
