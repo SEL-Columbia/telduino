@@ -15,7 +15,7 @@
 
 #select the file to run. telduino is main, telduino_test is going to be the test routines
 PROJECT = telduino
-PROGRAMMER = dragon_jtag #stk500 #dragon_jtag #dragon_isp
+PROGRAMMER = usbtiny #dragon_jtag #stk500 #dragon_jtag #dragon_isp
 PORT = usb
 BITPERIOD = 10
 #PROJECT = telduino_test
@@ -47,7 +47,7 @@ OBJECT_FILES =  pins_arduino.o WInterrupts.o wiring.o wiring_analog.o \
 	meterMode.o testMode.o cfg.o circuit_controller.o $(PROJECT).o 
 
 #TARGETS
-.PHONY : clean install programfuses readfuses docs
+.PHONY : clean install programfuses readfuses docs saverom
 .DEFAUL_GOAL := update
 update: compile program
 compile: $(PROJECT).hex
@@ -85,11 +85,16 @@ programfuses:
 	avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -U lfuse:w:0x57:m -U hfuse:w:0x11:m -U efuse:w:0xf5:m -B10
 
 readfuses:
-	@avrdude -p$(MCU) -c $(PROGRAMMER) -P usb -U hfuse:r:high.txt:r -U lfuse:r:low.txt:r -U efuse:r:ext.txt:r
+	@avrdude -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -U hfuse:r:high.txt:r -U lfuse:r:low.txt:r -U efuse:r:ext.txt:r
 	@echo -n "low  :" && hexdump low.txt
 	@echo -n "high :" && hexdump high.txt
 	@echo -n "efuse:" && hexdump ext.txt
 	@rm -f low.txt high.txt ext.txt
+
+saverom:
+	avrdude -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -U flash:r:$(PROJECT).read.bin:r
+	avrdude -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -U flash:r:$(PROJECT).read.hex:i
+
 
 docs :
 	doxygen
