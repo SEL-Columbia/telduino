@@ -1,11 +1,15 @@
+#!/usr/bin/python
+
 import serial
 import sys
 import select
+import time
 
 import os
 import time
 import threading
 import re
+
 REPORTREGEX = re.compile("(\d+),\d+,(\d+),\d+,VRMS,(\d+),IRMS,(\d+),W,(\d+),WE,(\d+),(\d+)")
 #2853052,2610,0,1,VRMS,30494,IRMS,8112,W,0,WE,0,20000
 #ts,seq,#ID,S,V,I,Vp,Ip,per,VA,W,VAE,WE,PF,0,0,StatusCode
@@ -31,11 +35,10 @@ while True:
     if m:
         ts,id,vrms,irms,w,we,stat= m.groups()
         if int(id.strip()) == 0 or int(id.strip()) == 1:
-            rowF = open(str(ts),"w")
-            rowF.write(line)
+            rowF = open(os.path.join("output/",str(ts)),"w")
+            rowF.write(time.strftime("%Y-%m-%d %H:%M:%S")+","+str(id)+","+str(w))
             rowF.close()
             print int(id)
-    #write to file if detect report
 
 os.system('stty sane')
     
