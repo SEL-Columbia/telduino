@@ -59,8 +59,8 @@ void setup()
     dbg.println(__TIME__);
 
     DbgTelInit();				// Blink leds
-    //initSelect();				// Select Circuit done in sd_raw_init
-    sd_raw_init();			//SDCard
+    initSelect();				// Select Circuit done in sd_raw_init
+    //sd_raw_init();			//SDCard
     SPI.begin();				// SPI
     SWinit();                   // Switches
 
