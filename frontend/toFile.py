@@ -10,11 +10,19 @@ import time
 import threading
 import re
 
+from authorization.clientlogin import ClientLogin
+from sql.sqlbuilder import SQL 
+import ftclient
+
+#TODO get table id
+#create graph
+
 REPORTREGEX = re.compile("(\d+),\d+,(\d+),\d+,VRMS,(\d+),IRMS,(\d+),W,(\d+),WE,(\d+),(\d+)")
+TABLEID =1
+ser = serial.Serial("/dev/ttyUSB0",9600,timeout=1)
+
 #2853052,2610,0,1,VRMS,30494,IRMS,8112,W,0,WE,0,20000
 #ts,seq,#ID,S,V,I,Vp,Ip,per,VA,W,VAE,WE,PF,0,0,StatusCode
-
-ser = serial.Serial("/dev/ttyUSB0",9600,timeout=1)
 
 class StdinReader(threading.Thread):
     def run(self):
@@ -25,22 +33,35 @@ class StdinReader(threading.Thread):
                 ser.write(read)
             
 
+uk = "javirosa1912@gmail.com"
+pk = "turinghope1848"
+token = ClientLogin().authorize(uk, pk)
+ft_client = ftclient.ClientLoginFTClient(token)
+
+#show tables
+results = ft_client.query(SQL().showTables())
+print results
+print "exiting"
+
+exit()
+
 os.system('stty raw')
 stdin_reader = StdinReader()
 stdin_reader.start()
-
 while True:
     line = ser.readline()
     m = REPORTREGEX.match(line)
     if m:
-        ts,id,vrms,irms,w,we,stat= m.groups()
-        if int(id.strip()) == 0 or int(id.strip()) == 1:
-            rowF = open(os.path.join("output/",str(ts)),"w")
-            rowF.write(time.strftime("%Y-%m-%d %H:%M:%S")+","+str(id)+","+str(w))
+        ts,cid,vrms,irms,w,we,stat= map(str.strip,m.groups())
+        if int(cid) == 0 or int(cid) == 1:
+            rowF = open(os.path.join("output/",ts),"w")
+            rowF.write(time.strftime("%Y-%m-%d %H:%M:%S")+","+cid+","+str(w)+"\n")
             rowF.close()
-            print int(id)
+            #insert row into table
+            rowid = int(ft_client.query(SQL().insert(tableid, {'date':date, 'CID':cid, 'W':w})).split("\n")[1])
+
+            print "cid:%s,w:%s,stat:%s,rowid:%d",(cid,w,stat,rowid)
+            print " rowid:",rowid
 
 os.system('stty sane')
-    
-exit()
-    
+
