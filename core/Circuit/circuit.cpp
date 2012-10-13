@@ -72,7 +72,7 @@ uint16_t CcalcWaitTime(Circuit *c)
     int16_t cycles = c->cyclesSample +1;
     uint16_t duration_ms = (uint16_t)((c->periodus/1000)*cycles);
     /*Wait at least 1.5 times the amount of time it takes for cyclesSample cycles to occur*/
-    return duration_ms + duration_ms/2; // At worst this is 65ms*cycles
+    return duration_ms + duration_ms/2; // At worst this is 65ms*cycles in a 50/60Hz AC system
 }
 
 /**
@@ -268,7 +268,7 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->VRMSslope = 1;//2.18;//.1069; /** in mV/Counts */
 
     /** Power Calibration Parameters */
-    c->VAslope = .11;//0.1976;//.03627;//75300;//34.2760;//2014/10000.0; J/Counts
+    c->VAslope = .11;//0.1976;//.03627;//75300;//34.2760;//2014/10000.0; W/Counts
     c->VAoffset = 0;// TODO not used yet
     c->Wslope= .11;//1;//0.1976;//1;//.03627;//31050; // W/Counts for watts
     c->Woffset = 0;// TODO not used yet
@@ -281,11 +281,10 @@ void CsetDefaults(Circuit *c, int8_t circuitID)
     c->ipeakMax = 16000;
     c->vpeakMax = 400;
 
-    // Current and Voltage
-    // Measured
+    /** Measured */
     c->IRMS = 0;
     c->VRMS = 0;
-    c->periodus = 30000;
+    c->periodus = 25000; //40Hz as a default
     c->VA = 0;
     c->W = 0;
     c->PF = 1234;// Is a value from 0 to 2^16-1
@@ -361,26 +360,27 @@ void Cprint(HardwareSerial *ser, Circuit *c)
 
 void CprintMeas(HardwareSerial *ser, Circuit *c)
 {
+    ser->print("CID:");
     ser->print(c->circuitID,DEC);
-    ser->print(",");
+    ser->print(",SWON");
     ser->print(CisOn(c),DEC);
-    ser->print(",VRMS,");
+    ser->print(",VRMS:");
     ser->print(c->VRMS,DEC);
-    ser->print(",IRMS,");
+    ser->print(",IRMS:");
     ser->print(c->IRMS,DEC);
    // ser->print(",");
    // ser->print(c->vpeak,DEC);
    // ser->print(",");
    // ser->print(c->ipeak,DEC);
-   // ser->print(",");
-   // ser->print(c->periodus,DEC);
+    ser->print(",PERIOD:");
+    ser->print(c->periodus,DEC);
    // ser->print(",");
    // ser->print(c->VA,DEC);
-    ser->print(",W,");
+    ser->print(",W:");
     ser->print(c->W,DEC);
   //  ser->print(",");
   //  ser->print(c->VAEnergy,DEC);
-    ser->print(",WE,");
+    ser->print(",WE:");
     ser->print(c->WEnergy,DEC);
   //  ser->print(",");
   //  ser->print(c->PF,DEC);

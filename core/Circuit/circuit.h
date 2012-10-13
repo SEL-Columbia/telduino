@@ -23,12 +23,13 @@ typedef struct {
 	/** 
      * Determines how often the ADE updates linecycle registers 
      * such as LAENERGY and LVAENERGY.
-	  @warning cyclesSample/frequency should be an integer. \
+     * Can also be configured dynamically using CsetSampleTime
+     * @warning cyclesSample/frequency should be an integer. \
       cyclesSample must be less than 700.
 	*/
 	uint16_t cyclesSample;
     /**
-     * ADE Phase calibration, determined mathmatically.
+     * ADE Phase calibration.
      * */
     int8_t phcal;
 
@@ -111,7 +112,6 @@ typedef struct {
 	*/
 	uint32_t status;
 
-
 } Circuit;
 
 //MODEL ACCESSORS
@@ -135,10 +135,14 @@ void Cload(Circuit *c, Circuit* addrEEPROM);
 void Csave(Circuit *c, Circuit* addrEEPROM);
 
 //CONTROLLER
+/** I'm in the process of creating a standard syntax 
+ * for setting and getting properties of the circuit 
+ * The idea would be that */
 typedef void (CSET)(Circuit *c,float);
 CSET CsetWslope;
 CSET CsetVAslope;
-extern char* PARAMETERS[2];
+CSET CsetSampleTime;
+extern char* PARAMETERS[3];
 extern CSET* CSETS[];
 
 //VIEW

@@ -54,6 +54,7 @@
 char serBuff[SERBUFFSIZE];
 /** Keeps track of the serial buffer head. */
 int8_t buffCursor = 0;
+float sampleTime_ms = 1000;
 
 /**Last time a metering occured. Used to determine when next time will occur.*/
 uint64_t lastMeterTime_ms = 0;
@@ -172,6 +173,7 @@ void meter(Circuit *ckt)
 {
     RCreset();
     Cmeasure(ckt);
+    CsetSampleTime(ckt,sampleTime_ms);
     printMeter(ckt);
 }
 
