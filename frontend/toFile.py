@@ -16,10 +16,11 @@ import ftclient
 
 #TODO get table id
 #create graph
+#Matt's tables as examples in one tab, my tables in another
 
 REPORTREGEX = re.compile("(\d+),\d+,(\d+),\d+,VRMS,(\d+),IRMS,(\d+),W,(\d+),WE,(\d+),(\d+)")
-TABLEID =1
-ser = serial.Serial("/dev/ttyUSB0",9600,timeout=1)
+TABLEID =5438389
+ser = serial.Serial("/dev/ttyUSB1",9600,timeout=1)
 
 #2853052,2610,0,1,VRMS,30494,IRMS,8112,W,0,WE,0,20000
 #ts,seq,#ID,S,V,I,Vp,Ip,per,VA,W,VAE,WE,PF,0,0,StatusCode
@@ -39,11 +40,10 @@ token = ClientLogin().authorize(uk, pk)
 ft_client = ftclient.ClientLoginFTClient(token)
 
 #show tables
-results = ft_client.query(SQL().showTables())
-print results
-print "exiting"
-
-exit()
+#results = ft_client.query(SQL().showTables())
+#print results
+#print "exiting"
+#exit()
 
 os.system('stty raw')
 stdin_reader = StdinReader()
@@ -54,14 +54,15 @@ while True:
     if m:
         ts,cid,vrms,irms,w,we,stat= map(str.strip,m.groups())
         if int(cid) == 0 or int(cid) == 1:
+            print w
             rowF = open(os.path.join("output/",ts),"w")
-            rowF.write(time.strftime("%Y-%m-%d %H:%M:%S")+","+cid+","+str(w)+"\n")
+            date = time.strftime("%Y-%m-%d %H:%M:%S")
+            rowF.write(date+","+cid+","+str(w)+"\n")
             rowF.close()
             #insert row into table
-            rowid = int(ft_client.query(SQL().insert(tableid, {'date':date, 'CID':cid, 'W':w})).split("\n")[1])
+            rowid = int(ft_client.query(SQL().insert(TABLEID, {'date':date, 'CID':cid, 'W':w})).split("\n")[1])
 
             print "cid:%s,w:%s,stat:%s,rowid:%d",(cid,w,stat,rowid)
-            print " rowid:",rowid
 
 os.system('stty sane')
 
