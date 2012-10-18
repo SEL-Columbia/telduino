@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 /**Must be the same value as NCIRCUITS in Select.h*/
-#define NSWITCHES 10
+#define NSWITCHES 2
 
 static int8_t _enabledC[NSWITCHES] = {0};
 

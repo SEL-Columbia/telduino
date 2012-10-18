@@ -200,22 +200,22 @@ const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	PK	, // PK 5 ** 67 ** A13	
 	PK	, // PK 6 ** 68 ** A14	
 	PK	, // PK 7 ** 69 ** A15	//////////// New Pins mapped below
-	PD	, // PF 0 ** 70 ** 	
-	PD	, // PF 1 ** 71 ** 	
-	PD	, // PF 2 ** 72 ** 	
-	PE	, // PF 3 ** 73 ** 	
-	PE	, // PF 4 ** 74 ** 	
-	PG	, // PF 5 ** 75 ** 	
-	PG	, // PF 6 ** 76 ** 	
-	PH	, // PF 7 ** 77 ** 	
-	PJ	, // PK 0 ** 78 ** 	
-	PJ	, // PK 1 ** 79 ** 	
-	PJ	, // PK 2 ** 80 ** 	
-	PJ	, // PK 3 ** 81 ** 	
-	PJ	, // PK 4 ** 82 ** 	
-	PJ	, // PK 5 ** 83 ** 	
-	PL	, // PK 6 ** 84 ** 	
-	PL	, // PK 7 ** 85 ** 	
+	PD	, // PD 4 ** 70 ** 	
+	PD	, // PD 5 ** 71 ** 	
+	PD	, // PD 6 ** 72 ** 	
+	PE	, // PE 6 ** 73 ** 	
+	PE	, // PE 7 ** 74 ** 	
+	PG	, // PG 3 ** 75 ** 	
+	PG	, // PG 4 ** 76 ** 	
+	PH	, // PH 7 ** 77 ** 	
+	PJ	, // PJ 2 ** 78 ** 	
+	PJ	, // PJ 3 ** 79 ** 	
+	PJ	, // PJ 4 ** 80 ** 	
+	PJ	, // PJ 5 ** 81 ** 	
+	PJ	, // PJ 6 ** 82 ** 	
+	PJ	, // PJ 7 ** 83 ** 	
+	PL	, // PL 5 ** 84 ** 	
+	PL	, // PL 6 ** 85 ** 	
 };
 
 const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {

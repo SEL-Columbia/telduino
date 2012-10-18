@@ -4,6 +4,9 @@
 
 #include "arduino/HardwareSerial.h"
 
+/** 16 Communications error bit-mask
+  * 17 Timeout error bit-mask
+  * */
 static const uint32_t COMM	= 0x00010000;
 static const uint32_t TIME  = 0x00020000;
 
@@ -88,12 +91,12 @@ typedef struct {
     int32_t vpeak;
 	/**
      *
- 	 * Status indicates if a safety fault was detected
+ 	 * Status indicates if a fault was detected
 	 * The LSB 16bits are directly from the ADE.
 	 * bit name
      * 0  Active energy is half-ful
      * 1  SAG occured over interval specified in sagDurationCycles
-     * 2  cyclesSample number of cycles have occured
+     * 2  cyclesSample*2 number of cycles have occured
      * 3  WAVEFORM register ready to sample
      * 4  Zero crossing
      * 5  Temperature data ready
@@ -106,9 +109,10 @@ typedef struct {
      * 12 Zero crossing timeout
      * 13 Power moving to negative from positive
      * 14 Power moving to positive from negative
+     * 
+     * See the declarations at the begining of this file for 
+     * the remaining status codes used here.
      *
-	 * 16 Enabled 
-	 * 17 CommErr
 	*/
 	uint32_t status;
 
