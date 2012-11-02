@@ -30,6 +30,7 @@ inEAnotDK = []
 for line in ea:
     #Generate key and get dk part number
     device = line[2].strip()
+    line[1] = line[1].upper()
     try:
         value,dknum = map(str.strip,line[1].split(':'))
         key = ":".join([device,value])
@@ -76,12 +77,12 @@ for dkPart in dkdict.keys():
     if not found:
         inEAnotDK.append(dkdict[dkPart])
 print
-print "In DK not found in EA. n=%d"%(len(inEAnotDK))
+print "Extra parts in BOM in DK not found in EA. n=%d"%(len(inEAnotDK))
 for i in inEAnotDK:
-    print i[0]
+    print i[0:3]
 
 #TODO fix LEDCHIPLED_1206:GREEN showing up in eanotdk
-#TODO fix BC1148CT-ND and BC1148TR-ND discrepancy
+#CP-002A-ND needs slightly wider holes. 
     
 ##for line in dk[0:3]:
 ##    print line
