@@ -1,8 +1,9 @@
 import csv
 import struct
-EAFMT = "4s51s30s90s"
-eacsv = open("TelduinoV6.ea.csv",'rb')
-dkcsv = open("TelduinoV6.dk.csv",'rb')
+
+#FNAME,EAFMT = "TellitShieldV6","4s51s30s90s"
+FNAME,EAFMT = "Meter-Daughterboard-input-V6JR","4s50s27s95s"
+eacsv,dkcsv = map(lambda f: open(f,'rb'), [FNAME+".ea.csv",FNAME+".dk.csv"])
 
 #CLEAR EA
 eacsv.readline()
@@ -61,11 +62,11 @@ print "No value for part in EA. n=%d"%(len(notEA))
 for i in notEA:
     print i
 print
-print "Not found in DK. n=%d"%(len(notDK))
+print "Not found in DK BOM. n=%d"%(len(notDK))
 for i in notDK:
     print i
 print
-print "Multiple found in EA. n=%d"%(len(dupEA))
+print "Duplicate part lines found in EA. n=%d"%(len(dupEA))
 for i in dupEA:
     print i[0]
 
@@ -77,7 +78,7 @@ for dkPart in dkdict.keys():
     if not found:
         inEAnotDK.append(dkdict[dkPart])
 print
-print "Extra parts in BOM in DK not found in EA. n=%d"%(len(inEAnotDK))
+print "Extra parts in DK BOM not found in EA. n=%d"%(len(inEAnotDK))
 for i in inEAnotDK:
     print i[0:3]
 
