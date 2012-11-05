@@ -1,0 +1,56 @@
+Partlist exported from /home/javirosa/bin/Dropbox/Telit Meter Project/Schematics/Shield06/TellitShieldV44JR.sch at 11/2/12 1:27 PM
+
+Qty Value                                              Device                        Parts                                                                                    
+1                                                      2.5_1HEADER                   TELIT_ON/OFF1                                                                            
+3                                                      3,81/1,4                      GND, VCC_ATMEL, VCC_MDM                                                                  
+1   .1 uF: BC1148CT-ND                                 CAPPTH                        C13                                                                                      
+3   0.0:P0.0ECT-ND                                     R-US_R1206                    JMDMSW, JRST, MDMPWRJP4                                                                  
+1   1.2K:P1.2KECT-ND                                   R-US_R1206                    R28                                                                                      
+1   1.5K:P1.5KECT-ND                                   R-US_R1206                    R26                                                                                      
+3   1K:RMCF1206FT1K00CT-ND                             R-US_R1206                    R9, R21, R25                                                                             
+1   2.5_1HEADER:DNS                                    2.5_1HEADER                   TELIT_ON/OFF                                                                             
+3   2.5_2HEADER:A31112-ND                              JUMPER-2PTH                   JP5, MDMRX, MDMTX                                                                        
+2   2.5_2HEADER:A31112-ND                              PINHD-1X2                     DEBUG_SER1, FTDISER                                                                      
+2   2.5_2HEADER:DNS                                    2.5_2HEADER                   RX/TX_ATMEL, RX/TX_TELIT                                                                 
+1   4.7uF:587-1442-1-ND                                C-EUC0805                     C8                                                                                       
+1   10 uF: P5148-ND                                    CAP_POLPTH2                   C12                                                                                      
+10  10K:RMCF1206FT10K0CT-ND                            R-US_R1206                    R2, R4, R5, R8, R11, R14, R15, R19, R20, R24                                             
+1   10n:445-1348-1-ND                                  C-EUC0805                     C6                                                                                       
+1   10uf:445-4043-1-ND(445-3943-1-ND/478-1625-1-ND)    C-EUC1206                     C23                                                                                      
+1   16MHz:300-8499-ND                                  CRYTALHC49S                   Q1                                                                                       
+3   22p:478-1308-1-ND                                  C-EUC0805                     C18, C19, C24                                                                            
+1   27:P27.0FCT-ND                                     R-US_R1206                    R16                                                                                      
+1   39nf: 311-1207-1-ND(478-1390-1-ND (311-1243-1-ND)) C-EUC1206                     C22                                                                                      
+1   40Ohm:240-2389-1-ND                                WE-CBF_0805                   L1                                                                                       
+4   47K:P47.0KFCT-ND                                   R-US_R1206                    R12, R13, R18, R27                                                                       
+2   82:P82ECT-ND                                       R-US_R1206                    R7, R10                                                                                  
+1   100 uF: P5152-ND                                   CAP_POLPTH1                   C11                                                                                      
+4   100:P100ECT-ND                                     R-US_R1206                    R1, R3, R6, R22                                                                          
+8   100n:490-1673-1-ND                                 C-EUC0805                     C2, C4, C5, C7, C16, C17, C20, C21                                                       
+2   100nF:399-1249-1-ND                                C-USC1206                     C9, C10                                                                                  
+3   100uF:495-1549-1-ND                                CPOL-USD/7343-31R             C1, C3, C15                                                                              
+1   270:P270FCT-ND                                     R-US_R1206                    R17                                                                                      
+2   1031K-ND:1031K-ND                                  2,54/0,9                      +5VTST, GNDTST                                                                           
+1   ATMEGA1280-16AU: ATMEGA1280-16AU-ND                ATMEGA1280-16AU               ATMEGA1280                                                                               
+1   CP-102A-ND                                         POWER_JACKPTH                 J1                                                                                       
+1   EG1213:EG1906-ND                                   EG1213                        UNMOUNTED                                                                                
+1   FT232RQ:768-1008-1-ND                              FT232RQ                       IC1                                                                                      
+1   GE836                                              GE836                         GE863                                                                                    
+1   Green:754-1141-1-nd                                LEDCHIPLED_1206               DBG0                                                                                     
+2   H11L1SM:H11L1SM-ND                                 H11L1MS                       OK3, OK4                                                                                 
+1   ICSP:609-3218-ND                                   PINHD-2X3                     ICSP1                                                                                    
+1   JTAG:S9169-ND                                      PINHD-2X5                     JPJTAG                                                                                   
+1   MINI-USB-32005-201:ED2992CT-ND                     MINI-USB-32005-201            X24                                                                                      
+1   NANOSMDC050F/13.2CT-ND                             PTCFUSE-1206                  F1                                                                                       
+1   Q-LT1528:LT1528CQ#PBF-ND                           Q-LT1528                      U1                                                                                       
+20  RJ45-6L-B:A31428-ND                                RJ45RJ45-NO-SHIELD_VERTJR     X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17, X18, X19, X20
+2   Red:754-1142-1-ND                                  LEDCHIPLED_1206               DBG1, UC_PWR                                                                             
+1   SD_CARD_SOCKETEASY_SOLDER                          SD_CARD_SOCKETEASY_SOLDER     SD-CARD                                                                                  
+1   SIMCARD_5036:478-5061-1-ND                         SIMCARD_5036                  SIM5036                                                                                  
+1   SMAEDGE:ACX1426-ND                                 RP-SMA_BOARD_EDGE142-0711-821 RP-SMA                                                                                   
+1   SWITCHSLIDE_EG1390:EG4632CT-ND                     SWITCHSLIDE_EG1390            SW1                                                                                      
+2   T1:MMBT2222A-FDICT-ND                              SOT-23_MMBT4403               T1, T2                                                                                   
+1   Trans1:TC7W125FUTFCT-ND                            SSOP8                         TC7W125FU                                                                                
+1   YELLOW:365-1204-ND                                 LED5MM                        MOUNT                                                                                    
+1   Zener: MMSZ5233B-FDICT-ND                          DIODESOD-123                  D2                                                                                       
+2   uSW:CKN9104CT-ND                                   SWITCHPB_KPT-1187B            POWER1, RESET                                                                            

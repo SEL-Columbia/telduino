@@ -1,0 +1,52 @@
+﻿Digi-Key Part Number,Manufacturer,Manufacturer Part Number,Customer Reference,Quantity 1,Quantity 2,Quantity 3,Description,Comments,RoHS Status,Lead Free Status,REACH Status
+ATMEGA1280-16AU-ND,ATMEL,ATMEGA1280-16AU,ATMEGA1280                                      ,1,0,0,IC MCU AVR 128K FLASH 100-TQFP,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Sep-2011
+300-8499-ND,CITIZEN FINETECH MIYOTA,HC49US-16.000MABJ-UB,Q1                                              ,1,0,0,CRYSTAL 16.000 MHZ 18PF HC49/US,,RoHS Compliant,Lead free,Unaffected Oct-2011
+490-1673-1-ND,MURATA ELECTRONICS (VA),GRM21BR71E104KA01L,"C2,C4,C5,C7,C16,C17,C20,C21                     ",8,0,0,CAP CER 0.1UF 25V 10% X7R 0805,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jul-2011
+478-1308-1-ND,AVX CORPORATION (VA),08055A220JAT2A,"C18,C19,C24                                     ",3,0,0,CAP CER 22PF 50V 5% NP0 0805,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jun-2012
+BC1148CT-ND,VISHAY BC COMPONENTS (VA),K104Z15Y5VE5TL2,C13                                             ,1,0,0,CAP CER 0.1UF 25V RADIAL,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jun-2011
+P0.0ECT-ND,PANASONIC ELECTRONIC COMPONENTS (VA),ERJ-8GEY0R00V,"JMDMSW,JRST,MDMPWRJP4                           ",3,0,0,RES 0.0 OHM 1/4W 1206 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Not Available
+RMCF1206FT1K00CT-ND,STACKPOLE ELECTRONICS INC (VA),RMCF1206FT1K00,"R3,R9,R21,R22,R25                               ",5,0,0,RES 1K OHM 1/4W 1% 1206 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Aug-2011
+P5148-ND,PANASONIC ELECTRONIC COMPONENTS,ECA-1EM100,C12                                             ,1,0,0,CAP ALUM 10UF 25V 20% RADIAL,,RoHS Compliant,Lead free,Unaffected Jun-2011
+EG4632CT-ND,E-SWITCH (VA),EG1390A,DTR                                             ,1,0,0,SWITCH SLIDE DPDT L=1.0MM SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jun-2012
+A31428-ND,TE CONNECTIVITY AMP,5556416-1,X1-X20                                          ,20,0,0,CONN MOD JACK 8-8 VERT PCB 50AU,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Aug-2011
+RMCF1206FT10K0CT-ND,STACKPOLE ELECTRONICS INC (VA),RMCF1206FT10K0,"R2,R4,R5,R8,R11,R14,R15,R19,R20,R24             ",10,0,0,RES 10K OHM 1/4W 1% 1206 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Aug-2011
+ACX1426-ND,AMPHENOL CONNEX,132289,GSM                                             ,1,0,0,CONN RCPT BULKHEAD SMA PCB,,RoHS Compliant,Lead free,Unaffected Nov-2011
+P47.0KFCT-ND,PANASONIC ELECTRONIC COMPONENTS (VA),ERJ-8ENF4702V,"R12,R13,R18,R27                                 ",3,0,0,RES 47.0K OHM 1/4W 1% 1206 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Not Available
+CKN9104CT-ND,C&K COMPONENTS (VA),PTS525SM10SMTR LFS,"RESET,TELLIT                                    ",2,0,0,SWITCH TACTILE SPST-NO 0.05A 12V,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Dec-2011
+445-4043-1-ND,TDK CORPORATION (VA),C3216X7R1A106K,C23                                             ,1,0,0,CAP CER 10UF 10V 10% X7R 1206,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Apr-2011
+P27.0FCT-ND,PANASONIC ELECTRONIC COMPONENTS (VA),ERJ-8ENF27R0V,R16                                             ,1,0,0,RES 27.0 OHM 1/4W 1% 1206 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Not Available
+P82ECT-ND,PANASONIC ELECTRONIC COMPONENTS (VA),ERJ-8GEYJ820V,"R7,R10                                          ",2,0,0,RES 82 OHM 1/4W 5% 1206 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Not Available
+P100ECT-ND,PANASONIC ELECTRONIC COMPONENTS (VA),ERJ-8GEYJ101V,"R6,R1,R22,R3                                   ",4,0,0,RES 100 OHM 1/4W 5% 1206 SMD,,RoHS Compliant,Lead free,Not Available
+P5152-ND,PANASONIC ELECTRONIC COMPONENTS,ECA-1EM101,C11                                             ,1,0,0,CAP ALUM 100UF 25V 20% RADIAL,,RoHS Compliant,Lead free,Unaffected Dec-2011
+311-1207-1-ND,YAGEO (VA),CC1206KRX7R9BB393,C22                                             ,1,0,0,CAP CER 0.039UF 50V 10% X7R 1206,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Sep-2011
+754-1142-1-ND,KINGBRIGHT CORP (VA),APT3216SRCPRV,"DBG1,UC_PWR                                     ",2,0,0,LED 3.2X1.6MM 640NM RED CLR SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Feb-2011
+754-1141-1-ND,KINGBRIGHT CORP (VA),APT3216SGC,DBG0                                            ,1,0,0,LED 3.2X1.6MM 568NM GRN CLR SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Feb-2011
+365-1204-ND,TT ELECTRONICS/OPTEK TECHNOLOGY,OVLLY8C7,MOUNT                                           ,1,0,0,LED 589NM CYLINDER YELLOW 5MM,,RoHS Compliant,Lead free,Unaffected Jun-2011
+LT1528CQ#PBF-ND,LINEAR TECHNOLOGY,LT1528CQ#PBF,Q-LT1528                                        ,1,0,0,IC REG LDO 3.3V/ADJ 3A DDPAK-5,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jun-2012
+H11L1SM-ND,FAIRCHILD OPTOELECTRONICS GROUP,H11L1SM,"OK3,OK4                                         ",2,0,0,OPTOCOUPLER LOGIC OUT 6-SMD,,RoHS Compliant,Lead free,Unaffected Jun-2011
+MMSZ5233B-FDICT-ND,DIODES INC (VA),MMSZ5233B-7-F,D2                                              ,1,0,0,DIODE ZENER 6V 500MW SOD-123,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jun-2012
+EG1906-ND,E-SWITCH,EG1213,UNMOUNTED                                       ,1,0,0,SWITCH SLIDE SPDT 30V RT ANGLE,,RoHS Compliant,Lead free,Unaffected Jun-2012
+768-1008-1-ND,FTDI (VA),FT232RQ-REEL,IC1                                             ,1,0,0,IC USB FS SERIAL UART 32-QFN,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jun-2011
+609-3218-ND,FCI,67996-406HLF,ICSP                                            ,1,0,0,CONN HEADER 6POS .100 STR TIN,,RoHS Compliant,Lead free,Unaffected Jun-2011
+S9169-ND,SULLINS CONNECTOR SOLUTIONS,SBH11-PBPC-D05-ST-BK,JPJTAG                                          ,1,0,0,CONN HEADER 2.54MM 10POS GOLD,,RoHS Compliant,Lead free,Unaffected Sep-2008
+240-2389-1-ND,LAIRD-SIGNAL INTEGRITY PRODUCTS (VA),MI0805K400R-10,L1                                              ,1,0,0,FERRITE 1.5A 40 OHM 0805 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Aug-2011
+ED2992CT-ND,ON SHORE TECHNOLOGY INC (VA),USB-M26FTR,X24                                             ,1,0,0,CONN USB MINI B R/A SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Aug-2011
+CP-102A-ND,CUI INC,PJ-102A,J1                                              ,1,0,0,CONN JACK POWER 2.1MM PCB,,RoHS Compliant,Lead free,Unaffected Oct-2010
+MMBT2222A-FDICT-ND,DIODES INC (VA),MMBT2222A-7-F,"T1,T2                                           ",2,0,0,TRANS NPN 40V 350MW SMD SOT23-3,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jun-2012
+TC7W125FUTFCT-ND,TOSHIBA (VA),"TC7W125FU(TE12L,F)",TC7W125FU                                       ,1,0,0,IC BUS BUFFER DUAL N-INV SM8,Alternate Packaging Exists,RoHS Compliant,Lead free,Not Available
+478-5061-1-ND,AVX CORP/KYOCERA CORP (VA),045036006219862+,SIMCARD_5036                                    ,1,0,0,CONNECTOR SIM CARD WITH BOSS,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jun-2012
+399-1249-1-ND,KEMET (VA),C1206C104K5RACTU,"C9,C10                                          ",2,0,0,CAP CER 0.1UF 50V 10% X7R 1206,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jan-2011
+495-1549-1-ND,KEMET (VA),T495X107K016ZTE100,"C1,C3,C15                                       ",3,0,0,CAP TANT 100UF 16V 10% 2917,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Jan-2011
+P1.2KECT-ND,PANASONIC ELECTRONIC COMPONENTS (VA),ERJ-8GEYJ122V,R28                                             ,1,0,0,RES 1.2K OHM 1/4W 5% 1206 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Not Available
+P1.5KECT-ND,PANASONIC ELECTRONIC COMPONENTS (VA),ERJ-8GEYJ152V,R26                                             ,1,0,0,RES 1.5K OHM 1/4W 5% 1206 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Not Available
+A31112-ND,TE CONNECTIVITY AMP,3-644456-2,"JP5, MDMPWRJP4, MDMRX, MDMTX,DEBUG_SER1, FTDISER",6,0,0,CONN HEADER VERT 2POS .100 TIN,,RoHS Compliant,Lead free,Unaffected Nov-1858
+CF14JT270RCT-ND,STACKPOLE ELECTRONICS INC (VA),CF14JT270R,R17                                             ,1,0,0,RES 270 OHM 1/4W 5% CARBON FILM,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Aug-2011
+1031K-ND,KEYSTONE ELECTRONICS,1031,,2,0,0,TERM TEST POINT SLOTTED .032"DIA,,RoHS Compliant,Lead free,Unaffected Dec-2011
+240-2604-ND,LAIRD-SIGNAL INTEGRITY PRODUCTS,28A2809-0A2,USB BEAD                                        ,1,0,0,FERRITE EMI SPLIT/SNAP-ON CORE,,RoHS Compliant,Lead free,Unaffected Aug-2011
+CP-2185-ND,TENSILITY INTERNATIONAL CORP,CA-2185,POWER CABLE                                     ,1,0,0,CABLE ASSY STR 2.1MM 6' 24 AWG,,RoHS Compliant,Lead free,Unaffected Jun-2011
+CP-002A-ND,CUI INC,PJ-002A,J1                                              ,1,0,0,CONN POWER JACK 2.1MM,,RoHS Compliant,Lead free,Unaffected Oct-2010
+240-2278-ND,LAIRD-SIGNAL INTEGRITY PRODUCTS,LFB127079-000,POWER CABLE FILTER                              ,1,0,0,FERRITE BEAD CORE EMI L/F 7.92MM,,RoHS Compliant,Lead free,Unaffected Aug-2011
+NANOSMDC050F/13.2CT-ND,TE CONNECTIVITY RAYCHEM CIRCUIT PROTECTION (VA),NANOSMDC050F/13.2-2,F1                                              ,1,0,0,POLYSWITCH 0.50A RESET FUSE SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Aug-2011
+445-1348-1-ND,TDK CORPORATION (VA),C2012X7R1H103K,C6                                              ,1,0,0,CAP CER 10000PF 50V 10% X7R 0805,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Apr-2011
+587-1442-1-ND,TAIYO YUDEN (VA),LMK212B7475KG-T,C8                                              ,1,0,0,CAP CER 4.7UF 10V 10% X7R 0805,Alternate Packaging Exists,RoHS Compliant,Lead free,Unaffected Nov-2009
+P270FCT-ND,PANASONIC ELECTRONIC COMPONENTS (VA),ERJ-8ENF2700V,R17,1,0,0,RES 270 OHM 1/4W 1% 1206 SMD,Alternate Packaging Exists,RoHS Compliant,Lead free,Not Available
