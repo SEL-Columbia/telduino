@@ -6,8 +6,8 @@ NOTES = 13
 EAKEY = 14
 EAGLEDELIMETER = "\t"
 
-#FNAME,EAFMT = "TellitShieldV6","4s51s30s90s"
-FNAME,EAFMT = "Meter-Daughterboard-input-V6JR","4s50s27s95s"
+FNAME,EAFMT = "TellitShieldV6","4s51s30s90s"
+#FNAME,EAFMT = "Meter-Daughterboard-input-V6JR","4s50s27s95s"
 eacsv,dkcsv = map(lambda f: open(f,'rb'), [FNAME+".ea.csv",FNAME+".dk.csv"])
 outfile = open(FNAME + ".csv",'w')
 #CLEAR EA
@@ -89,7 +89,7 @@ for i in inEAnotDK:
     print i[0:3]
 
 #GENERATE DATABASE FOR EAGLE
-outfile.write("Key,PartNumber,Distributor,Manufacturer,Notes\n")
+outfile.write(EAGLEDELIMETER.join("Key,PartNumber,Distributor,Manufacturer,Notes\n".split(","))
 for key,item in dkdict.iteritems():
     if len(item) == COMPLETELINESIZE:
         line = EAGLEDELIMETER.join([item[EAKEY],key,"Digikey",item[2],item[NOTES] +"\n"])

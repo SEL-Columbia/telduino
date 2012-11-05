@@ -1,0 +1,18 @@
+No value for part in EA. n=10
+['4', '240-2418-1-ND', 'WE-CBF_1806', 'Z3, Z4, Z7, Z8']
+['4', '240-2423-1-ND', 'WE-CBF_1812', 'Z1, Z2, Z6, Z9']
+['2', '1031K-ND', '2,54/0,9', 'PAD1, PAD2']
+['4', 'A98342-ND', 'W237-102', 'X1, X2, X3, X4']
+['2', 'ADE7753ARSZ-ND', 'ADE7753', 'ADE1, ADE2']
+['1', 'CP-102A-ND', 'POWER_JACKPTH', 'J1']
+['9', 'H11L1SM-ND', 'H11L1MS', 'OK1, OK2, OK3, OK4, OK5, OK6, OK7, OK8, OK9']
+['4', 'MMBT2907A-FDICT-ND', 'MMBT2907ALT1-PNP-SOT23-BEC', 'Q1, Q2, Q3, Q4']
+['2', 'P7277-ND', 'S20K250', 'R12, R14']
+['2', 'RT314F05-ND', 'RT424F054', 'K1, K2']
+
+Not found in DK BOM. n=1
+('RT314F05-ND', 'RT424F054:')
+
+Duplicate part lines found in EA. n=0
+
+Extra parts in DK BOM not found in EA. n=0
