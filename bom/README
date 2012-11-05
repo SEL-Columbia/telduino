@@ -1,0 +1,12 @@
+To unify database and Eagle generator BOM
+Run the Bom ULP
+Load the database using the Load button
+Add the columns in the database using the New Button
+Then verify the correct columns appear
+Finally save your file
+You can now import this in digikey
+
+There are several parts you have to manually add:
+- IC1
+- K1,K2
+- U$6,U$7
